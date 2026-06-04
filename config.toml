@@ -1,0 +1,51 @@
+title = "Henrik Åkesson"
+
+# The URL the site will be built for
+base_url = "https://human.solutions"
+
+# Whether to automatically compile all Sass files in the sass directory
+compile_sass = true
+
+# Whether to build a search index to be used later on by a JavaScript library
+build_search_index = false
+
+# The taxonomies to be rendered for that site and their configuration
+# Example:
+#     taxonomies = [
+#       {name = "tags", rss = true}, # each tag will have its own RSS feed
+#       {name = "categories", paginate_by = 5},  # 5 items per page for a term
+#       {name = "authors"}, # Basic definition: no RSS or pagination
+#     ]
+#
+taxonomies = [{ name = "tags", rss = true }]
+
+[markdown.highlighting]
+# Syntax highlighting — Zola 0.22+ ("giallo"). Default "inline" style sets colours
+# directly on the spans (no extra CSS file needed). Full theme list:
+# https://github.com/getzola/giallo  — swap `theme` freely.
+theme = "nord"
+
+[extra]
+# Put all your custom variables here
+home_subtitle = "Independent software developer — Rust & open source"
+
+footer_copyright = ' &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
+
+hermit_menu = [
+    { link = "/opensource", name = "Projects" },
+    { link = "/blog", name = "Blog" },
+    { link = "/about", name = "About" },
+]
+
+hermit_social = [
+    { name = "GitHub", link = "https://github.com/akesson" },
+    { name = "twitter", link = "https://x.com/hakesso" },
+]
+
+[extra.highlightjs]
+enable = false
+clipboard = false
+theme = "vs2015"
+
+[extra.author]
+name = "Henrik Åkesson"
