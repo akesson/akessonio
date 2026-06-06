@@ -20,10 +20,15 @@ build_search_index = false
 taxonomies = [{ name = "tags", rss = true }]
 
 [markdown.highlighting]
-# Syntax highlighting — Zola 0.22+ ("giallo"). Default "inline" style sets colours
-# directly on the spans (no extra CSS file needed). Full theme list:
-# https://github.com/getzola/giallo  — swap `theme` freely.
-theme = "nord"
+# Syntax highlighting — Zola 0.22+ ("giallo"). style="class" emits CSS classes
+# (.z-*) instead of inline styles and generates one stylesheet per theme, so the
+# code block can follow the site's dark/light toggle. dark_theme/light_theme pick
+# the pair; they are swapped client-side by the theme toggle (see main.js), not
+# by prefers-color-scheme, since the toggle is manual. Theme list:
+# https://github.com/getzola/giallo
+style = "class"
+dark_theme = "nord"
+light_theme = "github-light"
 
 [extra]
 # Put all your custom variables here

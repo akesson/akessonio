@@ -1,12 +1,16 @@
 // Colors
 //
-$theme:  #91bce6;
-$text: #c6cddb;
-$demphasized-text: #a1a7b4;
-$light-grey: #494f5c;
-$dark-grey: #3b3e48;
-$highlight-grey: #7d828a;
-$midnightblue: #31333d;
+// The palette is now a set of runtime CSS custom properties (see _color.scss):
+// one drifting hue + a dark/light swap. These Sass names are kept as thin
+// aliases onto the themed role tokens so every existing rule keeps working
+// unchanged — each resolves, at runtime, to its current theme's value.
+$theme:            var(--accent);          // links, headings, active nav / TOC
+$text:             var(--text);            // body text
+$demphasized-text: var(--muted);           // secondary / de-emphasised text
+$light-grey:       var(--bg);              // page base
+$dark-grey:        var(--surface);         // raised chrome (header, mobile menu)
+$highlight-grey:   var(--border);          // hairline dividers
+$midnightblue:     var(--surface-sunken);  // insets, scrollbar, footnote chip
 
 // Fonts
 //

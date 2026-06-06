@@ -1,0 +1,96 @@
+// ───────────────────────────────────────────────────────────────────────────
+// Colour system — runtime CSS custom properties (NOT Sass vars), because the
+// palette is *live* in two ways:
+//   1. one drifting hue feeds ONLY the accent (+ diagram series); main.js
+//      rotates --hue 0→360 over 30 min (sub-perceptual, 0.2°/s). Everything
+//      else — body text, greys, borders, backgrounds — is fixed neutral
+//      greyscale. The hue shows up only in the "select highlights";
+//   2. the dark / light theme is a runtime swap (data-theme on <html>).
+//
+// Two tiers (the "raw → roles" model):
+//   raw   → --hue            the single living input. L and C are fixed
+//                            constants baked into each role expression below.
+//   roles → --bg --surface --surface-sunken --text --muted --border --accent
+//           --page (backdrop) --series-1..3 (diagrams)
+//
+// Why this works: OKLCH lightness is perceptually uniform, so pinning L (and C)
+// per role and rotating only H keeps contrast constant as the hue turns. Every
+// foreground/background pair below was swept across all 360° in both themes and
+// clears WCAG AA — most clear AAA. The worst-hue ratios are noted per role.
+// Light and dark differ ONLY in their L/C constants; --hue is shared.
+//
+// Old browsers (no oklch): the @supports block at the end supplies the previous
+// fixed hex palette so the site still renders, just without drift.
+// ───────────────────────────────────────────────────────────────────────────
+
+:root {
+  // The one living input. Default 250 ≈ the old #91bce6 blue, so a no-JS,
+  // reduced-motion, or first-paint render already looks designed (not grey).
+  --hue: 250;
+
+  // ── Dark theme (default) ── contrast vs --bg, worst hue across 360°:
+  // Fixed NEUTRAL greyscale everywhere except --accent (+ diagram series): the
+  // drifting hue shows up only in the "select highlights" (links, headings,
+  // active TOC, inline-code pill), never in body text, greys, or backgrounds.
+  --bg:             oklch(0.30 0 0);               // page base — neutral
+  --surface:        oklch(0.34 0 0);               // raised chrome: header, menu
+  --surface-sunken: oklch(0.26 0 0);               // recessed: insets, scrollbar
+  --text:           oklch(0.86 0 0);               // body            8.8:1  (AAA)
+  --muted:          oklch(0.70 0 0);               // secondary       5.0:1  (AA)
+  --border:         oklch(0.44 0 0);               // hairline dividers
+  --accent:         oklch(0.76 0.100 var(--hue));  // links/headings  5.6:1  (AA+) — drifts
+
+  // Page backdrop. Dark = flat neutral (large dark gradients band in 8-bit, and
+  // a "sky" reads as a light-mode metaphor anyway).
+  --page: var(--bg);
+
+  // Diagram series — analogous + triad off the live hue. Reserved for future
+  // multi-series figures; today's inline SVGs use --accent + currentColor.
+  --series-1: var(--accent);
+  --series-2: oklch(0.74 0.10 calc(var(--hue) + 120));
+  --series-3: oklch(0.74 0.10 calc(var(--hue) + 240));
+}
+
+[data-theme="light"] {
+  // ── Light theme ── contrast vs --bg, worst hue across 360°:
+  // Fixed neutral greyscale everywhere except --accent (+ series), as in dark.
+  --bg:             oklch(0.985 0 0);              // page base — neutral, near-white
+  --surface:        oklch(0.995 0 0);              // raised chrome (header) — brightest
+  --surface-sunken: oklch(0.95  0 0);              // recessed (code fallback, chips)
+  --text:           oklch(0.28 0 0);               // body           13:1   (AAA)
+  --muted:          oklch(0.50 0 0);               // secondary      5.4:1  (AA)
+  --border:         oklch(0.85 0 0);               // hairline dividers
+  --accent:         oklch(0.50 0.100 var(--hue));  // links/headings 5.1:1  (AA+) — drifts
+                                                   // darker than dark's accent so
+                                                   // it reads as text on near-white
+
+  // Sky-like backdrop: a whisper two-stop NEUTRAL gradient — a touch brighter at
+  // the top grading to a hair darker lower down. Gives atmospheric depth without
+  // colour. Text (13:1) and accent (5.1:1) still clear AA against the lower stop.
+  --page: linear-gradient(
+    to bottom,
+    oklch(0.998 0 0),
+    oklch(0.975 0 0)
+  );
+
+  --series-2: oklch(0.50 0.10 calc(var(--hue) + 120));
+  --series-3: oklch(0.50 0.10 calc(var(--hue) + 240));
+}
+
+// Fallback for browsers without OKLCH (pre-2023). Re-supply the previous fixed
+// palette so the site is fully usable; no drift, no themed light mode.
+@supports not (color: oklch(0.5 0.1 250)) {
+  :root {
+    --bg: #494f5c;
+    --surface: #3b3e48;
+    --surface-sunken: #31333d;
+    --text: #c6cddb;
+    --muted: #a1a7b4;
+    --border: #7d828a;
+    --accent: #91bce6;
+    --page: #494f5c;
+    --series-1: #91bce6;
+    --series-2: #91bce6;
+    --series-3: #91bce6;
+  }
+}

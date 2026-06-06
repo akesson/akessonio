@@ -1,5 +1,6 @@
 @import "predefined.scss";
 @import "tokens.scss";
+@import "color.scss";
 @import "fonts.scss";
 @import "normalize.scss";
 @import "animate.scss";
@@ -22,7 +23,7 @@
 }
 
 html {
-  background: $light-grey;
+  background: var(--page); // flat in dark, a faint drifting sky-gradient in light
   line-height: 1.6;
   letter-spacing: 0.06em;
 }
@@ -50,7 +51,8 @@ pre {
   line-height: 1.5;
   letter-spacing: normal;
   white-space: pre;
-  color: #eee;
+  color: var(--text);            // base; giallo's .z-code overrides when active
+  background: var(--surface-sunken); // themed fallback if the giallo CSS is absent
   border-radius: 12px;
   // -webkit-overflow-scrolling: touch;
 
@@ -64,7 +66,7 @@ pre {
 
 code {
   color: $text;
-  background: rgba($theme, 0.15);
+  background: color-mix(in oklab, var(--accent) 15%, transparent); // accent tint, themed
   border-radius: 8px;
   padding: 4px;
   font-size: 0.85em; // sit optically level with the 18px prose
@@ -248,6 +250,38 @@ table {
   padding: 0;
   margin-left: 0.4em;
   cursor: pointer;
+}
+
+// Dark / light toggle — fixed, low-emphasis, present on every page (including
+// home, which has no site header). Shows the icon of the theme you'd switch TO.
+#theme-toggle {
+  position: fixed;
+  top: $space-4;
+  right: $space-4;
+  z-index: 2; // above the fixed header (z-index 1)
+  display: inline-flex;
+  margin: 0;
+  color: var(--muted);
+  opacity: 0.7;
+  transition: opacity $dur-fast $ease, color $dur-fast $ease;
+
+  &:hover {
+    opacity: 1;
+    color: var(--accent);
+  }
+
+  .feather-moon {
+    display: none; // dark theme: offer the sun (→ light)
+  }
+}
+
+[data-theme="light"] #theme-toggle {
+  .feather-sun {
+    display: none; // light theme: offer the moon (→ dark)
+  }
+  .feather-moon {
+    display: inline-block;
+  }
 }
 
 #menu-btn {

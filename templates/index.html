@@ -20,6 +20,32 @@
     href="{{get_url(path="favicon.ico")}}"
   />
   <link rel="preload" href="{{get_url(path="fonts/hanken-grotesk-latin.woff2")}}" as="font" type="font/woff2" crossorigin/>
+  <!-- Syntax highlighting: both theme sheets load; the active one is chosen to
+       match data-theme (below + main.js), not prefers-color-scheme, because the
+       theme toggle is manual. -->
+  <link id="giallo-dark" rel="stylesheet" media="all" href="{{get_url(path="giallo-dark.css")}}"/>
+  <link id="giallo-light" rel="stylesheet" media="not all" href="{{get_url(path="giallo-light.css")}}"/>
+  <!-- Set theme + starting hue before first paint: no flash of the wrong theme
+       or the default hue. Mirrors the logic in main.js. -->
+  <script>
+    (function () {
+      try {
+        var d = document.documentElement;
+        var t = localStorage.getItem("theme")
+          || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        d.setAttribute("data-theme", t);
+        var dark = document.getElementById("giallo-dark");
+        var light = document.getElementById("giallo-light");
+        if (dark && light) {
+          dark.media = t === "light" ? "not all" : "all";
+          light.media = t === "light" ? "all" : "not all";
+        }
+        if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          d.style.setProperty("--hue", (Date.now() / 1800000 * 360 % 360).toFixed(1));
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="{{get_url(path="style.css")}}"/>
   {% if page.title %}
   <title>{{page.title}}</title>
@@ -32,6 +58,10 @@
   {% endif %}
 
   <body id="page">
+
+	<button id="theme-toggle" class="hdr-btn" title="Toggle light / dark" aria-label="Toggle light or dark theme">
+	  {{ macros::icon(name="sun") }}{{ macros::icon(name="moon") }}
+	</button>
 
 	{% block header %}
 	{% endblock header %}
