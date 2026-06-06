@@ -1,5 +1,6 @@
 @import "predefined.scss";
 @import "tokens.scss";
+@import "fonts.scss";
 @import "normalize.scss";
 @import "animate.scss";
 @import "icons.scss";
@@ -48,25 +49,25 @@ pre {
   font-size: 0.9em;
   line-height: 1.5;
   letter-spacing: normal;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  white-space: pre;
   color: #eee;
-  border-radius: 4px;
+  border-radius: 12px;
   // -webkit-overflow-scrolling: touch;
 
   code {
     padding: 0;
     margin: 0;
-    background: $midnightblue;
+    background: transparent; // uniform block colour (show the pre's bg, not the inline pill)
+    font-size: inherit; // keep block code at the pre size, not the 0.85em inline size
   }
 }
 
 code {
-  color: #eee;
-  background: $highlight-grey;
-  border-radius: 3px;
-  padding: 0 3px;
-  margin: 0 4px;
+  color: $text;
+  background: rgba($theme, 0.15);
+  border-radius: 8px;
+  padding: 4px;
+  font-size: 0.85em; // sit optically level with the 18px prose
   word-break: break-all;
   letter-spacing: normal;
 }
@@ -145,7 +146,7 @@ table {
 }
 
 .thin {
-  max-width: 720px;
+  max-width: 42rem; // ~75ch reading measure at the 18px prose size
   margin: auto;
 }
 
@@ -450,10 +451,31 @@ hr.post-end {
 }
 
 .content {
-  text-align: justify;
-  text-justify: inter-ideograph; //For IE/Edge
+  font-size: 1.125rem; // 18px reading size
+  line-height: 1.7;
+  letter-spacing: normal;
+  text-align: left;
 
-  @include aTag;
+  a {
+    color: inherit; // links read in body colour, not the accent
+    font-weight: 700;
+    text-decoration: underline; // plain default underline, no offset, body-text size
+    border-bottom: none;
+    box-shadow: none;
+    transition: color 0.2s ease-out;
+
+    &:hover {
+      color: $theme; // accent only appears on interaction
+    }
+  }
+
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: $theme; // headings carry the single accent
+  }
 
   figure {
     max-width: 100%;
@@ -691,10 +713,6 @@ hr.post-end {
 
   .section-inner {
     max-width: 1600px;
-  }
-
-  .thin {
-    max-width: 960px;
   }
 
   figure.left {

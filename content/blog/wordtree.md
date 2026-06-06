@@ -10,7 +10,7 @@ toc = true
 words = 2576
 +++
 
-I just open-sourced [`wordtree`](https://github.com/akesson/wordtree), a compact
+I just open-sourced [wordtree](https://github.com/akesson/wordtree), a compact
 trie for word lists. Before I tell you what it does, here is what it is *not*: it
 is not the fastest at anything. I benchmarked it against a specialist crate for
 each job it does, and on every head-to-head axis a specialist beat it. Exact
@@ -24,12 +24,12 @@ edit-distance computation that rides *down the trie* in a fixed three-byte
 window, and an 8-byte node that pushes everything else off to the side.
 
 The whole comparative study is reproducible — every number below comes from
-[`comparisons/REPORT.md`](https://github.com/akesson/wordtree/blob/main/comparisons/REPORT.md), regenerable with four `cargo`
+[comparisons/REPORT.md](https://github.com/akesson/wordtree/blob/main/comparisons/REPORT.md), regenerable with four `cargo`
 commands against the word lists bundled in the repo.
 
 ## Three jobs
 
-`wordtree` came out of a translation app that needed three things from one big
+wordtree came out of a translation app that needed three things from one big
 word list, all at once, on devices where startup time and memory both mattered:
 
 1. **A browsable index.** Group the words into folders (~100 per folder) so a UI
