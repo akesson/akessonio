@@ -157,11 +157,6 @@ table {
   height: 1em;
 }
 
-.desktop-only,
-.desktop-only-ib {
-  display: none;
-}
-
 // Accessibility
 //
 .screen-reader-text {
@@ -456,6 +451,26 @@ hr.post-end {
   letter-spacing: normal;
   text-align: left;
 
+  // Vertical rhythm ("flow", per ishadeed): every gap is a top margin, so
+  // bottoms never stack and the space between any two blocks is exactly one
+  // value. Headings open a larger gap to signal a new section.
+  --flow-space: #{$space-5}; // 24px — base gap between blocks
+  > * {
+    margin-block: 0;
+  }
+  > * + * {
+    margin-top: var(--flow-space);
+  }
+  > h2 {
+    --flow-space: #{$space-7}; // 48px — major section break
+  }
+  > h3,
+  > h4,
+  > h5,
+  > h6 {
+    --flow-space: #{$space-6}; // 32px before sub-headings
+  }
+
   a {
     color: inherit; // links read in body colour, not the accent
     font-weight: 700;
@@ -480,7 +495,7 @@ hr.post-end {
   figure {
     max-width: 100%;
     height: auto;
-    margin: 0;
+    margin-inline: 0; // vertical spacing comes from flow; kill only the UA inline margin
     text-align: center;
 
     p {
@@ -581,38 +596,54 @@ hr.post-end {
 }
 
 #toc {
-  position: fixed;
-  left: 50%;
-  top: 0;
-  display: none;
+  display: none; // appears only at >= $bp-xl, where the gutter has room (DESIGN §5)
 }
 
 .toc-title {
-  margin-left: 1em;
-  margin-bottom: 0.5em;
-  font-size: 0.8em;
-  font-weight: bold;
+  margin-bottom: $space-3;
+  font-size: $text-sm;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
 }
 
 #TableOfContents {
-  font-size: 0.8em;
-  @include dimmed;
+  font-size: $text-sm;
+  line-height: 1.4; // wrapped lines hug, so each entry reads as one block
 
   ul {
-    padding-left: 1em;
+    list-style: none;
     margin: 0;
+    padding-left: 0;
   }
 
-  & > ul {
-    list-style-type: none;
+  ul ul {
+    padding-left: $space-3; // indent nested headings
+  }
 
-    ul ul {
-      font-size: 0.9em;
+  li {
+    margin-top: $space-3; // 12px between sibling entries — a clear step up from the line gap
+  }
+
+  ul ul li {
+    margin-top: $space-2; // 8px: a child hugs its parent, marking the sub-group
+  }
+
+  a {
+    color: $text;
+    opacity: 0.55; // low-emphasis: the TOC supports, never competes
+    text-decoration: none;
+    transition: opacity $dur-fast $ease; // only opacity animates (DESIGN §2)
+
+    &:hover {
+      opacity: 1;
     }
-  }
 
-  a:hover {
-    border-bottom: $theme 1px solid;
+    &.active {
+      opacity: 1;
+      color: $theme; // scroll-spy cue: the one accent = wayfinding, instant
+    }
   }
 }
 
@@ -646,7 +677,7 @@ hr.post-end {
 
 // Media Queries
 //
-@media (min-width: 800px) {
+@media (min-width: $bp-md) {
   .site-main {
     margin-top: 3em;
   }
@@ -656,24 +687,54 @@ hr.post-end {
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: $bp-lg) {
   .site-main {
     margin-top: 6em;
   }
 }
 
-@media (min-width: 1300px) {
+@media (min-width: $bp-xl) {
   .site-main {
     margin-top: 8em;
   }
 
-  .desktop-only,
-  #toc.show-toc {
-    display: block;
+  // Reading layout (blog posts / opensource project pages only). The grid spans
+  // the full viewport so the article stays centred at its ~42rem measure while
+  // the TOC sits against the right border as a sticky rail — no toggle, no
+  // hamburger (DESIGN §5). Below this width there is no room, so the TOC is
+  // absent. Scoped to .reading-layout so list/section pages keep their layout.
+  .reading-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 42rem) minmax(0, 1fr);
+    column-gap: $space-6;
+    align-items: start;
+    max-width: none; // escape .section-inner's cap so the tracks reach the edges
+    width: auto;
+    padding-inline: $space-6; // keep content off the very edge
   }
 
-  .desktop-only-ib {
-    display: inline-block;
+  .reading-layout > article.thin {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0; // the centre track positions it; drop .thin's auto margins
+  }
+
+  .reading-layout > .post-nav {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .reading-layout > #toc {
+    display: block;
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start; // flush to the left border of the viewport
+    align-self: start;
+    position: sticky;
+    top: $space-8;
+    max-width: 16rem;
+    max-height: calc(100vh - #{$space-8} * 2);
+    overflow-y: auto;
   }
 
   figure.left {
@@ -698,21 +759,15 @@ hr.post-end {
   hr.post-end {
     width: 30%;
   }
-
-  #toc {
-    top: 13em;
-    margin-left: 370px;
-    max-width: 220px;
-  }
 }
 
-@media (min-width: 1800px) {
+@media (min-width: $bp-2xl) {
   .site-main {
     margin-top: 10em;
   }
 
-  .section-inner {
-    max-width: 1600px;
+  .reading-layout > #toc {
+    max-width: 18rem; // the right track is wider at this size
   }
 
   figure.left {
@@ -732,12 +787,6 @@ hr.post-end {
 
   hr.post-end {
     width: 30%;
-  }
-
-  #toc {
-    top: 15em;
-    margin-left: 490px;
-    max-width: 300px;
   }
 }
 

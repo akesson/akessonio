@@ -10,7 +10,7 @@
 {% endblock title %}
 
 {% block main %}
-<main class="site-main section-inner animated fadeIn faster">
+<main class="site-main reading-layout section-inner animated fadeIn faster">
   <article class="thin">
 	<header class="post-header">
 	  <div class="post-meta">
@@ -18,11 +18,6 @@
 		<span>{{ page.date | date(format="%b %d, %Y")}}</span>
 		<small> - {{ macros::read_time(words=page.extra.words | default(value=page.word_count)) }}</small>
 		{% endif %}
-            {% if page.extra.toc %}
-            <button id="toc-btn" class="hdr-btn desktop-only-ib">
-                {{ macros::icon(name="list") }}
-            </button>
-		    {% endif %}
 	  </div>
 	  <h1>{{ page.title }}</h1>
 	</header>
