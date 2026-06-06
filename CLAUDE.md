@@ -39,10 +39,12 @@ Current routing:
 | Content | Template | Notes |
 |---|---|---|
 | `/` home | `index.html` | base layout, rendered directly |
-| `content/blog/` (`_index.md`, posts) | `section.html` / `page.html` | defaults; posts get TOC + prev/next + read-time |
-| `content/opensource/` | `opensource.html` / `opensource_page.html` | set explicitly in front-matter |
-| `content/services.md`, `polyglot.md`, `contact.md` | `description.html` | standalone pages, set in front-matter |
+| `content/blog/` (`_index.md`, posts) | `section.html` / `page.html` | defaults; posts get TOC + prev/next + read-time. **Currently no posts** — only the `_index.md` exists, so `/blog` renders an empty list |
+| `content/opensource/` | `opensource.html` / `opensource_page.html` | set explicitly in front-matter; two project pages (`cargo_leptos.md`, `reactive_signals.md`) |
+| `content/about.md` | `description.html` | the only standalone page, set in front-matter |
 | tags taxonomy | `tags/list.html` (all terms), `tags/single.html` (one tag) | `tags` is the only taxonomy, RSS enabled |
+
+> **Current content inventory** (so the table above stays honest): `content/about.md`, `content/blog/_index.md` (no posts), `content/opensource/_index.md` + `cargo_leptos.md` + `reactive_signals.md`. The `hermit_menu` nav links to `/opensource`, `/blog`, `/about` — all resolve, but `/blog` is empty.
 
 `macros.html` holds shared partials: `render_social_icons()`, `footer()`, `read_time()`. The social-icon macro is a large `if/elif` chain keyed on the icon `name` string.
 
@@ -74,5 +76,5 @@ The header `<nav>` + mobile menu markup is **duplicated verbatim** across `secti
 
 - Sections are directories under `content/` with an `_index.md` (`sort_by = "date"` is used for listed sections).
 - A page joins a listed section by being a `.md` file in that directory with `date` set; `section.html` and the opensource list group pages by year.
-- Standalone informational pages use `template = "description.html"`.
-- Shortcodes live in `templates/shortcodes/` (e.g. `contact()` renders a Formspree form); invoke them from Markdown as `{{ contact() }}`.
+- Standalone informational pages use `template = "description.html"` (currently only `about.md`).
+- Shortcodes would live in `templates/shortcodes/`, invoked from Markdown as `{{ name() }}` — but that directory is **currently empty** (no shortcodes defined yet).
