@@ -41,6 +41,10 @@ pre,
 code,
 pre tt {
   font-family: $code-fonts;
+  // JetBrains Mono ships code ligatures (-> => === …); keep them off for a
+  // calm, literal rendering (DESIGN.md). Flip to "liga" 1, "calt" 1 to enable.
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
 }
 
 pre {
