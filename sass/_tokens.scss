@@ -1,0 +1,42 @@
+// ───────────────────────────────────────────────────────────────────────────
+// Design tokens — see DESIGN.md. Source of truth for new / redesigned UI.
+// New code pulls from these instead of raw literals. Purely additive today:
+// nothing references them yet, so adding this file changes no output.
+// ───────────────────────────────────────────────────────────────────────────
+
+// ── Spacing scale (rem) — whitespace is the grouping tool ──
+$space-1: 0.25rem;  $space-2: 0.5rem;   $space-3: 0.75rem;
+$space-4: 1rem;     $space-5: 1.5rem;   $space-6: 2rem;
+$space-7: 3rem;     $space-8: 4rem;     $space-9: 6rem;   // section separation
+
+// ── Motion — discreet & short. No bounce / overshoot, ever. ──
+$dur-fast: 120ms;   // hover, focus, micro-feedback
+$dur-base: 200ms;   // default transition / single entrance fade
+$dur-slow: 320ms;   // largest reveal allowed
+$ease:     cubic-bezier(0.2, 0, 0, 1);   // decelerate, calm
+// Only ever transition opacity & transform.
+
+// ── Named breakpoints ──
+$bp-sm: 520px;   $bp-md: 800px;   $bp-lg: 960px;
+$bp-xl: 1300px;  // TOC appears at / above this
+$bp-2xl: 1800px;
+
+// ── Type scale (~1.2 modular) — few sizes read as calm ──
+$text-sm:  0.875rem;  $text-base: 1rem;     $text-lg:  1.25rem;
+$text-xl:  1.563rem;  $text-2xl:  1.953rem; $text-3xl: 2.441rem;
+$line-base: 1.6;      // generous, comfortable reading
+
+// ── Fluid — used sparingly (page gutter, largest headings, section spacing) ──
+$gutter:   clamp(1rem, 5vw, 3rem);
+$h1-fluid: clamp(2rem, calc(1.4rem + 2.4vw), #{$text-3xl});
+
+// ── Semantic colour tokens — ONE accent that always means something. ──
+// Aliased to the current Hermit palette (_predefined.scss) so a future light
+// theme is a drop-in: re-point these, not every rule. AA contrast is mandatory.
+// `$text` is already semantic and lives in _predefined.scss.
+$bg:             $light-grey;        // page background
+$surface:        $dark-grey;         // raised chrome (header, mobile menu)
+$surface-sunken: $midnightblue;      // code blocks, insets
+$muted:          $demphasized-text;  // secondary / de-emphasised text
+$border:         $highlight-grey;    // hairline dividers (last resort)
+$accent:         $theme;             // links, active nav / TOC, CTAs — never decoration

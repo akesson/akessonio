@@ -42,10 +42,5 @@ hermit_social = [
     { name = "twitter", link = "https://x.com/hakesso" },
 ]
 
-[extra.highlightjs]
-enable = false
-clipboard = false
-theme = "vs2015"
-
 [extra.author]
 name = "Henrik Åkesson"
