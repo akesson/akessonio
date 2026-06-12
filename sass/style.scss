@@ -24,6 +24,10 @@
 
 html {
   background: var(--page); // flat in dark, a faint drifting sky-gradient in light
+  // Fill the viewport on short pages so the `to bottom` gradient spans the
+  // screen instead of tiling: the html box is its content height by default,
+  // and a two-stop gradient would visibly restart below it.
+  min-height: 100%;
   line-height: 1.6;
   letter-spacing: 0.06em;
 }
@@ -74,7 +78,12 @@ code {
   // Inline code: no pill — just the drifting accent on the prose background.
   color: $theme;
   font-size: 0.85em; // sit optically level with the 18px prose
-  word-break: break-all;
+  // Keep identifiers whole when they fit; only break a token when it would
+  // otherwise overflow (e.g. a long ident in a narrow mobile table cell).
+  // `anywhere` (not `break-word`) so the break also shrinks the cell's
+  // min-content width, letting tables narrow on mobile. break-all shredded
+  // every token mid-word even when there was room.
+  overflow-wrap: anywhere;
   letter-spacing: normal;
 }
 
@@ -103,7 +112,8 @@ a {
   transition-timing-function: ease-out;
 
   &:hover {
-    color: #fff;
+    color: $theme; // the drifting accent — wayfinding feedback (DESIGN §colour).
+                   // Was #fff, which vanished on the near-white light theme.
   }
 
   &:focus {
