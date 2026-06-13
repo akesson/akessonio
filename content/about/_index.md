@@ -53,5 +53,5 @@ through it:
 
 ## Find me
 
-- GitHub: [github.com/akesson](https://github.com/akesson)
-- X/Twitter: [@hakesso](https://x.com/hakesso)
+- {{ social(name="GitHub", link="https://github.com/akesson", label="github.com/akesson") }}
+- {{ social(name="twitter", link="https://x.com/hakesso", label="@hakesso") }}

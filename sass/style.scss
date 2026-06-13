@@ -377,45 +377,27 @@ table {
   }
 }
 
-#site-footer {
-  text-align: center;
-  font-size: 0.9em;
+// Inline social links in body text (the About "Find me" list): icon + label as
+// one calm link. No underline — matches the discreet tone of the old footer.
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
   color: var(--muted);
-  margin-bottom: 96px;
-  margin-top: 64px;
+  text-decoration: none;
 
-  a {
-    color: var(--muted);
-  }
-  p {
-    margin: 0;
+  svg {
+    width: 1.1em;
+    height: 1.1em;
   }
 
-  // Identity, relocated here from the old spotlight: social, tagline, copyright.
-  .footer-social {
-    font-size: 1.4em;
-
-    a {
-      margin: 0 $space-2;
-
-      &:hover {
-        color: var(--accent);
-      }
-    }
-  }
-
-  .footer-tagline {
-    margin-top: $space-4;
-    font-style: italic;
-  }
-
-  .footer-meta {
-    margin-top: $space-3;
+  &:hover {
+    color: var(--accent);
   }
 }
 
-// Sticky footer: short pages (a sparse index, the about page) fill the viewport
-// so the footer sits at the bottom instead of floating mid-screen.
+// Full-height layout: short pages (a sparse index, the about page) still fill the
+// viewport so content isn't stranded mid-screen.
 body {
   display: flex;
   flex-direction: column;
@@ -424,7 +406,7 @@ body {
 
 // Content spacing below the chrome (strip or back link). One calm, constant gap
 // at every width — replaces the old 3→10em escalation tuned for the bottom bar.
-// flex-grow pushes the footer to the bottom on short pages.
+// flex-grow lets main fill the remaining height on short pages.
 .site-main {
   flex: 1 0 auto;
   margin-top: $space-7;
