@@ -10,13 +10,23 @@
  * with the move to a persistent top tab strip (three tabs need no hamburger).
  */
 
-// Dark / light theme toggle
+// Theme — three modes: light / dark / system (the default)
 //
-// The initial theme is set by an inline <head> script (before first paint, so
-// there is no flash); this only handles clicks and persists the choice. With no
-// stored choice the inline script falls back to the OS preference.
+// The inline <head> script resolves and applies the theme before first paint (no
+// flash); this adds the interactive parts: cycling the mode on click, persisting
+// it, keeping the OS preference live while in "system" mode, and labelling the
+// button. light/dark are manual overrides; "system" follows the OS, including
+// live changes. data-theme holds the resolved light|dark that drives colours;
+// data-theme-mode holds the chosen mode that drives which toggle icon shows.
+const MODES = ['light', 'dark', 'system'];
+const prefersDark = matchMedia('(prefers-color-scheme: dark)');
+
+// Resolve a mode to the concrete light|dark used for colours + syntax sheet.
+const resolveTheme = (mode) =>
+  mode === 'system' ? (prefersDark.matches ? 'dark' : 'light') : mode;
+
 // Activate the syntax-highlight sheet (giallo-dark / giallo-light) that matches
-// the theme; the other is disabled but stays loaded, so toggling is instant.
+// the theme; the other is disabled but stays loaded, so switching is instant.
 const applySyntaxTheme = (theme) => {
   const dark = document.getElementById('giallo-dark');
   const light = document.getElementById('giallo-light');
@@ -26,18 +36,51 @@ const applySyntaxTheme = (theme) => {
   }
 };
 
+const storedMode = () => {
+  try {
+    return localStorage.getItem('theme') || 'system';
+  } catch (e) {
+    return 'system';
+  }
+};
+
 const themeToggle = document.getElementById('theme-toggle');
+
+// Apply a mode everywhere: resolved colour theme, syntax sheet, the mode marker
+// (drives the toggle icon via CSS), and the button's accessible label.
+const applyMode = (mode) => {
+  const root = document.documentElement;
+  const theme = resolveTheme(mode);
+  root.setAttribute('data-theme', theme);
+  root.setAttribute('data-theme-mode', mode);
+  applySyntaxTheme(theme);
+  if (themeToggle) {
+    const next = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+    const label = mode === 'system' ? 'System (follows your OS)'
+      : mode[0].toUpperCase() + mode.slice(1);
+    themeToggle.setAttribute('title', `Theme: ${label}`);
+    themeToggle.setAttribute('aria-label', `Theme: ${label}. Click to switch to ${next}.`);
+  }
+};
+
 if (themeToggle) {
+  // Label to match the mode the inline script already applied before paint.
+  applyMode(storedMode());
+
   themeToggle.addEventListener('click', () => {
-    const root = document.documentElement;
-    const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-    root.setAttribute('data-theme', next);
-    applySyntaxTheme(next);
+    const next = MODES[(MODES.indexOf(storedMode()) + 1) % MODES.length];
+    applyMode(next);
     try {
       localStorage.setItem('theme', next);
     } catch (e) {}
   });
 }
+
+// Keep "system" mode live: when the OS flips light/dark, re-resolve — but only
+// while the user hasn't set a manual override.
+prefersDark.addEventListener('change', () => {
+  if (storedMode() === 'system') applyMode('system');
+});
 
 // Drifting hue
 //

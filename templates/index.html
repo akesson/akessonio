@@ -21,24 +21,29 @@
   />
   <link rel="preload" href="{{get_url(path="fonts/hanken-grotesk-latin.woff2")}}" as="font" type="font/woff2" crossorigin/>
   <!-- Syntax highlighting: both theme sheets load; the active one is chosen to
-       match data-theme (below + main.js), not prefers-color-scheme, because the
-       theme toggle is manual. -->
+       match the resolved data-theme (below + main.js) — which may be a manual
+       override — not prefers-color-scheme directly. -->
   <link id="giallo-dark" rel="stylesheet" media="all" href="{{get_url(path="giallo-dark.css")}}"/>
   <link id="giallo-light" rel="stylesheet" media="not all" href="{{get_url(path="giallo-light.css")}}"/>
-  <!-- Set theme + starting hue before first paint: no flash of the wrong theme
-       or the default hue. Mirrors the logic in main.js. -->
+  <!-- Resolve theme + starting hue before first paint: no flash of the wrong
+       theme or the default hue. Mirrors the logic in main.js.
+       theme mode is one of light / dark / system (default); "system" follows the
+       OS live (see main.js). data-theme is the resolved light|dark that drives
+       colours; data-theme-mode is the chosen mode that drives the toggle icon. -->
   <script>
     (function () {
       try {
         var d = document.documentElement;
-        var t = localStorage.getItem("theme")
-          || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-        d.setAttribute("data-theme", t);
+        var mode = localStorage.getItem("theme") || "system";
+        var prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+        var theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        d.setAttribute("data-theme", theme);
+        d.setAttribute("data-theme-mode", mode);
         var dark = document.getElementById("giallo-dark");
         var light = document.getElementById("giallo-light");
         if (dark && light) {
-          dark.media = t === "light" ? "not all" : "all";
-          light.media = t === "light" ? "all" : "not all";
+          dark.media = theme === "light" ? "not all" : "all";
+          light.media = theme === "light" ? "all" : "not all";
         }
         if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
           d.style.setProperty("--hue", (Date.now() / 1800000 * 360 % 360).toFixed(1));
@@ -61,8 +66,8 @@
 
   <body id="page">
 
-    <button id="theme-toggle" class="hdr-btn" title="Toggle light / dark" aria-label="Toggle light or dark theme">
-      {{ macros::icon(name="sun") }}{{ macros::icon(name="moon") }}
+    <button id="theme-toggle" class="hdr-btn" title="Theme" aria-label="Switch theme (light, dark, or system)">
+      {{ macros::icon(name="sun") }}{{ macros::icon(name="moon") }}{{ macros::icon(name="monitor") }}
     </button>
 
     {# Default chrome: the persistent tab strip. Level-2 pages (article, project)

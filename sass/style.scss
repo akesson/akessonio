@@ -345,8 +345,9 @@ table {
   cursor: pointer;
 }
 
-// Dark / light toggle — fixed, low-emphasis, present on every page (including
-// home, which has no site header). Shows the icon of the theme you'd switch TO.
+// Theme toggle — fixed, low-emphasis, present on every page (including home,
+// which has no site header). Cycles light → dark → system; shows the icon of the
+// CURRENT mode, with the next mode named in the button's title/aria-label.
 #theme-toggle {
   position: fixed;
   top: $space-4;
@@ -363,18 +364,23 @@ table {
     color: var(--accent);
   }
 
+  // Reveal only the current mode's icon. All three render; data-theme-mode (set
+  // by the inline script / main.js) picks one. The system glyph shows by default
+  // — it's the default mode and a graceful fallback if the attribute is absent.
+  .feather-sun,
   .feather-moon {
-    display: none; // dark theme: offer the sun (→ light)
+    display: none;
   }
 }
 
-[data-theme="light"] #theme-toggle {
-  .feather-sun {
-    display: none; // light theme: offer the moon (→ dark)
-  }
-  .feather-moon {
-    display: inline-block;
-  }
+[data-theme-mode="light"] #theme-toggle {
+  .feather-monitor { display: none; }
+  .feather-sun { display: inline-block; }
+}
+
+[data-theme-mode="dark"] #theme-toggle {
+  .feather-monitor { display: none; }
+  .feather-moon { display: inline-block; }
 }
 
 // Inline social links in body text (the About "Find me" list): icon + label as
