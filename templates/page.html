@@ -1,56 +1,45 @@
 {% extends "index.html" %}
-
 {% import "macros.html" as macros %}
 
-{% block header %}
-{{ macros::site_header() }}
-{% endblock header %}
-
-{% block title %}
-{% endblock title %}
+{# An article (level 2). The tab strip is dropped; one back arrow returns to the
+   Articles index. main.js may re-point it to wherever you actually came from. #}
+{% block header %}{{ macros::back_link(label="Articles", href=config.base_url ~ "/") }}{% endblock header %}
 
 {% block main %}
-<main class="site-main reading-layout section-inner animated fadeIn faster">
+<main class="site-main reading-layout section-inner">
   <article class="thin">
-	<header class="post-header">
-	  <div class="post-meta">
-		{% if page.date %}
-		<span>{{ page.date | date(format="%b %d, %Y")}}</span>
-		<small> - {{ macros::read_time(words=page.extra.words | default(value=page.word_count)) }}</small>
-		{% endif %}
-	  </div>
-	  <h1>{{ page.title }}</h1>
-	</header>
+    <header class="post-header">
+      <div class="post-meta">
+        {% if page.date %}
+        <span>{{ page.date | date(format="%b %d, %Y")}}</span>
+        <small> - {{ macros::read_time(words=page.extra.words | default(value=page.word_count)) }}</small>
+        {% endif %}
+      </div>
+      <h1>{{ page.title }}</h1>
+    </header>
 
-	<div class="content">
-
-	  {{ page.content | safe }}
-	</div>
-	<hr class="post-end">
-	<footer class="post-info">
-    {% if page.taxonomies and page.taxonomies.tags %}
-	  <p>
-		{{ macros::icon(name="tag", class="meta-icon") }}
-		{% for k, tags in page.taxonomies %}
-		{% for t in tags %}
-		<span class="tag"><a href="{{get_taxonomy_url(kind="tags", name=t)}}">{{t}}</a></span>
-		{% endfor %}
-		{% endfor %}
-    </p>
-    {% endif %}
-    <p>{{ macros::icon(name="file-text") }}{{ page.extra.words | default(value=page.word_count) }} Words</p>
-    {% if page.date %}
-    <p>{{ macros::icon(name="calendar") }}{{ page.date }}</p>
-    {% endif %}
-	</footer>
+    <div class="content">
+      {{ page.content | safe }}
+    </div>
+    <hr class="post-end">
+    <footer class="post-info">
+      {% if page.taxonomies and page.taxonomies.tags %}
+      <p>
+        {{ macros::icon(name="tag", class="meta-icon") }}
+        {% for k, tags in page.taxonomies %}
+        {% for t in tags %}
+        <span class="tag"><a href="{{get_taxonomy_url(kind="tags", name=t)}}">{{t}}</a></span>
+        {% endfor %}
+        {% endfor %}
+      </p>
+      {% endif %}
+      <p>{{ macros::icon(name="file-text") }}{{ page.extra.words | default(value=page.word_count) }} Words</p>
+      {% if page.date %}
+      <p>{{ macros::icon(name="calendar") }}{{ page.date }}</p>
+      {% endif %}
+    </footer>
   </article>
 
   {{ macros::post_nav(page=page) }}
 </main>
 {% endblock main %}
-
-{% block footer %}
-
-{{ macros::footer() }}
-
-{% endblock footer %}

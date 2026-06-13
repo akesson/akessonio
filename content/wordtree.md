@@ -1,6 +1,7 @@
 +++
 title = "One trie, three jobs, zero benchmarks won"
 date = 2026-06-06
+aliases = ["/blog/wordtree/"]
 [taxonomies]
 tags = ["rust", "data-structures"]
 [extra]

@@ -1,16 +1,14 @@
-{% extends "index.html" %} {% import "macros.html" as macros %} {% block header
-%}
-{{ macros::site_header() }}
-{% endblock header %} {% block title %} {% endblock title %} {% block main %}
-<main class="section-inner animated fadeIn faster">
-  <article class="thin">
-    <h1 class="title">{{ page.title }}</h1>
+{% extends "index.html" %}
+{% import "macros.html" as macros %}
 
-    <div class="content">{{ page.content | safe }}</div>
+{# A standalone informational section (About). Now a section, so it reads from
+   section.* rather than page.*. Inherits the tab strip; the active tab is the
+   heading, so the h1 is visually hidden. #}
+{% block main %}
+<main class="site-main section-inner">
+  <article class="thin">
+    <h1 class="title screen-reader-text">{{ section.title }}</h1>
+    <div class="content">{{ section.content | safe }}</div>
   </article>
 </main>
 {% endblock main %}
-
-{% block footer %}
-{{ macros::footer() }}
-{% endblock footer %}

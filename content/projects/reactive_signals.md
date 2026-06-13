@@ -3,7 +3,8 @@ title="reactive-signals"
 description="[preview] Highly performant reactive signals in scopes organised in a tree structure."
 date = 2018-09-29T11:36:33+08:00
 draft = false
-template = "opensource_page.html"
+template = "project.html"
+aliases = ["/opensource/reactive-signals/"]
 +++
 
 [GitHub](https://github.com/human-solutions/reactive-signals) [crates.io](https://crates.io/crates/reactive-signals) [docs.rs](https://docs.rs/reactive-signals)

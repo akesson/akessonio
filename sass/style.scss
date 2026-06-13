@@ -209,52 +209,78 @@ table {
   z-index: 100000;
 }
 
-// Header & Footer
-//
-#site-header {
-  position: fixed;
-  z-index: 1;
-  bottom: 0;
-  width: 100%;
-  box-sizing: border-box;
-  box-shadow: -1px -2px 3px rgba(0, 0, 0, 0.45);
-  background-color: $dark-grey;
+// ── Top tab strip (index pages) ──────────────────────────────────────────────
+// The persistent chrome on /, /projects/, /about/. Calm, text-only links with
+// navigation semantics; the active tab carries the single accent (DESIGN: accent
+// = wayfinding) plus an underline, so the state is never colour-only.
+.tabstrip {
+  view-transition-name: tabstrip; // stays anchored; only the body cross-fades
+  padding-top: $space-5;
 }
 
-.hdr-wrapper {
+.tabs {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5em 0;
-  font-size: 1.2rem;
+  gap: $space-5;
+  align-items: baseline;
+  font-size: $text-lg;
+  letter-spacing: normal;
 
-  .site-branding {
-    display: inline-block;
-    margin-right: 0.8em;
-    font-size: 1.2em;
-  }
+  a {
+    color: var(--muted);
+    padding-bottom: $space-1;
+    border-bottom: 2px solid transparent;
+    transition: color $dur-fast $ease, border-color $dur-fast $ease;
 
-  .site-nav {
-    display: inline-block;
-    font-size: 1.1em;
-    opacity: 0.8;
+    &:hover {
+      color: var(--text);
+    }
 
-    a {
-      margin-left: 0.8em;
+    &[aria-current="page"] {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
     }
   }
 }
 
-.hdr-icons {
-  font-size: 1.2em;
+// ── Back link (level-2 pages) ────────────────────────────────────────────────
+// Replaces the strip on an article / project page: one quiet arrow "up". The
+// label + href are upgraded by main.js to match where you actually came from.
+.leaf-header {
+  padding-top: $space-5;
 }
 
-.hdr-social {
-  display: inline-block;
-  margin-left: 0.6em;
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  color: var(--muted);
+  letter-spacing: normal;
+  transition: color $dur-fast $ease;
 
-  & > a {
-    margin-left: 0.4em;
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+// ── Cross-document View Transitions ──────────────────────────────────────────
+// The "panel feel": a short opacity cross-fade between pages (DESIGN: animate
+// only opacity/transform, ≤ $dur-slow). The strip's view-transition-name keeps
+// it still while the body fades; unsupported browsers just navigate normally.
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: $dur-base;
+  animation-timing-function: $ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
 
@@ -298,32 +324,6 @@ table {
   }
 }
 
-#menu-btn {
-  display: none;
-  margin-left: 0.6em;
-  cursor: pointer;
-}
-
-#mobile-menu {
-  position: fixed;
-  bottom: 4.8em;
-  right: 1.5em;
-  display: none;
-  padding: 0.6em 1.8em;
-  z-index: 1;
-  box-sizing: border-box;
-  box-shadow: -1px -2px 3px 0px rgba(0, 0, 0, 0.45);
-  background-color: $dark-grey;
-
-  ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    line-height: 2;
-    font-size: 1.2em;
-  }
-}
-
 #site-footer {
   text-align: center;
   font-size: 0.9em;
@@ -337,95 +337,69 @@ table {
   p {
     margin: 0;
   }
+
+  // Identity, relocated here from the old spotlight: social, tagline, copyright.
+  .footer-social {
+    font-size: 1.4em;
+
+    a {
+      margin: 0 $space-2;
+
+      &:hover {
+        color: var(--accent);
+      }
+    }
+  }
+
+  .footer-tagline {
+    margin-top: $space-4;
+    font-style: italic;
+  }
+
+  .footer-meta {
+    margin-top: $space-3;
+  }
 }
 
-// Spotlight
-//
-#spotlight {
-  display: flex;
-  height: 100vh;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  max-width: 93%;
-  margin: auto;
-  font-size: 1.5rem;
+// Content spacing below the chrome (strip or back link). One calm, constant gap
+// at every width — replaces the old 3→10em escalation tuned for the bottom bar.
+.site-main {
+  margin-top: $space-7;
 }
 
+// Visible page heading. The three index pages hide their h1 (the active tab is
+// the heading); only a project page shows a real .title, so size it for the
+// reading column rather than the old centred spotlight headline.
 h1.title {
-  margin-top: 6rem;
-  margin-bottom: 2rem;
-  text-align: center;
-  font-size: 2.6rem;
+  margin: 0 0 $space-5;
+  font-size: $text-2xl;
 }
 
-#opensourcelist {
-  font-size: 1.5rem;
-
-  nav p.description {
-    margin-top: 0.2rem;
-    margin-bottom: 2rem;
-    font-size: 1rem;
-  }
-
-  a {
-    border-bottom: 2px solid $theme;
-  }
-
-}
-
-#home-center {
-  display: flex;
-  flex-grow: 1;
-  flex-direction: column;
-  justify-content: center;
-}
-
-#home-title {
+// Projects index — one entry per project: a title + a short description, no
+// dates (projects aren't date-led, unlike articles).
+.project-list {
   margin: 0;
-  text-align: center;
+  padding: 0;
+  list-style: none;
 }
 
-#home-subtitle {
-  margin-top: 0;
-  margin-bottom: 1.5em;
-  text-align: center;
-  line-height: normal;
-  font-size: 0.6em;
-  font-style: italic;
-  opacity: 0.9;
-  max-width: 22rem;
+.project-item + .project-item {
+  margin-top: $space-6;
 }
 
-#home-social {
-  font-size: 1.4em;
-  text-align: center;
-  opacity: 0.8;
+.project-link {
+  font-size: $text-lg;
+  box-shadow: inset 0 -2px 0 $theme; // quiet accent underline
 
-  a {
-    margin: 0 0.2em;
+  &:hover {
+    color: $theme;
   }
 }
 
-#home-nav {
-  opacity: 0.8;
-
-  a {
-    display: block;
-    text-align: center;
-    margin-top: 0.5em;
-  }
-}
-
-#home-footer {
-  text-align: center;
-  font-size: 0.6em;
-  line-height: normal;
-  @include dimmed;
-
-  p {
-    margin-top: 0;
-  }
+.project-desc {
+  margin: $space-2 0 0;
+  color: var(--muted);
+  font-size: $text-base;
 }
 
 // list.html
@@ -658,29 +632,15 @@ hr.post-end {
 // Media Queries
 //
 @media (min-width: $bp-md) {
-  .site-main {
-    margin-top: 3em;
-  }
-
   hr.post-end {
     width: 40%;
   }
 }
 
-@media (min-width: $bp-lg) {
-  .site-main {
-    margin-top: 6em;
-  }
-}
-
 @media (min-width: $bp-xl) {
-  .site-main {
-    margin-top: 8em;
-  }
-
-  // Reading layout (blog posts / opensource project pages only). The grid spans
-  // the full viewport so the article stays centred at its ~42rem measure, with
-  // symmetric empty gutters that wide content can break out into. Scoped to
+  // Reading layout (articles / project pages only). The grid spans the full
+  // viewport so the article stays centred at its ~42rem measure, with symmetric
+  // empty gutters that wide content can break out into. Scoped to
   // .reading-layout so list/section pages keep their layout.
   .reading-layout {
     display: grid;
@@ -754,25 +714,12 @@ hr.post-end {
 }
 
 @media (min-width: $bp-2xl) {
-  .site-main {
-    margin-top: 10em;
-  }
-
   hr.post-end {
     width: 30%;
   }
 }
 
 @media (max-width: 760px) {
-  .hide-in-mobile,
-  .site-nav.hide-in-mobile {
-    display: none;
-  }
-
-  #menu-btn {
-    display: inline-block;
-  }
-
   .posts-group {
     display: block;
 
@@ -780,15 +727,10 @@ hr.post-end {
       margin: -6px 0 4px;
     }
   }
-
 }
 
 @media (max-width: 520px) {
   hr.post-end {
     width: 60%;
-  }
-
-  #mobile-menu {
-    right: 1.2em;
   }
 }

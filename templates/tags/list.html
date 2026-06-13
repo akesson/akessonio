@@ -1,20 +1,15 @@
-{% extends "index.html" %} {% import "macros.html" as macros %} {% block header
-%}
-{{ macros::site_header() }}
-{% endblock header %} {% block title %} {% endblock title %} {% block main %}
+{% extends "index.html" %}
+{% import "macros.html" as macros %}
 
-<main class="site-main section-inner thin animated fadeIn faster" style="text-align: center;">
-  {% block content %}
+{% block main %}
+<main class="site-main section-inner thin" style="text-align: center;">
   {% for tag in terms %}
   <header class="post-header">
-      <h1 class="post-header__title"><a href="{{ config.base_url }}/tags/{{ tag.slug }}">{{ tag.name }}</a></h1>
+    <h1 class="post-header__title"><a href="{{ config.base_url }}/tags/{{ tag.slug }}">{{ tag.name }}</a></h1>
     <p class="post-header__info">
       {{ tag.pages | length }} post{{ tag.pages | length | pluralize }}
     </p>
   </header>
   {% endfor %}
-  {% endblock content %}
 </main>
-
-{% endblock main %} {% block footer %} {{ macros::footer() }} {% endblock footer
-%}
+{% endblock main %}

@@ -1,0 +1,18 @@
+{% extends "index.html" %}
+{% import "macros.html" as macros %}
+
+{# A project page (level 2). Like an article: the strip is dropped for a single
+   back arrow, here returning to the Projects index. #}
+{% block header %}{{ macros::back_link(label="Projects", href=config.base_url ~ "/projects/") }}{% endblock header %}
+
+{% block main %}
+<main class="site-main reading-layout section-inner">
+  <article class="thin">
+    <h1 class="title">{{ page.title }}</h1>
+
+    <div class="content">{{ page.content | safe }}</div>
+  </article>
+
+  {{ macros::post_nav(page=page) }}
+</main>
+{% endblock main %}

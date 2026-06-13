@@ -1,82 +1,14 @@
 /**
- * Utils
+ * main.js
+ *
+ * Three small concerns:
+ *   1. the manual dark / light theme toggle,
+ *   2. the drifting accent hue, and
+ *   3. the level-2 "back" link upgrade.
+ *
+ * The old Hermit bottom-bar auto-hide and the mobile-menu toggle were removed
+ * with the move to a persistent top tab strip (three tabs need no hamburger).
  */
-
-// Throttle
-//
-const throttle = (callback, limit) => {
-  let timeoutHandler = null;
-  return () => {
-    if (timeoutHandler == null) {
-      timeoutHandler = setTimeout(() => {
-        callback();
-        timeoutHandler = null;
-      }, limit);
-    }
-  };
-};
-
-// addEventListener Helper
-//
-const listen = (ele, e, callback) => {
-  if (document.querySelector(ele) !== null) {
-    document.querySelector(ele).addEventListener(e, callback);
-  }
-};
-
-/**
- * Functions
- */
-
-// Auto Hide Header
-//
-let header = document.getElementById('site-header');
-let lastScrollPosition = window.pageYOffset;
-
-const autoHideHeader = () => {
-  let currentScrollPosition = window.pageYOffset;
-  if (currentScrollPosition > lastScrollPosition) {
-    header.classList.remove('slideInUp');
-    header.classList.add('slideOutDown');
-  } else {
-    header.classList.remove('slideOutDown');
-    header.classList.add('slideInUp');
-  }
-  lastScrollPosition = currentScrollPosition;
-};
-
-// Mobile Menu Toggle
-//
-let mobileMenuVisible = false;
-
-const toggleMobileMenu = () => {
-  let mobileMenu = document.getElementById('mobile-menu');
-  if (mobileMenuVisible == false) {
-    mobileMenu.style.animationName = 'bounceInRight';
-    mobileMenu.style.webkitAnimationName = 'bounceInRight';
-    mobileMenu.style.display = 'block';
-    mobileMenuVisible = true;
-  } else {
-    mobileMenu.style.animationName = 'bounceOutRight';
-    mobileMenu.style.webkitAnimationName = 'bounceOutRight';
-    mobileMenuVisible = false;
-  }
-};
-
-if (header !== null) {
-  listen('#menu-btn', 'click', toggleMobileMenu);
-
-  window.addEventListener(
-    'scroll',
-    throttle(() => {
-      autoHideHeader();
-
-      if (mobileMenuVisible == true) {
-        toggleMobileMenu();
-      }
-    }, 250)
-  );
-}
 
 // Dark / light theme toggle
 //
@@ -126,4 +58,45 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   setHue();
   setInterval(setHue, 1000);
   document.addEventListener('visibilitychange', setHue); // catch up on return
+}
+
+// Back link — history-aware "up"
+//
+// A level-2 page (article, project) renders a deterministic back link to its
+// section index. This upgrades the label + target to wherever you *actually*
+// came from, when that was another section on this site — so an article reached
+// from Projects offers "← Projects", not "← Articles". Defensive by design: the
+// server default already works with JS off, and we only trust a same-origin
+// origin (the Navigation API on Chromium, else document.referrer).
+const backLink = document.querySelector('.back-link');
+if (backLink) {
+  // Known strip sections, most specific first so "/" is the catch-all.
+  const sections = [
+    { path: '/projects/', label: 'Projects' },
+    { path: '/', label: 'Articles' },
+  ];
+
+  let fromPath = null;
+  try {
+    const nav = window.navigation;
+    const fromUrl =
+      (nav && nav.activation && nav.activation.from && nav.activation.from.url) ||
+      document.referrer ||
+      '';
+    if (fromUrl) {
+      const u = new URL(fromUrl, location.href);
+      if (u.origin === location.origin) fromPath = u.pathname;
+    }
+  } catch (e) {}
+
+  if (fromPath && fromPath !== location.pathname) {
+    const match = sections.find(
+      (s) => fromPath === s.path || fromPath.startsWith(s.path)
+    );
+    if (match) {
+      backLink.setAttribute('href', match.path);
+      const label = backLink.querySelector('.back-label');
+      if (label) label.textContent = match.label;
+    }
+  }
 }

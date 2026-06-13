@@ -36,10 +36,13 @@ home_subtitle = "Independent software developer — Rust & open source"
 
 footer_copyright = ' &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
 
-hermit_menu = [
-    { link = "/opensource", name = "Projects" },
-    { link = "/blog", name = "Blog" },
-    { link = "/about", name = "About" },
+# Top tab strip — three real-URL sections rendered as tabs. `path` is matched
+# against Zola's `current_path` to mark the active tab (aria-current). Articles
+# is the home, served at "/". Order is Articles · Projects · About.
+tabs = [
+    { path = "/", name = "Articles" },
+    { path = "/projects/", name = "Projects" },
+    { path = "/about/", name = "About" },
 ]
 
 hermit_social = [

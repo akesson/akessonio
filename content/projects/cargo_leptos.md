@@ -3,7 +3,8 @@ title="cargo-leptos"
 description="[released] The Leptos official build tool with parallel building of the server binary and the WASM frontend."
 date = 2018-09-29T11:36:33+08:00
 draft = false
-template = "opensource_page.html"
+template = "project.html"
+aliases = ["/opensource/cargo-leptos/"]
 +++
 
 [GitHub](https://github.com/leptos-rs/cargo-leptos), [Crates](https://crates.io/crates/cargo-leptos)
@@ -16,6 +17,6 @@ It is part of the [leptos-rs](https://github.com/leptos-rs) GitHub organisation.
 Refactorings:
 
 - Path handling, especially on Windows is a major source of bugs and limitations.
-  Will use [x-path](/opensource/xpath) to solve those issues.
+  Will use [x-path](/projects/xpath) to solve those issues.
 - Remove reliance on changing the current working directory, which is a global
   environment variable and thus creates problems for testing.

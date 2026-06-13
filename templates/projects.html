@@ -1,0 +1,19 @@
+{% extends "index.html" %}
+{% import "macros.html" as macros %}
+
+{# The Projects index. Inherits the tab strip; the active "Projects" tab is the
+   heading, so the h1 is visually hidden. Projects aren't date-led, so they list
+   as title + description rather than the dated rows the Articles index uses. #}
+{% block main %}
+<main class="site-main section-inner thin">
+  <h1 class="title screen-reader-text">{{ section.title }}</h1>
+  <ul class="project-list">
+    {% for page in section.pages %}
+    <li class="project-item">
+      <a class="project-link" href="{{ page.permalink }}">{{ page.title }}</a>
+      <p class="project-desc">{{ page.description }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+</main>
+{% endblock main %}

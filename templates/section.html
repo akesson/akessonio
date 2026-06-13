@@ -1,10 +1,12 @@
-{% extends "index.html" %} {% import "macros.html" as macros %} {% block header
-%}
-{{ macros::site_header() }}
-{% endblock header %} {% block title %} {% endblock title %} {% block main %}
+{% extends "index.html" %}
+{% import "macros.html" as macros %}
 
-<main class="site-main section-inner thin animated fadeIn faster">
-  <h1 class="title">{{ section.title }}</h1>
+{# The Articles index — the site home, served at "/". Inherits the tab strip from
+   the base header; the active "Articles" tab is the visual heading, so the h1 is
+   present for a11y/SEO but visually hidden. #}
+{% block main %}
+<main class="site-main section-inner thin">
+  <h1 class="title screen-reader-text">{{ section.title }}</h1>
   {% for year, pages in section.pages | group_by(attribute="year") %}
   <div class="posts-group">
     <div class="post-year">{{ year }}</div>
@@ -21,6 +23,4 @@
   </div>
   {% endfor %}
 </main>
-
-{% endblock main %} {% block footer %} {{ macros::footer() }} {% endblock footer
-%}
+{% endblock main %}
