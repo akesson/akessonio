@@ -11,14 +11,14 @@
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
-  background: $midnightblue;
+  background: var(--surface-sunken);
 }
 
 ::-webkit-scrollbar-thumb {
   background: #888;
 
   &:hover {
-    background: $text;
+    background: var(--text);
   }
 }
 
@@ -37,7 +37,7 @@ button,
 input,
 select,
 textarea {
-  color: $text;
+  color: var(--text);
   font-family: $fonts;
 }
 
@@ -76,7 +76,7 @@ pre {
 
 code {
   // Inline code: no pill — just the drifting accent on the prose background.
-  color: $theme;
+  color: var(--accent);
   font-size: 0.85em; // sit optically level with the 18px prose
   // Keep identifiers whole when they fit; only break a token when it would
   // otherwise overflow (e.g. a long ident in a narrow mobile table cell).
@@ -104,7 +104,7 @@ blockquote {
 }
 
 a {
-  color: $text;
+  color: var(--text);
   text-decoration: none;
   border: none;
   transition-property: color;
@@ -112,7 +112,7 @@ a {
   transition-timing-function: ease-out;
 
   &:hover {
-    color: $theme; // the drifting accent — wayfinding feedback (DESIGN §colour).
+    color: var(--accent); // the drifting accent — wayfinding feedback (DESIGN §colour).
                    // Was #fff, which vanished on the near-white light theme.
   }
 
@@ -123,7 +123,7 @@ a {
 
 article {
   a {
-    border-bottom: 2px solid $theme;
+    border-bottom: 2px solid var(--accent);
   }
 }
 
@@ -327,12 +327,12 @@ table {
 #site-footer {
   text-align: center;
   font-size: 0.9em;
-  color: $demphasized-text;
+  color: var(--muted);
   margin-bottom: 96px;
   margin-top: 64px;
 
   a {
-    color: $demphasized-text;
+    color: var(--muted);
   }
   p {
     margin: 0;
@@ -399,10 +399,10 @@ h1.title {
 
 .project-link {
   font-size: $text-lg;
-  box-shadow: inset 0 -2px 0 $theme; // quiet accent underline
+  box-shadow: inset 0 -2px 0 var(--accent); // quiet accent underline
 
   &:hover {
-    color: $theme;
+    color: var(--accent);
   }
 }
 
@@ -521,7 +521,7 @@ h1.title {
   }
 
   .post-item {
-    border-bottom: 1px $highlight-grey dashed;
+    border-bottom: 1px var(--border) dashed;
 
     a {
       display: flex;
@@ -599,7 +599,7 @@ hr.post-end {
     transition: color 0.2s ease-out;
 
     &:hover {
-      color: $theme; // accent only appears on interaction
+      color: var(--accent); // accent only appears on interaction
     }
   }
 
@@ -608,7 +608,7 @@ hr.post-end {
   h4,
   h5,
   h6 {
-    color: $theme; // headings carry the single accent
+    color: var(--accent); // headings carry the single accent
   }
 
   figure {
@@ -669,7 +669,7 @@ hr.post-end {
   text-decoration: none;
   padding: 2px;
   border-radius: 2px;
-  background-color: $midnightblue;
+  background-color: var(--surface-sunken);
 }
 
 .post-info {
@@ -682,7 +682,7 @@ hr.post-end {
   }
 
   a:hover {
-    border-bottom: 1px solid $theme;
+    border-bottom: 1px solid var(--accent);
   }
 
   svg {

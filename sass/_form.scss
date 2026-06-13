@@ -7,7 +7,7 @@ form {
         min-height: 1.6rem;
         padding: 0.4rem;
         display: block;
-        background-color: $dark-grey;
+        background-color: var(--surface);
         border: 0px;
         border-radius: 4px;
     }
@@ -21,14 +21,14 @@ form {
         width: 26rem;
         padding: 0.4rem;
         display: block;
-        background-color: $dark-grey;
+        background-color: var(--surface);
         border: 0px;
         border-radius: 4px;
    }
 
    button {
-    background-color: $dark-grey;
-    border: 1px solid $text;
+    background-color: var(--surface);
+    border: 1px solid var(--text);
     border-radius: 4px;
     margin-top: 1rem;
     padding: 0.4rem;

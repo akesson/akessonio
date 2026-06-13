@@ -33,5 +33,5 @@ $h1-fluid: clamp(2rem, calc(1.4rem + 2.4vw), #{$text-3xl});
 // ── Colour tokens live in _color.scss ──
 // Colour is now a runtime concern (a drifting hue + a dark/light swap), so the
 // semantic colour tokens are CSS custom properties (--bg, --surface, --text,
-// --accent, …) defined in _color.scss, not Sass vars. _predefined.scss aliases
-// the old Sass colour names onto them. ONE accent that always means something.
+// --accent, …) defined in _color.scss, not Sass vars. Reference them directly
+// as var(--…). ONE accent that always means something.

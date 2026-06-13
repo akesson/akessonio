@@ -1,17 +1,3 @@
-// Colors
-//
-// The palette is now a set of runtime CSS custom properties (see _color.scss):
-// one drifting hue + a dark/light swap. These Sass names are kept as thin
-// aliases onto the themed role tokens so every existing rule keeps working
-// unchanged — each resolves, at runtime, to its current theme's value.
-$theme:            var(--accent);          // links, headings, active nav
-$text:             var(--text);            // body text
-$demphasized-text: var(--muted);           // secondary / de-emphasised text
-$light-grey:       var(--bg);              // page base
-$dark-grey:        var(--surface);         // raised chrome (header, mobile menu)
-$highlight-grey:   var(--border);          // hairline dividers
-$midnightblue:     var(--surface-sunken);  // insets, scrollbar, footnote chip
-
 // Fonts
 //
 $fonts: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -26,17 +12,4 @@ $code-fonts: "JetBrains Mono", Consolas, "Andale Mono WT", "Andale Mono", Menlo,
 //
 @mixin dimmed {
   opacity: 0.6;
-}
-
-@mixin aTag {
-  a {
-    word-break: break-all;
-    border: none;
-    box-shadow: inset 0 -2px 0 $theme;
-    transition-property: background-color;
-
-    &:hover {
-      background-color: $theme;
-    }
-  }
 }
