@@ -335,11 +335,14 @@ config.extra.hermit_social %}
    the strip anchored while the page body cross-fades between navigations. ── #}
 {% macro tabstrip(current) %}
 <header class="tabstrip">
-  <nav class="tabs section-inner" aria-label="Sections">
-    {% for tab in config.extra.tabs %}
-    <a href="{{ config.base_url ~ tab.path }}"{% if current == tab.path %} aria-current="page"{% endif %}>{{ tab.name }}</a>
-    {% endfor %}
-  </nav>
+  <div class="chrome-row section-inner">
+    <a class="wordmark" href="{{ config.base_url }}">{{ config.title }}</a>
+    <nav class="tabs" aria-label="Sections">
+      {% for tab in config.extra.tabs %}
+      <a href="{{ config.base_url ~ tab.path }}"{% if current == tab.path %} aria-current="page"{% endif %}>{{ tab.name }}</a>
+      {% endfor %}
+    </nav>
+  </div>
 </header>
 {% endmacro tabstrip %}
 
@@ -348,10 +351,12 @@ config.extra.hermit_social %}
    main.js upgrades the label + target from a same-origin referrer / the Navigation
    API so it points back to wherever you actually came from. ── #}
 {% macro back_link(label, href) %}
-<header class="leaf-header section-inner">
-  <a class="back-link" href="{{ href }}" data-default-href="{{ href }}" data-default-label="{{ label }}">
-    {{ self::icon(name="arrow-left") }}<span class="back-label">{{ label }}</span>
-  </a>
+<header class="leaf-header">
+  <div class="chrome-row section-inner">
+    <a class="back-link" href="{{ href }}" data-default-href="{{ href }}" data-default-label="{{ label }}">
+      {{ self::icon(name="arrow-left") }}<span class="back-label">{{ label }}</span>
+    </a>
+  </div>
 </header>
 {% endmacro back_link %}
 

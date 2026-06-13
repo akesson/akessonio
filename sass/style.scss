@@ -218,6 +218,53 @@ table {
   padding-top: $space-5;
 }
 
+// Header chrome row — a 3-track grid mirroring the reading column. The centre
+// track is the 42rem measure, so the tabs (and the level-2 back link) line up
+// exactly with the page content (.thin); the wordmark sits in the left-gutter
+// track. The column-gap cancels out of the centring, so alignment is exact.
+.chrome-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 42rem) minmax(0, 1fr);
+  align-items: baseline;
+  // No column-gap: the gutter track already separates the wordmark from the
+  // tabs. A gap would survive when the side tracks collapse to 0 (mobile),
+  // pushing the centre track — and the tabs — off the content's left edge.
+  column-gap: 0;
+  row-gap: $space-3;
+}
+
+.chrome-row > .wordmark {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  font-size: $text-lg; // same size as the tab links
+  color: var(--text);
+  white-space: nowrap;
+  transition: color $dur-fast $ease;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.chrome-row > .tabs,
+.chrome-row > .back-link {
+  grid-column: 2;
+  justify-self: start;
+}
+
+// Once the left gutter can no longer hold the wordmark beside the 42rem column,
+// drop the name onto its own row directly above the tabs (which stay aligned to
+// the content column). Scoped to .tabstrip so the back-link row is untouched.
+@media (max-width: 1180px) {
+  .tabstrip .wordmark {
+    grid-column: 1 / -1;
+  }
+  .tabstrip .tabs {
+    grid-row: 2;
+  }
+}
+
 .tabs {
   display: flex;
   gap: $space-5;
