@@ -335,7 +335,7 @@ config.extra.hermit_social %}
    the strip anchored while the page body cross-fades between navigations. ── #}
 {% macro tabstrip(current) %}
 <header class="tabstrip">
-  <div class="chrome-row section-inner">
+  <div class="chrome-row">
     <a class="wordmark" href="{{ config.base_url }}">{{ config.title }}</a>
     <nav class="tabs" aria-label="Sections">
       {% for tab in config.extra.tabs %}
@@ -352,7 +352,7 @@ config.extra.hermit_social %}
    API so it points back to wherever you actually came from. ── #}
 {% macro back_link(label, href) %}
 <header class="leaf-header">
-  <div class="chrome-row section-inner">
+  <div class="chrome-row">
     <a class="back-link" href="{{ href }}" data-default-href="{{ href }}" data-default-label="{{ label }}">
       {{ self::icon(name="arrow-left") }}<span class="back-label">{{ label }}</span>
     </a>

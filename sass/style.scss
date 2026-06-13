@@ -226,6 +226,12 @@ table {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 42rem) minmax(0, 1fr);
   align-items: baseline;
+  // Full-bleed row with a small page inset, so the wordmark sits in the page's
+  // top-left corner rather than at the capped .section-inner gutter. The inset
+  // matches the content's gutter on phones (3.5vw = section-inner's 3.5% margin,
+  // so the tabs land exactly on the text column) and caps at the toggle's $space-4
+  // on desktop (the corner). Symmetric, so the centre track stays viewport-centred.
+  padding-inline: min(3.5vw, $space-4);
   // No column-gap: the gutter track already separates the wordmark from the
   // tabs. A gap would survive when the side tracks collapse to 0 (mobile),
   // pushing the centre track — and the tabs — off the content's left edge.
