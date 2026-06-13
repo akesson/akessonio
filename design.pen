@@ -1,0 +1,402 @@
+{
+  "version": "2.13",
+  "children": [
+    {
+      "type": "frame",
+      "id": "c5GupM",
+      "x": 920,
+      "y": 0,
+      "name": "Articles — Current",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 1440,
+      "height": 760,
+      "fill": "$bg",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "a007X",
+          "name": "Header",
+          "width": "fill_container",
+          "height": 80,
+          "fill": "#00000000",
+          "layout": "none",
+          "children": [
+            {
+              "type": "text",
+              "id": "UxwiL",
+              "x": 16,
+              "y": 24,
+              "name": "Wordmark",
+              "fill": "$text",
+              "content": "Henrik Åkesson",
+              "fontFamily": "Hanken Grotesk",
+              "fontSize": 20,
+              "fontWeight": "normal",
+              "letterSpacing": 0.96
+            },
+            {
+              "type": "frame",
+              "id": "xYhrd",
+              "x": 384,
+              "y": 24,
+              "name": "Tabs",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "fqrad",
+                  "name": "Tab Articles",
+                  "width": 68,
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "bjebW",
+                      "name": "Label",
+                      "fill": "$accent",
+                      "content": "Articles",
+                      "fontFamily": "Hanken Grotesk",
+                      "fontSize": 20,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "b3p7E",
+                      "name": "Active Underline",
+                      "fill": "$accent",
+                      "width": "fill_container",
+                      "height": 2
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "kcpQb",
+                  "name": "Tab Projects",
+                  "fill": "$muted",
+                  "content": "Projects",
+                  "fontFamily": "Hanken Grotesk",
+                  "fontSize": 20,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "KtEUD",
+                  "name": "Tab About",
+                  "fill": "$muted",
+                  "content": "About",
+                  "fontFamily": "Hanken Grotesk",
+                  "fontSize": 20,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "icon",
+              "id": "CqOkH",
+              "x": 1408,
+              "y": 16,
+              "name": "Theme Toggle",
+              "width": 16,
+              "height": 16,
+              "icon": "moon",
+              "library": "lucide",
+              "fill": "$muted"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "TZnYp",
+          "name": "Content",
+          "width": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            24,
+            384
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "ogkJd",
+              "name": "Year 2026",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "DJF1O",
+                  "name": "Year Label",
+                  "fill": "$muted",
+                  "content": "2026",
+                  "fontFamily": "Hanken Grotesk",
+                  "fontSize": 14,
+                  "fontWeight": "normal",
+                  "letterSpacing": 1.4
+                },
+                {
+                  "type": "frame",
+                  "id": "KaPrq",
+                  "name": "Article List",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 40,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Ag1ZY",
+                      "name": "Entry — wordtree",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Qw1Ta",
+                          "name": "Title",
+                          "fill": "$text",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "One trie, three jobs, zero benchmarks won",
+                          "lineHeight": 1.25,
+                          "fontFamily": "Hanken Grotesk",
+                          "fontSize": 25,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "a71IC",
+                          "name": "Dek",
+                          "fill": "$muted",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "A compact word-list trie that loses every benchmark to a specialist — and why I shipped it anyway.",
+                          "lineHeight": 1.5,
+                          "fontFamily": "Hanken Grotesk",
+                          "fontSize": 16,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Fu9QF",
+                          "name": "Meta",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "t1ATd",
+                              "name": "Date",
+                              "fill": "$muted",
+                              "content": "Jun 6, 2026",
+                              "fontFamily": "Hanken Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "LN0C1",
+                              "name": "sep1",
+                              "fill": "$muted",
+                              "content": "·",
+                              "fontFamily": "Hanken Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "rg8Ea",
+                              "name": "Read",
+                              "fill": "$muted",
+                              "content": "10 min read",
+                              "fontFamily": "Hanken Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "gFetc",
+                              "name": "sep2",
+                              "fill": "$muted",
+                              "content": "·",
+                              "fontFamily": "Hanken Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "AhLw7",
+                              "name": "Tag rust",
+                              "fill": "$muted",
+                              "content": "#rust",
+                              "fontFamily": "Hanken Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "T5802O",
+                              "name": "sep3",
+                              "fill": "$muted",
+                              "content": "·",
+                              "fontFamily": "Hanken Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "IVKTH",
+                              "name": "Tag ds",
+                              "fill": "$muted",
+                              "content": "#data-structures",
+                              "fontFamily": "Hanken Grotesk",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "themes": {
+    "mode": [
+      "dark",
+      "light"
+    ]
+  },
+  "variables": {
+    "accent": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#7fb6ef",
+          "theme": {
+            "mode": "dark"
+          }
+        },
+        {
+          "value": "#32669a",
+          "theme": {
+            "mode": "light"
+          }
+        }
+      ]
+    },
+    "bg": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#2e2e2e",
+          "theme": {
+            "mode": "dark"
+          }
+        },
+        {
+          "value": "#fafafa",
+          "theme": {
+            "mode": "light"
+          }
+        }
+      ]
+    },
+    "border": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#525252",
+          "theme": {
+            "mode": "dark"
+          }
+        },
+        {
+          "value": "#cecece",
+          "theme": {
+            "mode": "light"
+          }
+        }
+      ]
+    },
+    "muted": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#9e9e9e",
+          "theme": {
+            "mode": "dark"
+          }
+        },
+        {
+          "value": "#636363",
+          "theme": {
+            "mode": "light"
+          }
+        }
+      ]
+    },
+    "surface": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#383838",
+          "theme": {
+            "mode": "dark"
+          }
+        },
+        {
+          "value": "#fdfdfd",
+          "theme": {
+            "mode": "light"
+          }
+        }
+      ]
+    },
+    "surface-sunken": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#242424",
+          "theme": {
+            "mode": "dark"
+          }
+        },
+        {
+          "value": "#eeeeee",
+          "theme": {
+            "mode": "light"
+          }
+        }
+      ]
+    },
+    "text": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#d1d1d1",
+          "theme": {
+            "mode": "dark"
+          }
+        },
+        {
+          "value": "#292929",
+          "theme": {
+            "mode": "light"
+          }
+        }
+      ]
+    }
+  }
+}
