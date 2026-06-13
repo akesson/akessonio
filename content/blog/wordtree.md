@@ -4,7 +4,6 @@ date = 2026-06-06
 [taxonomies]
 tags = ["rust", "data-structures"]
 [extra]
-toc = true
 # Inline SVG figures inflate Zola's word_count (it counts rendered markup), which
 # would skew read-time. This is the true prose count; remove it to fall back to auto.
 words = 2576

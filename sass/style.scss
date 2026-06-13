@@ -627,58 +627,6 @@ hr.post-end {
   }
 }
 
-#toc {
-  display: none; // appears only at >= $bp-xl, where the gutter has room (DESIGN §5)
-}
-
-.toc-title {
-  margin-bottom: $space-3;
-  font-size: $text-sm;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  opacity: 0.7;
-}
-
-#TableOfContents {
-  font-size: $text-sm;
-  line-height: 1.4; // wrapped lines hug, so each entry reads as one block
-
-  ul {
-    list-style: none;
-    margin: 0;
-    padding-left: 0;
-  }
-
-  ul ul {
-    padding-left: $space-3; // indent nested headings
-  }
-
-  li {
-    margin-top: $space-3; // 12px between sibling entries — a clear step up from the line gap
-  }
-
-  ul ul li {
-    margin-top: $space-2; // 8px: a child hugs its parent, marking the sub-group
-  }
-
-  a {
-    color: $text;
-    opacity: 0.55; // low-emphasis: the TOC supports, never competes
-    text-decoration: none;
-    transition: opacity $dur-fast $ease; // only opacity animates (DESIGN §2)
-
-    &:hover {
-      opacity: 1;
-    }
-
-    &.active {
-      opacity: 1;
-      color: $theme; // scroll-spy cue: the one accent = wayfinding, instant
-    }
-  }
-}
-
 .post-nav {
   display: flex;
   justify-content: space-between;
@@ -731,10 +679,9 @@ hr.post-end {
   }
 
   // Reading layout (blog posts / opensource project pages only). The grid spans
-  // the full viewport so the article stays centred at its ~42rem measure while
-  // the TOC sits against the right border as a sticky rail — no toggle, no
-  // hamburger (DESIGN §5). Below this width there is no room, so the TOC is
-  // absent. Scoped to .reading-layout so list/section pages keep their layout.
+  // the full viewport so the article stays centred at its ~42rem measure, with
+  // symmetric empty gutters that wide content can break out into. Scoped to
+  // .reading-layout so list/section pages keep their layout.
   .reading-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 42rem) minmax(0, 1fr);
@@ -745,16 +692,13 @@ hr.post-end {
     padding-inline: $space-6; // keep content off the very edge
 
     // Symmetric media breakout (consumed by the :is(pre, figure, .bleed) rule
-    // below). Each term is a real edge, so the bleed can never reach the TOC:
-    //   50vw - 21rem  the text column's LEFT edge (grid: pad 2rem + 1fr track + gap 2rem)
-    //         - 18rem  the TOC's RIGHT edge       (pad 2rem + 16rem TOC width)
-    //         - 2rem   a safety gap kept clear of the TOC
-    // The result grows with the viewport but stays >= 2rem off the TOC at every
-    // width from $bp-xl up; clamped to 0 (no room near 1300px) and to --bleed-max
-    // (stays tasteful when wide). At $bp-2xl the TOC widens to 18rem, but by then
-    // --bleed is already pinned at the cap with ample clearance, so one formula holds.
+    // below). The cap is the gap between the text column and the page edge:
+    //   50vw - 21rem  the text column's LEFT edge (half of the 42rem measure)
+    //         - 2rem   the page's padding-inline — the breakout's outer limit
+    // The result grows with the viewport, clamped to 0 (no room near 1300px) and
+    // to --bleed-max (stays tasteful when wide), so one formula holds at every width.
     --bleed-max: 7rem;
-    --bleed: clamp(0rem, 50vw - 21rem - 18rem - 2rem, var(--bleed-max));
+    --bleed: clamp(0rem, 50vw - 21rem - 2rem, var(--bleed-max));
   }
 
   // Code blocks and illustrations spill equally past the 42rem reading measure,
@@ -775,7 +719,7 @@ hr.post-end {
     align-self: center; // centre + symmetric overflow, sharp (no transform)
     width: max-content; // grow to the content's natural width…
     min-width: 100%; // …never narrower than the text column…
-    max-width: calc(100% + 2 * var(--bleed)); // …never past the TOC-safe bleed cap
+    max-width: calc(100% + 2 * var(--bleed)); // …never past the bleed cap
   }
 
   // Let a vector illustration scale to fill its figure (the figure is sized to
@@ -804,19 +748,6 @@ hr.post-end {
     grid-row: 2;
   }
 
-  .reading-layout > #toc {
-    display: block;
-    grid-column: 1;
-    grid-row: 1;
-    justify-self: start; // flush to the left border of the viewport
-    align-self: start;
-    position: sticky;
-    top: $space-8;
-    max-width: 16rem;
-    max-height: calc(100vh - #{$space-8} * 2);
-    overflow-y: auto;
-  }
-
   hr.post-end {
     width: 30%;
   }
@@ -825,10 +756,6 @@ hr.post-end {
 @media (min-width: $bp-2xl) {
   .site-main {
     margin-top: 10em;
-  }
-
-  .reading-layout > #toc {
-    max-width: 18rem; // the right track is wider at this size
   }
 
   hr.post-end {

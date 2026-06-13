@@ -4,7 +4,7 @@ Design principles for the Human Solutions site. These are the rules that decisio
 
 ## The north star
 
-**Professional, trustworthy, calm, beautiful.** This is the outcome of the five principles that follow plus two habits: **restraint** (do less, consistently) and **legibility** (text is always comfortably readable). Calm comes from consistency and generous space, not from decoration. When a choice is ambiguous, pick the quieter option.
+**Professional, trustworthy, calm, beautiful.** This is the outcome of the six principles that follow plus two habits: **restraint** (do less, consistently) and **legibility** (text is always comfortably readable). Calm comes from consistency and generous space, not from decoration. When a choice is ambiguous, pick the quieter option.
 
 A trust check that must always hold: body text meets **WCAG AA contrast (≥ 4.5:1)** against its background. "Beautiful" never wins over "readable."
 
@@ -44,15 +44,24 @@ Fluidity smooths the layout across sizes; it is not applied to everything.
 - **Body text stays a fixed size.** Fluid body type hurts readability and predictability — this is the "sparingly."
 - Prefer a few well-chosen `clamp()` expressions over scattered `vw` units. If a value doesn't visibly benefit from being fluid, make it fixed.
 
-## 5. A reactive table of contents that appears only when there's room
+## 5. Imagery is theme-aware by construction
 
-The TOC is a convenience that must never crowd the content.
+Every image must work in both themes (dark default + `[data-theme="light"]`, a runtime swap on `<html>`). *How* it adapts depends on the type — and the type is decided before the asset is made. The site uses three:
 
-- It appears **automatically** when the viewport is wide enough to hold it in the side gutter beside the main content column — **no toggle button, no hamburger**. When there isn't room, it is simply absent.
-- Implement as `position: sticky` within a layout gutter, not `position: fixed` with hard-coded offsets. The content column keeps its comfortable measure (~720px); the TOC lives in leftover space.
-- Default trigger is the `$bp-xl` breakpoint (the simple, robust 90% solution). Only escalate to JS measurement (`ResizeObserver` on actual gutter width) if the breakpoint proves too blunt in practice.
-- The TOC is low-emphasis: smaller, dimmed, quiet hover. It supports the content; it never competes with it.
-- The TOC **reflects reading position**: the entry for the section currently in view is highlighted (scroll-spy) — a small, low-emphasis cue (a quiet accent on the active item), never animated.
+- **Technical illustrations & diagrams → inline SVG, coloured by tokens.** Never bake hex into a diagram. Ship the SVG *inline* in the DOM so it inherits the runtime variables, and paint it with theme roles: structure/strokes in `--text` / `--muted` / `--border`, the one meaningful emphasis in `--accent`, multi-series data in `--series-1..3`. One asset, adapts for free, drifts with the hue. (An SVG referenced via `<img>` can't read page variables — inline it, or it won't theme.)
+- **Cropped UI screenshots → ship a light *and* a dark capture.** A raster can't be recoloured, so capture the UI in each mode and show the one matching the active theme. Selection must follow `[data-theme]` (the manual toggle), so `<picture>` + `prefers-color-scheme` alone is **not** sufficient — key the swap on the theme attribute. Give a screenshot a hairline `--border` frame (the §1 containment exception: a UI capture is a different *kind* of content) so its own chrome never merges into the page; keep the frame quiet. Any crossfade on theme change is ≤ `$dur-base`, and absent under `prefers-reduced-motion`.
+- **Occasional photo → edit a light and a dark variant.** Same `[data-theme]` swap as screenshots. A photo is the one element that *may* go edge-to-edge (§6), but only as a deliberate exception.
+- **Never let an image glare.** A bright UI capture dropped on the dark theme is a white rectangle punching through the calm — that is the whole reason for dual captures. An image's surrounding value should sit close to the page surface in each theme.
+
+## 6. Content earns its width on one short ladder
+
+Wide things — code, diagrams, screenshot sets — break out of the reading measure, but only as far as the `--bleed` cap. **Two rungs, no more** (restraint, §1):
+
+- **Column** — `$measure` (`42rem`, ~672px, ~75ch of prose). Prose, inline figures, a single small screenshot, code up to ~80 columns.
+- **Wide** — up to `$measure + 2 × --bleed-max` (`--bleed-max: 7rem` → ~`56rem` / ~896px). The default for `pre`, `figure`, and anything tagged `.bleed`: diagrams that need room, side-by-side comparisons, wider code. Symmetric overflow, centred, capped at `--bleed-max`. Opt out with `.no-bleed` (pin a small figure to the column); opt a table in with `.bleed`.
+- **No full-bleed by default.** The ladder stops at the cap on purpose. A true edge-to-edge element (the occasional photo) is the rare exception, never routine.
+- **Side-by-side (cross-platform) sets** — win/lin/mac or android/ios sit as a 2–4-up grid on the **Wide** rung: equal cells, shared aspect ratio and baseline, each cell labelled with its platform, one caption under the whole set held at the reading measure. Collapse to a single stacked column below `$bp-md`. A diagram earns the Wide rung only when its horizontal extent *means* something (a timeline, a spectrum, a comparison); otherwise it stays in the column.
+- **Code measure — design for 80–90 columns.** At the `0.9em` code size (JetBrains Mono, ~0.6em/char) the Wide cap holds ~88 columns without scrolling, and ~65 fit the bare column; 80 is the comfortable house width. Lines past ~90 columns **scroll horizontally** inside the block (`pre { overflow: auto }`) — never shrink code below ~16px, and never soft-wrap it, to force 120 columns to fit. Legibility beats fitting (north star). The only levers if a section genuinely needs more are the `pre` font-size and `--bleed-max`; raising the cap is bounded by the gutter between the column and the page edge. *(Column counts are computed at a 0.6em advance — confirm against the first real code block.)*
 
 ---
 
@@ -75,7 +84,7 @@ $ease:     cubic-bezier(0.2, 0, 0, 1);   // decelerate, calm
 
 // ── Named breakpoints ──
 $bp-sm: 520px;   $bp-md: 800px;   $bp-lg: 960px;
-$bp-xl: 1300px;  // TOC appears at / above this
+$bp-xl: 1300px;  // reading layout + content breakout kick in at / above this
 $bp-2xl: 1800px;
 
 // ── Type scale (~1.2 modular) — few sizes read as calm ──
@@ -86,15 +95,25 @@ $line-base: 1.6;      // generous, comfortable reading
 // ── Fluid — used sparingly ──
 $gutter:   clamp(1rem, 5vw, 3rem);
 $h1-fluid: clamp(2rem, 1.4rem + 2.4vw, $text-3xl);
+
+// ── Media & breakout (§5–§6) — one short ladder, not a full-bleed system ──
+$measure:    42rem;        // reading column (~75ch prose). Breakout cap = $measure + 2*7rem ≈ 56rem
+$code-size:  0.9em;        // block code (JetBrains Mono ~0.6em/char) → ~88-col cap; target ≤ 80–90
+$frame:      1px solid var(--border);  // quiet frame for a UI screenshot (§1 containment, §5)
+// Breakout width itself is a *runtime* var (lives in style.scss, depends on the viewport):
+//   --bleed-max: 7rem;                                            // widest overflow per side
+//   --bleed: clamp(0rem, 50vw - 21rem - 2rem, var(--bleed-max));  // capped by the gutter
 ```
 
-**Colour note (for when theming is built):** name colour tokens *semantically* (`$bg`, `$surface`, `$text`, `$accent`, `$muted`) rather than by appearance, so a light theme is a drop-in. **One accent, and it always means something:** `$accent` carries interactive and wayfinding meaning only — links, the active nav/TOC item, primary CTAs — never decoration; everything else is `$bg`/`$surface`/`$text`/`$muted`. Whatever the palette, the AA contrast rule in the north star is non-negotiable.
+**Colour note (for when theming is built):** name colour tokens *semantically* (`$bg`, `$surface`, `$text`, `$accent`, `$muted`) rather than by appearance, so a light theme is a drop-in. **One accent, and it always means something:** `$accent` carries interactive and wayfinding meaning only — links, the active nav item, primary CTAs — never decoration; everything else is `$bg`/`$surface`/`$text`/`$muted`. Whatever the palette, the AA contrast rule in the north star is non-negotiable.
+
+*Now implemented* as **runtime** CSS custom properties (not Sass vars), because the palette is live: a single drifting `--hue` feeds only `--accent` (+ `--series-1..3` for diagrams), and the dark/light theme is a `data-theme` swap on `<html>`. The roles are exactly `--bg --surface --surface-sunken --text --muted --border --accent --page --series-1..3`. Theme-aware imagery (§5) and inline diagrams hook these directly.
 
 ---
 
 ## Applying this to the reviews / comparison section
 
-- **Reviews** (image/screenshot-heavy): let screenshots breathe with `$space-6`+ around them; group a review's platform sections with whitespace, not boxes. One quiet entrance fade per page at most.
+- **Reviews** (image/screenshot-heavy): let screenshots breathe with `$space-6`+ around them; group a review's platform sections with whitespace, not boxes. One quiet entrance fade per page at most. Screenshots ship as light/dark pairs and cross-platform sets render as a Wide-rung 2–4-up grid (§5, §6).
 - **Comparison table**: whitespace and optional subtle row banding over gridlines; sticky header if long; platform filtering hides columns/rows with no animation (or a single ≤200ms opacity fade) — never a flashy reflow.
 - **Platform filter controls**: discreet, calm, and instant-feeling. Feedback within `$dur-fast`.
 

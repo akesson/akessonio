@@ -78,48 +78,6 @@ if (header !== null) {
   );
 }
 
-// ToC scroll-spy
-//
-// Highlight the TOC entry for the section currently in view. This is
-// progressive enhancement: the TOC works as plain anchor links without it.
-// The active cue is an instant, low-emphasis accent — no animation (DESIGN §5).
-const tocLinks = Array.from(document.querySelectorAll('#TableOfContents a'));
-
-if (tocLinks.length) {
-  const toc = document.getElementById('toc');
-
-  const targets = tocLinks
-    .map((link) => {
-      const id = decodeURIComponent((link.hash || '').slice(1));
-      const heading = id && document.getElementById(id);
-      return heading ? { link, heading } : null;
-    })
-    .filter(Boolean);
-
-  let active = null;
-  const setActive = (link) => {
-    if (active === link) return;
-    if (active) active.classList.remove('active');
-    if (link) link.classList.add('active');
-    active = link;
-  };
-
-  const syncActive = () => {
-    // Skip the work entirely when the TOC isn't shown (narrow viewports).
-    if (!toc || getComputedStyle(toc).display === 'none') return;
-    const line = 120; // a heading becomes "current" once its top passes this
-    let current = targets[0];
-    for (const t of targets) {
-      if (t.heading.getBoundingClientRect().top <= line) current = t;
-      else break;
-    }
-    setActive(current ? current.link : null);
-  };
-
-  syncActive();
-  window.addEventListener('scroll', throttle(syncActive, 100));
-}
-
 // Dark / light theme toggle
 //
 // The initial theme is set by an inline <head> script (before first paint, so

@@ -4,8 +4,6 @@ description="[released] The Leptos official build tool with parallel building of
 date = 2018-09-29T11:36:33+08:00
 draft = false
 template = "opensource_page.html"
-[extra]
-toc=true
 +++
 
 [GitHub](https://github.com/leptos-rs/cargo-leptos), [Crates](https://crates.io/crates/cargo-leptos)

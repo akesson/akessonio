@@ -18,7 +18,7 @@ $ease:     cubic-bezier(0.2, 0, 0, 1);   // decelerate, calm
 
 // ── Named breakpoints ──
 $bp-sm: 520px;   $bp-md: 800px;   $bp-lg: 960px;
-$bp-xl: 1300px;  // TOC appears at / above this
+$bp-xl: 1300px;  // reading layout + content breakout kick in at / above this
 $bp-2xl: 1800px;
 
 // ── Type scale (~1.2 modular) — few sizes read as calm ──

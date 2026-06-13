@@ -31,7 +31,7 @@
   // ── Dark theme (default) ── contrast vs --bg, worst hue across 360°:
   // Fixed NEUTRAL greyscale everywhere except --accent (+ diagram series): the
   // drifting hue shows up only in the "select highlights" (links, headings,
-  // active TOC, inline-code pill), never in body text, greys, or backgrounds.
+  // active nav, inline-code pill), never in body text, greys, or backgrounds.
   --bg:             oklch(0.30 0 0);               // page base — neutral
   --surface:        oklch(0.34 0 0);               // raised chrome: header, menu
   --surface-sunken: oklch(0.26 0 0);               // recessed: insets, scrollbar

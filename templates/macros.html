@@ -365,29 +365,6 @@ config.extra.hermit_social %}
 </div>
 {% endmacro site_header %}
 
-{# ── Table of contents aside. Pass the current page. ── #}
-{% macro toc(page) %}
-<aside id="toc">
-  <div id="TableOfContents">
-    <div class="toc-title">Table of contents</div>
-    <ul>
-      {% for h1 in page.toc %}
-      <li>
-        <a href="{{ h1.permalink | safe }}">{{ h1.title }}</a>
-        {% if h1.children %}
-        <ul>
-          {% for h2 in h1.children %}
-          <li><a href="{{ h2.permalink | safe }}">{{ h2.title }}</a></li>
-          {% endfor %}
-        </ul>
-        {% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-  </div>
-</aside>
-{% endmacro toc %}
-
 {# ── Prev / next post navigation. Pass the current page. ── #}
 {% macro post_nav(page) %}
 <div class="post-nav thin">

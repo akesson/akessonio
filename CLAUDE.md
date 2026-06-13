@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **Design:** `DESIGN.md` holds the target design principles (calm, whitespace-led, discreet/short motion, sparing fluidity, space-reactive TOC) and the design tokens. New/redesigned UI follows it; the current Hermit defaults predate it.
+> **Design:** `DESIGN.md` holds the target design principles (calm, whitespace-led, discreet/short motion, sparing fluidity) and the design tokens. New/redesigned UI follows it; the current Hermit defaults predate it.
 
 This is the **Human Solutions** website (https://human.solutions): a [Zola](https://www.getzola.org) static site built on a **vendored, customized Hermit theme**. The theme is copied directly into `templates/` + `sass/` and edited in place — there is no `themes/` directory and no `theme =` in `config.toml`, so all layout changes are made directly to the files here.
 
@@ -39,7 +39,7 @@ Current routing:
 | Content | Template | Notes |
 |---|---|---|
 | `/` home | `index.html` | base layout, rendered directly |
-| `content/blog/` (`_index.md`, posts) | `section.html` / `page.html` | defaults; posts get TOC + prev/next + read-time. **Currently no posts** — only the `_index.md` exists, so `/blog` renders an empty list |
+| `content/blog/` (`_index.md`, posts) | `section.html` / `page.html` | defaults; posts get prev/next + read-time. **Currently no posts** — only the `_index.md` exists, so `/blog` renders an empty list |
 | `content/opensource/` | `opensource.html` / `opensource_page.html` | set explicitly in front-matter; two project pages (`cargo_leptos.md`, `reactive_signals.md`) |
 | `content/about.md` | `description.html` | the only standalone page, set in front-matter |
 | tags taxonomy | `tags/list.html` (all terms), `tags/single.html` (one tag) | `tags` is the only taxonomy, RSS enabled |
@@ -70,7 +70,6 @@ The header `<nav>` + mobile menu markup is **duplicated verbatim** across `secti
 
 - **Math**: KaTeX is loaded from CDN in the base template on every page (auto-render with `$`/`$$`/`\(\)`/`\[\]` delimiters).
 - **Code highlighting**: Zola's built-in `highlight_code = true` is on. There is also an *optional* highlight.js + badge/clipboard path gated behind `config.extra.highlightjs.enable` (currently `false`).
-- **TOC**: pages opt in with `[extra] toc = true` in front-matter; `page.html` then renders the `#toc` aside from `page.toc`.
 
 ## Content authoring conventions
 

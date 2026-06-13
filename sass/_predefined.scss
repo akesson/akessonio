@@ -4,7 +4,7 @@
 // one drifting hue + a dark/light swap. These Sass names are kept as thin
 // aliases onto the themed role tokens so every existing rule keeps working
 // unchanged — each resolves, at runtime, to its current theme's value.
-$theme:            var(--accent);          // links, headings, active nav / TOC
+$theme:            var(--accent);          // links, headings, active nav
 $text:             var(--text);            // body text
 $demphasized-text: var(--muted);           // secondary / de-emphasised text
 $light-grey:       var(--bg);              // page base
