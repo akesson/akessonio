@@ -9,3 +9,5 @@
 # Local working source docs (bio data for building About/Projects) — not for the repo
 /linkedin-profile.md
 /github-profile.md
+.playwright-mcp
+robin-rendle-breakouts/
