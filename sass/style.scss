@@ -361,9 +361,19 @@ table {
   }
 }
 
+// Sticky footer: short pages (a sparse index, the about page) fill the viewport
+// so the footer sits at the bottom instead of floating mid-screen.
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 // Content spacing below the chrome (strip or back link). One calm, constant gap
 // at every width — replaces the old 3→10em escalation tuned for the bottom bar.
+// flex-grow pushes the footer to the bottom on short pages.
 .site-main {
+  flex: 1 0 auto;
   margin-top: $space-7;
 }
 
@@ -400,6 +410,93 @@ h1.title {
   margin: $space-2 0 0;
   color: var(--muted);
   font-size: $text-base;
+}
+
+// ── Articles index — editorial list ──────────────────────────────────────────
+// Each entry leads with a prominent title, a one-line dek, and a quiet meta row.
+// The year is a small inline label, not a gutter; whitespace groups the entries
+// (DESIGN §1) and the accent stays on links only (no archive-style underlines).
+.article-year + .article-year {
+  margin-top: $space-8;
+}
+
+.year-label {
+  margin: 0 0 $space-5;
+  font-size: $text-sm;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.article-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.article-entry + .article-entry {
+  margin-top: $space-7;
+}
+
+.article-link {
+  display: block;
+
+  &:hover .article-title {
+    color: var(--accent);
+  }
+}
+
+.article-title {
+  margin: 0;
+  font-size: $text-xl;
+  line-height: 1.25;
+  color: var(--text);
+  transition: color $dur-fast $ease;
+}
+
+.article-dek {
+  margin: $space-2 0 0;
+  font-size: $text-base;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.article-meta {
+  margin: $space-3 0 0;
+  font-size: $text-sm;
+  letter-spacing: normal;
+  color: var(--muted);
+
+  .meta-sep {
+    margin: 0 $space-2;
+    opacity: 0.5;
+  }
+
+  .reading-time {
+    white-space: nowrap;
+  }
+
+  .article-tag {
+    color: var(--muted);
+
+    &::before {
+      content: "#";
+      opacity: 0.6;
+    }
+
+    &:hover {
+      color: var(--accent);
+    }
+  }
+}
+
+// ── About — lead paragraph ───────────────────────────────────────────────────
+// The opening paragraph is set larger and calm, giving the page an anchored,
+// confident open in place of the (visually hidden) h1.
+.about-intro > p:first-of-type {
+  font-size: $text-lg;
+  line-height: 1.55;
+  color: var(--text);
 }
 
 // list.html

@@ -3,24 +3,32 @@
 
 {# The Articles index — the site home, served at "/". Inherits the tab strip from
    the base header; the active "Articles" tab is the visual heading, so the h1 is
-   present for a11y/SEO but visually hidden. #}
+   present for a11y/SEO but visually hidden. Entries lead with the title, a one-
+   line dek, and a quiet meta line — the writing is the positioning. #}
 {% block main %}
 <main class="site-main section-inner thin">
   <h1 class="title screen-reader-text">{{ section.title }}</h1>
   {% for year, pages in section.pages | group_by(attribute="year") %}
-  <div class="posts-group">
-    <div class="post-year">{{ year }}</div>
-    <ul class="posts-list">
+  <section class="article-year">
+    <h2 class="year-label">{{ year }}</h2>
+    <ul class="article-list">
       {% for page in pages %}
-      <li class="post-item">
-        <a href="{{ page.permalink }}">
-          <span class="post-title">{{ page.title }}</span>
-          <span class="post-day">{{ page.date | date(format="%b %d") }}</span>
+      <li class="article-entry">
+        <a class="article-link" href="{{ page.permalink }}">
+          <h3 class="article-title">{{ page.title }}</h3>
         </a>
+        {% if page.description %}
+        <p class="article-dek">{{ page.description }}</p>
+        {% endif %}
+        <p class="article-meta">
+          <time datetime="{{ page.date }}">{{ page.date | date(format="%b %-d, %Y") }}</time>
+          <span class="meta-sep">·</span>{{ macros::read_time(words=page.extra.words | default(value=page.word_count)) }}
+          {%- if page.taxonomies.tags %}{% for t in page.taxonomies.tags %}<span class="meta-sep">·</span><a class="article-tag" href="{{ get_taxonomy_url(kind='tags', name=t) }}">{{ t }}</a>{% endfor %}{% endif %}
+        </p>
       </li>
       {% endfor %}
     </ul>
-  </div>
+  </section>
   {% endfor %}
 </main>
 {% endblock main %}
