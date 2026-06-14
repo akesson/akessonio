@@ -5,8 +5,9 @@
   "type": "module",
   "description": "Tooling for the Human Solutions Zola site (Playwright screenshot suite).",
   "scripts": {
-    "screenshots": "zola build --base-url http://127.0.0.1:8787 && playwright test",
+    "screenshots": "zola build --base-url http://127.0.0.1:8787 && playwright test && node tests/gallery.mjs",
     "test": "playwright test",
+    "gallery": "node tests/gallery.mjs",
     "check:math": "node scripts/check-no-math.mjs"
   },
   "devDependencies": {

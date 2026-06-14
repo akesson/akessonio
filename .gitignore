@@ -17,3 +17,7 @@ robin-rendle-breakouts/
 node_modules/
 test-results/
 playwright-report/
+
+# Local-only review page (derived from the screenshots; regenerate with
+# `npm run gallery`). The generator tests/gallery.mjs IS committed.
+/tests/screenshots/gallery.html
