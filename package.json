@@ -1,9 +1,9 @@
 {
-  "name": "human-solutions-website",
+  "name": "akessonio-website",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Tooling for the Human Solutions Zola site (Playwright screenshot suite).",
+  "description": "Tooling for the akesson.io Zola site (Playwright screenshot suite).",
   "scripts": {
     "screenshots": "zola build --base-url http://127.0.0.1:8787 && playwright test && node tests/gallery.mjs",
     "test": "playwright test",

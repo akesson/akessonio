@@ -1,6 +1,6 @@
 # DESIGN.md
 
-Design principles for the Human Solutions site. These are the rules that decisions get measured against — including the upcoming reviews/comparison section. A principle you can't measure is just a vibe, so each one below is paired with a concrete rule and, where relevant, a token that enforces it.
+Design principles for Henrik Åkesson's site (akesson.io). These are the rules that decisions get measured against — including the upcoming reviews/comparison section. A principle you can't measure is just a vibe, so each one below is paired with a concrete rule and, where relevant, a token that enforces it.
 
 ## The north star
 

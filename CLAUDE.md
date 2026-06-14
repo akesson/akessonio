@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > **Design:** `DESIGN.md` holds the target design principles (calm, whitespace-led, discreet/short motion, sparing fluidity) and the design tokens. New/redesigned UI follows it; the current Hermit defaults predate it.
 
-This is the **Human Solutions** website (https://human.solutions): a [Zola](https://www.getzola.org) static site built on a **vendored, customized Hermit theme**. The theme is copied directly into `templates/` + `sass/` and edited in place — there is no `themes/` directory and no `theme =` in `config.toml`, so all layout changes are made directly to the files here.
+This is **Henrik Åkesson's** personal website (https://akesson.io): a [Zola](https://www.getzola.org) static site built on a **vendored, customized Hermit theme**. The theme is copied directly into `templates/` + `sass/` and edited in place — there is no `themes/` directory and no `theme =` in `config.toml`, so all layout changes are made directly to the files here.
 
 ## Commands
 
