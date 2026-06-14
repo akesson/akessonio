@@ -98,6 +98,16 @@
 
     <script defer src="{{get_url(path="js/main.js")}}"></script>
 
+    {# Privacy-friendly analytics (GoatCounter): cookieless, no consent banner
+       required. Gated to the production base_url so `zola serve` and the
+       screenshot suite (built with --base-url http://127.0.0.1:8787) neither
+       count dev visits nor fetch the external script. Lives in the base (not
+       js_footer) so a child template overriding that block can't drop it. #}
+    {% if config.base_url is starting_with("https://akesson.io") %}
+    <script data-goatcounter="https://akesson.goatcounter.com/count"
+            async src="https://gc.zgo.at/count.js"></script>
+    {% endif %}
+
     {# No math rendering. KaTeX was removed (2026-06-14); the site has no math
        support and `scripts/check-no-math.mjs` rejects math delimiters in
        content. See CLAUDE.md to add MathML to Zola if math is ever needed. #}
