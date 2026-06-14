@@ -1,7 +1,7 @@
 title = "Henrik Åkesson"
 
 # The URL the site will be built for
-base_url = "https://human.solutions"
+base_url = "https://akesson.io"
 
 # Whether to automatically compile all Sass files in the sass directory
 compile_sass = true
