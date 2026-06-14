@@ -22,9 +22,15 @@
   <link rel="preload" href="{{get_url(path="fonts/hanken-grotesk-latin.woff2")}}" as="font" type="font/woff2" crossorigin/>
   <!-- Syntax highlighting: both theme sheets load; the active one is chosen to
        match the resolved data-theme (below + main.js) — which may be a manual
-       override — not prefers-color-scheme directly. -->
+       override — not prefers-color-scheme directly. Only emitted when the page
+       actually contains a code block (<pre>); most pages have none, so they skip
+       ~14.7 KB of render-blocking CSS. The inline script below and main.js both
+       guard getElementById, so their absence is safe. -->
+  {%- set page_html = page.content | default(value=section.content | default(value="")) -%}
+  {% if "<pre" in page_html %}
   <link id="giallo-dark" rel="stylesheet" media="all" href="{{get_url(path="giallo-dark.css")}}"/>
   <link id="giallo-light" rel="stylesheet" media="not all" href="{{get_url(path="giallo-light.css")}}"/>
+  {% endif %}
   <!-- Resolve theme + starting hue before first paint: no flash of the wrong
        theme or the default hue. Mirrors the logic in main.js.
        theme mode is one of light / dark / system (default); "system" follows the
@@ -52,6 +58,16 @@
     })();
   </script>
   <link rel="stylesheet" href="{{get_url(path="style.css")}}"/>
+  {# Speculative prefetch: warm same-origin documents on hover/pointerdown so the
+     next page is already in cache when clicked. Same-origin only (href_matches is
+     resolved against this origin). Chromium-only; other browsers ignore it. #}
+  <script type="speculationrules">
+  {
+    "prefetch": [
+      { "source": "document", "where": { "href_matches": "/*" }, "eagerness": "moderate" }
+    ]
+  }
+  </script>
   {% if page.title %}
   <title>{{ page.title }}</title>
   {% elif section.title %}
@@ -80,7 +96,7 @@
 
     {% block footer %}{% endblock footer %}
 
-    <script src="{{get_url(path="js/main.js")}}"></script>
+    <script defer src="{{get_url(path="js/main.js")}}"></script>
 
     {# No math rendering. KaTeX was removed (2026-06-14); the site has no math
        support and `scripts/check-no-math.mjs` rejects math delimiters in
