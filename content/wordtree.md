@@ -3,8 +3,6 @@ title = "One trie, three jobs, zero benchmarks won"
 date = 2026-06-06
 description = "A compact word-list trie that loses every benchmark to a specialist — and why I shipped it anyway."
 aliases = ["/blog/wordtree/"]
-[taxonomies]
-tags = ["rust", "data-structures"]
 [extra]
 # Inline SVG figures inflate Zola's word_count (it counts rendered markup), which
 # would skew read-time. This is the true prose count; remove it to fall back to auto.

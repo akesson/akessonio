@@ -23,7 +23,6 @@
         <p class="article-meta">
           <time datetime="{{ page.date }}">{{ page.date | date(format="%b %-d, %Y") }}</time>
           <span class="meta-sep">·</span>{{ macros::read_time(words=page.extra.words | default(value=page.word_count)) }}
-          {%- if page.taxonomies.tags %}{% for t in page.taxonomies.tags %}<span class="meta-sep">·</span><a class="article-tag" href="{{ get_taxonomy_url(kind='tags', name=t) }}">{{ t }}</a>{% endfor %}{% endif %}
         </p>
       </li>
       {% endfor %}

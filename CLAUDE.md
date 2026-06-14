@@ -42,7 +42,6 @@ Current routing:
 | `content/blog/` (`_index.md`, posts) | `section.html` / `page.html` | defaults; posts get prev/next + read-time. **Currently no posts** — only the `_index.md` exists, so `/blog` renders an empty list |
 | `content/opensource/` | `opensource.html` / `opensource_page.html` | set explicitly in front-matter; two project pages (`cargo_leptos.md`, `reactive_signals.md`) |
 | `content/about.md` | `description.html` | the only standalone page, set in front-matter |
-| tags taxonomy | `tags/list.html` (all terms), `tags/single.html` (one tag) | `tags` is the only taxonomy, RSS enabled |
 
 > **Current content inventory** (so the table above stays honest): `content/about.md`, `content/blog/_index.md` (no posts), `content/opensource/_index.md` + `cargo_leptos.md` + `reactive_signals.md`. The `hermit_menu` nav links to `/opensource`, `/blog`, `/about` — all resolve, but `/blog` is empty.
 
@@ -50,7 +49,7 @@ Current routing:
 
 ### Known maintenance smell
 
-The header `<nav>` + mobile menu markup is **duplicated verbatim** across `section.html`, `page.html`, `opensource.html`, `opensource_page.html`, `description.html`, `tags/list.html`, and `tags/single.html` (because each overrides the `header` block). Changing site navigation means editing all of them. If touching the header, prefer extracting it into a `macros.html` macro and calling it from each `header` block.
+The header `<nav>` + mobile menu markup is **duplicated verbatim** across `section.html`, `page.html`, `opensource.html`, `opensource_page.html`, `description.html` (because each overrides the `header` block). Changing site navigation means editing all of them. If touching the header, prefer extracting it into a `macros.html` macro and calling it from each `header` block.
 
 ## Configuration-driven content
 
@@ -70,6 +69,7 @@ The header `<nav>` + mobile menu markup is **duplicated verbatim** across `secti
 
 - **Math**: KaTeX is loaded from CDN in the base template on every page (auto-render with `$`/`$$`/`\(\)`/`\[\]` delimiters).
 - **Code highlighting**: Zola's built-in `highlight_code = true` is on. There is also an *optional* highlight.js + badge/clipboard path gated behind `config.extra.highlightjs.enable` (currently `false`).
+- **Tags/taxonomies: intentionally none.** The `tags` taxonomy was removed (2026-06-14) — at ~10–20 articles a tag system adds no navigation value and produces thin one-entry per-tag pages/feeds. `config.toml` keeps the commented Zola example showing how to re-add. Revisit only at ~40+ posts, or when content forms distinct clusters of 5+ posts each.
 
 ## Content authoring conventions
 

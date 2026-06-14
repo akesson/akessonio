@@ -23,16 +23,6 @@
     </div>
     <hr class="post-end">
     <footer class="post-info">
-      {% if page.taxonomies and page.taxonomies.tags %}
-      <p>
-        {{ macros::icon(name="tag", class="meta-icon") }}
-        {% for k, tags in page.taxonomies %}
-        {% for t in tags %}
-        <span class="tag"><a href="{{get_taxonomy_url(kind="tags", name=t)}}">{{t}}</a></span>
-        {% endfor %}
-        {% endfor %}
-      </p>
-      {% endif %}
       <p>{{ macros::icon(name="file-text") }}{{ page.extra.words | default(value=page.word_count) }} Words</p>
       {% if page.date %}
       <p>{{ macros::icon(name="calendar") }}{{ page.date }}</p>

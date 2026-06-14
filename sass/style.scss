@@ -524,19 +524,6 @@ h1.title {
   .reading-time {
     white-space: nowrap;
   }
-
-  .article-tag {
-    color: var(--muted);
-
-    &::before {
-      content: "#";
-      opacity: 0.6;
-    }
-
-    &:hover {
-      color: var(--accent);
-    }
-  }
 }
 
 // ── About — lead paragraph ───────────────────────────────────────────────────
@@ -736,14 +723,6 @@ hr.post-end {
 
   svg {
     margin-right: 0.8em;
-  }
-
-  .tag {
-    margin-right: 0.5em;
-
-    &::before {
-      content: "#";
-    }
   }
 }
 
