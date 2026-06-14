@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta itemprop="name" content="Henrik Åkesson" />
+  <meta itemprop="description" content="" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="https://akesson.io/apple-touch-icon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://akesson.io/favicon-32x32.png" />
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="16x16"
+    href="https://akesson.io/favicon-16x16.png"
+  />
+  <link
+    rel="shortcut icon"
+    href="https://akesson.io/favicon.ico"
+  />
+  <link rel="preload" href="https://akesson.io/fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin/>
+  <!-- Syntax highlighting: both theme sheets load; the active one is chosen to
+       match the resolved data-theme (below + main.js) — which may be a manual
+       override — not prefers-color-scheme directly. Only emitted when the page
+       actually contains a code block (<pre>); most pages have none, so they skip
+       ~14.7 KB of render-blocking CSS. The inline script below and main.js both
+       guard getElementById, so their absence is safe. -->
+  <!-- Resolve theme + starting hue before first paint: no flash of the wrong
+       theme or the default hue. Mirrors the logic in main.js.
+       theme mode is one of light / dark / system (default); "system" follows the
+       OS live (see main.js). data-theme is the resolved light|dark that drives
+       colours; data-theme-mode is the chosen mode that drives the toggle icon. -->
+  <script>
+    (function () {
+      try {
+        var d = document.documentElement;
+        var mode = localStorage.getItem("theme") || "system";
+        var prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+        var theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        d.setAttribute("data-theme", theme);
+        d.setAttribute("data-theme-mode", mode);
+        var dark = document.getElementById("giallo-dark");
+        var light = document.getElementById("giallo-light");
+        if (dark && light) {
+          dark.media = theme === "light" ? "not all" : "all";
+          light.media = theme === "light" ? "all" : "not all";
+        }
+        if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          d.style.setProperty("--hue", (Date.now() / 1800000 * 360 % 360).toFixed(1));
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="https://akesson.io/style.css"/>
+  
+  <script type="speculationrules">
+  {
+    "prefetch": [
+      { "source": "document", "where": { "href_matches": "/*" }, "eagerness": "moderate" }
+    ]
+  }
+  </script>
+  
+  <title>reactive-signals</title>
+  
+
+  
+
+  <body id="page">
+
+    <button id="theme-toggle" class="hdr-btn" title="Theme" aria-label="Switch theme (light, dark, or system)">
+      
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-monitor"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+
+    </button>
+
+    
+    
+<header class="leaf-header">
+  <div class="chrome-row">
+    <a class="back-link" href="https:&#x2F;&#x2F;akesson.io&#x2F;projects&#x2F;" data-default-href="https:&#x2F;&#x2F;akesson.io&#x2F;projects&#x2F;" data-default-label="Projects">
+      
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+<span class="back-label">Projects</span>
+    </a>
+  </div>
+</header>
+
+
+    
+
+    
+<main class="site-main reading-layout section-inner">
+  <article class="thin">
+    <h1 class="title">reactive-signals</h1>
+
+    <div class="content"><p><a rel="external" href="https://github.com/human-solutions/reactive-signals">GitHub</a> <a rel="external" href="https://crates.io/crates/reactive-signals">crates.io</a> <a rel="external" href="https://docs.rs/reactive-signals">docs.rs</a></p>
+<p>reactive-signals is a dx-first scope-based fine-grained reactive system. It is based on the excellent ideas in leptos_reactive
+but is written from scratch to provide the simplest API and mental model possible for developers. See <a rel="external" href="https://docs.rs/reactive-signals">docs.rs</a>
+for much more information.</p>
+<p>Status: <a rel="external" href="https://opencollective.com/human-solutions/projects/reactive-signals">fund raising</a> for achieving a production-level featureset and quality:</p>
+<ul>
+<li><a rel="external" href="https://docs.rs/reactive-signals/0.1.0-alpha.3/reactive_signals/struct.Scope.html#typed-attached-data">attached data</a> for Scopes</li>
+<li><a rel="external" href="https://docs.rs/reactive-signals/0.1.0-alpha.3/reactive_signals/macro.signal.html#example-of-async-functional-reactive-signals">async signals</a></li>
+<li>full test-coverage</li>
+<li>push-pull updates</li>
+<li>tokio tracing instrumentation</li>
+</ul>
+</div>
+  </article>
+
+  
+<div class="post-nav thin">
+  
+  
+</div>
+
+</main>
+
+
+    
+
+    <script defer src="https://akesson.io/js/main.js"></script>
+
+    
+    
+    <script data-goatcounter="https://akesson.goatcounter.com/count"
+            async src="https://gc.zgo.at/count.js"></script>
+    
+
+    
+
+    
+    
+  </body>
+</html>

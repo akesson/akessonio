@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://akesson.io/</loc>
+    </url>
+    <url>
+        <loc>https://akesson.io/about/</loc>
+    </url>
+    <url>
+        <loc>https://akesson.io/projects/</loc>
+    </url>
+    <url>
+        <loc>https://akesson.io/projects/cargo-leptos/</loc>
+        <lastmod>2018-09-29T11:36:33+08:00</lastmod>
+    </url>
+    <url>
+        <loc>https://akesson.io/projects/reactive-signals/</loc>
+        <lastmod>2018-09-29T11:36:33+08:00</lastmod>
+    </url>
+    <url>
+        <loc>https://akesson.io/wordtree/</loc>
+        <lastmod>2026-06-06</lastmod>
+    </url>
+</urlset>
