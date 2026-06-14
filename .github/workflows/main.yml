@@ -6,6 +6,12 @@ jobs:
     steps:
       - name: 'checkout'
         uses: actions/checkout@v3.0.0
+      - name: 'setup node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 'guard: no math (site has no renderer)'
+        run: node scripts/check-no-math.mjs
       - name: 'build'
         uses: shalzz/zola-deploy-action@v0.22.1
         env:
@@ -19,6 +25,12 @@ jobs:
     steps:
       - name: 'checkout'
         uses: actions/checkout@v3.0.0
+      - name: 'setup node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 'guard: no math (site has no renderer)'
+        run: node scripts/check-no-math.mjs
       - name: 'build and deploy'
         uses: shalzz/zola-deploy-action@v0.22.1
         env:

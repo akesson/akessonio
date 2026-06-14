@@ -12,5 +12,8 @@
 .playwright-mcp
 robin-rendle-breakouts/
 
+# Node / Playwright tooling (the screenshot suite). Committed screenshots live
+# in tests/screenshots/ and are intentionally NOT ignored.
 node_modules/
 test-results/
+playwright-report/

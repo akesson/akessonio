@@ -67,7 +67,7 @@ The header `<nav>` + mobile menu markup is **duplicated verbatim** across `secti
 
 ## Rendering specifics
 
-- **Math**: KaTeX is loaded from CDN in the base template on every page (auto-render with `$`/`$$`/`\(\)`/`\[\]` delimiters).
+- **Math**: **Not supported.** KaTeX was removed (2026-06-14); there is no math renderer. Writing math delimiters (`$…$`, `$$…$$`, `\(…\)`, `\[…\]`) in content is **rejected by `npm run check:math`** (`scripts/check-no-math.mjs`, also a CI step in `.github/workflows/main.yml`) so it can't silently render as literal text. **To enable math**, add **MathML** to Zola: Zola 0.22 has no native math and no plugins, so run a build-time converter (**Temml** via Node, or the `latex2mathml` Rust crate) as a **post-build pass over `public/`**, and rework the deploy (the all-in-one `shalzz/zola-deploy-action` leaves no seam) — native MathML then renders with zero runtime JS/CSS/CDN. Then delete the guard.
 - **Code highlighting**: Zola's built-in `highlight_code = true` is on. There is also an *optional* highlight.js + badge/clipboard path gated behind `config.extra.highlightjs.enable` (currently `false`).
 - **Tags/taxonomies: intentionally none.** The `tags` taxonomy was removed (2026-06-14) — at ~10–20 articles a tag system adds no navigation value and produces thin one-entry per-tag pages/feeds. `config.toml` keeps the commented Zola example showing how to re-add. Revisit only at ~40+ posts, or when content forms distinct clusters of 5+ posts each.
 

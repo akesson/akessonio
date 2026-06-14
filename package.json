@@ -1,0 +1,17 @@
+{
+  "name": "human-solutions-website",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tooling for the Human Solutions Zola site (Playwright screenshot suite).",
+  "scripts": {
+    "screenshots": "zola build --base-url http://127.0.0.1:8787 && playwright test",
+    "test": "playwright test",
+    "check:math": "node scripts/check-no-math.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0"
+  }
+}
