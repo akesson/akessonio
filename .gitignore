@@ -11,3 +11,6 @@
 /github-profile.md
 .playwright-mcp
 robin-rendle-breakouts/
+
+node_modules/
+test-results/
