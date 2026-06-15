@@ -105,7 +105,7 @@ $frame:      1px solid var(--border);  // quiet frame for a UI screenshot (§1 c
 //   --bleed: clamp(0rem, 50vw - 21rem - 2rem, var(--bleed-max));  // capped by the gutter
 ```
 
-**Colour note (for when theming is built):** name colour tokens *semantically* (`$bg`, `$surface`, `$text`, `$accent`, `$muted`) rather than by appearance, so a light theme is a drop-in. **One accent, and it always means something:** `$accent` carries interactive and wayfinding meaning only — links, the active nav item, primary CTAs — never decoration; everything else is `$bg`/`$surface`/`$text`/`$muted`. Whatever the palette, the AA contrast rule in the north star is non-negotiable.
+**Colour note (for when theming is built):** name colour tokens *semantically* (`$bg`, `$surface`, `$text`, `$accent`, `$muted`) rather than by appearance, so a light theme is a drop-in. **One accent, and it always means something:** `$accent` carries interactive, wayfinding, and structural-emphasis meaning — links, the active nav item, primary CTAs, section headings, and inline code — never ambient decoration; everything else is `$bg`/`$surface`/`$text`/`$muted`. Whatever the palette, the AA contrast rule in the north star is non-negotiable.
 
 *Now implemented* as **runtime** CSS custom properties (not Sass vars), because the palette is live: a single drifting `--hue` feeds only `--accent` (+ `--series-1..3` for diagrams), and the dark/light theme is a `data-theme` swap on `<html>`. The roles are exactly `--bg --surface --surface-sunken --text --muted --border --accent --page --series-1..3`. Theme-aware imagery (§5) and inline diagrams hook these directly.
 
