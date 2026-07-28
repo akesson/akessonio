@@ -8,17 +8,19 @@ This is **Henrik Åkesson's** personal website (https://akesson.io): a [Zola](ht
 
 ## Commands
 
+The site builds with **zola-plus** (a zola fork adding the table directives — `scroll`, `expand`, `reflow`, `transpose`, measured widths), pinned in `mise.toml` (`"github:akesson/zola-plus"`). Plain `zola` still builds the site but silently drops every table directive — always build with `zola-plus`:
+
 ```bash
-zola serve     # local dev server with live reload (http://127.0.0.1:1111)
-zola build     # build static site into public/
-zola check     # validate content + check internal/external links
+zola-plus serve     # local dev server with live reload (http://127.0.0.1:1111)
+zola-plus build     # build static site into public/
+zola-plus check     # validate content + check internal/external links
 ```
 
 There is no test suite, linter, or JS build step — JS is hand-written in `static/js/` and served as-is; SCSS is compiled by Zola itself (`compile_sass = true`).
 
 ## Deployment (important)
 
-Deploy is via GitHub Actions (`.github/workflows/main.yml`, using `shalzz/zola-deploy-action`):
+Deploy is via GitHub Actions (`.github/workflows/main.yml`): `jdx/mise-action` installs the pinned zola-plus, `zola-plus build` produces `public/`, and `peaceiris/actions-gh-pages` pushes it to `gh-pages`:
 
 - **Pushing to `main` builds AND deploys** to the `gh-pages` branch (production). There is no staging gate.
 - Pushes to any other branch run a build-only check (no deploy).
@@ -67,7 +69,7 @@ The header `<nav>` + mobile menu markup is **duplicated verbatim** across `secti
 
 ## Rendering specifics
 
-- **Math**: **Not supported.** KaTeX was removed (2026-06-14); there is no math renderer. Writing math delimiters (`$…$`, `$$…$$`, `\(…\)`, `\[…\]`) in content is **rejected by `npm run check:math`** (`scripts/check-no-math.mjs`, also a CI step in `.github/workflows/main.yml`) so it can't silently render as literal text. **To enable math**, add **MathML** to Zola: Zola 0.22 has no native math and no plugins, so run a build-time converter (**Temml** via Node, or the `latex2mathml` Rust crate) as a **post-build pass over `public/`**, and rework the deploy (the all-in-one `shalzz/zola-deploy-action` leaves no seam) — native MathML then renders with zero runtime JS/CSS/CDN. Then delete the guard.
+- **Math**: **Not supported.** KaTeX was removed (2026-06-14); there is no math renderer. Writing math delimiters (`$…$`, `$$…$$`, `\(…\)`, `\[…\]`) in content is **rejected by `npm run check:math`** (`scripts/check-no-math.mjs`, also a CI step in `.github/workflows/main.yml`) so it can't silently render as literal text. **To enable math**, add **MathML** to Zola: Zola 0.22 has no native math and no plugins, so run a build-time converter (**Temml** via Node, or the `latex2mathml` Rust crate) as a **post-build pass over `public/`** — the CI build is a plain `zola-plus build` step, so the pass slots in between build and deploy — native MathML then renders with zero runtime JS/CSS/CDN. Then delete the guard.
 - **Code highlighting**: Zola's built-in `highlight_code = true` is on. There is also an *optional* highlight.js + badge/clipboard path gated behind `config.extra.highlightjs.enable` (currently `false`).
 - **Tags/taxonomies: intentionally none.** The `tags` taxonomy was removed (2026-06-14) — at ~10–20 articles a tag system adds no navigation value and produces thin one-entry per-tag pages/feeds. `config.toml` keeps the commented Zola example showing how to re-add. Revisit only at ~40+ posts, or when content forms distinct clusters of 5+ posts each.
 
