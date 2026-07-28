@@ -3,6 +3,8 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 > **Design:** `docs/DESIGN.md` holds the target design principles (calm, whitespace-led, discreet/short motion, sparing fluidity) and the design tokens. New/redesigned UI follows it; the current Hermit defaults predate it.
+>
+> **Voice:** `docs/VOICE.md` holds the tone-of-voice rules (concise, direct, humane, no BS — first person, conclusion first, owned opinions, wrong turns as content). All site prose and blog posts are measured against it.
 
 This is **Henrik Åkesson's** personal website (https://akesson.io): a [Zola](https://www.getzola.org) static site built on a **vendored, customized Hermit theme**. The theme is copied directly into `templates/` + `sass/` and edited in place — there is no `themes/` directory and no `theme =` in `config.toml`, so all layout changes are made directly to the files here.
 
@@ -40,25 +42,18 @@ Current routing:
 
 | Content | Template | Notes |
 |---|---|---|
-| `/` home | `index.html` | base layout, rendered directly |
-| `content/blog/` (`_index.md`, posts) | `section.html` / `page.html` | defaults; posts get prev/next + read-time. **Currently no posts** — only the `_index.md` exists, so `/blog` renders an empty list |
-| `content/opensource/` | `opensource.html` / `opensource_page.html` | set explicitly in front-matter; two project pages (`cargo_leptos.md`, `reactive_signals.md`) |
-| `content/about.md` | `description.html` | the only standalone page, set in front-matter |
+| `/` home = article list | `index.html` + `content/_index.md` (`section.html`, "Articles") | articles are **top-level** `content/*.md` files |
+| Articles (e.g. `content/wordtree.md`) | `page.html` (default mapping) | prev/next via `post_nav()` macro, read-time; old `/blog/...` URLs kept via `aliases` |
+| `content/projects/` | `projects.html` / `project.html` | set in front-matter; old `/opensource/...` URLs kept via `aliases` |
+| `content/about/_index.md` | `description.html` | set in front-matter |
 
-> **Current content inventory** (so the table above stays honest): `content/about.md`, `content/blog/_index.md` (no posts), `content/opensource/_index.md` + `cargo_leptos.md` + `reactive_signals.md`. The `hermit_menu` nav links to `/opensource`, `/blog`, `/about` — all resolve, but `/blog` is empty.
-
-`macros.html` holds shared partials: `render_social_icons()`, `footer()`, `read_time()`. The social-icon macro is a large `if/elif` chain keyed on the icon `name` string.
-
-### Known maintenance smell
-
-The header `<nav>` + mobile menu markup is **duplicated verbatim** across `section.html`, `page.html`, `opensource.html`, `opensource_page.html`, `description.html` (because each overrides the `header` block). Changing site navigation means editing all of them. If touching the header, prefer extracting it into a `macros.html` macro and calling it from each `header` block.
+`macros.html` holds shared partials: `read_time()`, `social_icon()`, `icon()`, `tabstrip()` (the section nav strip, with `aria-current`), `back_link()`, `post_nav()`. Navigation is **not** duplicated across templates anymore — header blocks call the macros (e.g. `page.html` calls `back_link()`).
 
 ## Configuration-driven content
 
 `config.toml` `[extra]` drives site chrome — edit here, not in templates:
 
-- `hermit_menu` — main nav items (`{link, name}`); rendered in every header block.
-- `hermit_social` — social links (`{name, link}`); `name` must match a branch in the `render_social_icons()` macro or it falls back to a generic link icon.
+- `hermit_social` — social links (`{name, link}`); `name` must match a branch in the `social_icon()` macro or it falls back to a generic link icon. (There is no `hermit_menu` anymore — section nav is the `tabstrip()` macro in `macros.html`.)
 - `home_subtitle`, `footer_copyright`, `author.name`, `highlightjs.*`.
 
 ## Styling & assets
@@ -75,7 +70,7 @@ The header `<nav>` + mobile menu markup is **duplicated verbatim** across `secti
 
 ## Content authoring conventions
 
-- Sections are directories under `content/` with an `_index.md` (`sort_by = "date"` is used for listed sections).
-- A page joins a listed section by being a `.md` file in that directory with `date` set; `section.html` and the opensource list group pages by year.
-- Standalone informational pages use `template = "description.html"` (currently only `about.md`).
+- **Articles are top-level** `content/<slug>.md` files with `date` set; the root section (`content/_index.md`, "Articles", `sort_by = "date"`) lists them. Subsections (`content/projects/`) are directories with an `_index.md`.
+- **Writing an article? Use the `write-article` skill** — it encodes the workflow (voice pass against `docs/VOICE.md`, front-matter, `blog-tables`, math guard, build check).
+- Standalone informational pages use `template = "description.html"` (currently only `content/about/_index.md`).
 - Shortcodes would live in `templates/shortcodes/`, invoked from Markdown as `{{ name() }}` — but that directory is **currently empty** (no shortcodes defined yet).
