@@ -58,6 +58,7 @@
     })();
   </script>
   <link rel="stylesheet" href="{{get_url(path="style.css")}}"/>
+  {% block head_extra %}{% endblock head_extra %}
   {# Speculative prefetch: warm same-origin documents on hover/pointerdown so the
      next page is already in cache when clicked. Same-origin only (href_matches is
      resolved against this origin). Chromium-only; other browsers ignore it. #}

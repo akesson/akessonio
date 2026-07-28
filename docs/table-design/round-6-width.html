@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tables · Round 6 — width</title>
+<style>
+  /* ── Site tokens (mirrors sass/_color.scss, hue pinned at 250). ── */
+  :root, [data-theme="dark"] {
+    --hue: 250;
+    --bg: oklch(0.30 0 0);
+    --surface: oklch(0.34 0 0);
+    --surface-sunken: oklch(0.26 0 0);
+    --text: oklch(0.86 0 0);
+    --muted: oklch(0.70 0 0);
+    --border: oklch(0.44 0 0);
+    --accent: oklch(0.76 0.100 var(--hue));
+    --page: var(--bg);
+  }
+  [data-theme="light"] {
+    --bg: oklch(0.985 0 0);
+    --surface: oklch(0.995 0 0);
+    --surface-sunken: oklch(0.95 0 0);
+    --text: oklch(0.28 0 0);
+    --muted: oklch(0.50 0 0);
+    --border: oklch(0.85 0 0);
+    --accent: oklch(0.50 0.100 var(--hue));
+    --page: linear-gradient(to bottom, oklch(0.998 0 0), oklch(0.975 0 0));
+  }
+  @font-face {
+    font-family: "Hanken Grotesk";
+    font-style: normal; font-weight: 400 700; font-display: swap;
+    src: url("../../static/fonts/hanken-grotesk-latin.woff2") format("woff2");
+  }
+  @font-face {
+    font-family: "JetBrains Mono";
+    font-style: normal; font-weight: 400 700; font-display: swap;
+    src: url("../../static/fonts/jetbrains-mono-latin.woff2") format("woff2");
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--page); min-height: 100%; }
+  body {
+    margin: 0 auto; padding: 3rem 1.5rem 6rem; max-width: 46rem;
+    font: 18px/1.6 "Hanken Grotesk", sans-serif; letter-spacing: 0.06em;
+    color: var(--text);
+  }
+  h1 { font-size: 1.6rem; color: var(--accent); }
+  h2 { font-size: 1.15rem; margin: 3.5rem 0 0.25rem; }
+  h2 small { color: var(--muted); font-weight: 400; font-size: 0.85rem; margin-left: 0.5rem; }
+  h2.part { margin-top: 4.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  p { margin: 0.5rem 0 1rem; }
+  p.dim { color: var(--muted); font-size: 0.875rem; }
+  ul { margin: 0.5rem 0 1rem; }
+  li { margin: 0.25rem 0; }
+  code {
+    font-family: "JetBrains Mono", monospace; font-size: 0.85em;
+    color: var(--text); letter-spacing: normal;
+    font-variant-ligatures: none;
+  }
+  #theme {
+    position: fixed; top: 1rem; right: 1rem; z-index: 10;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 0.4rem 0.8rem; font: inherit; cursor: pointer;
+  }
+
+  /* ── DECIDED SYSTEM (rounds 1–5) ── */
+  .panel {
+    --panel-bg: var(--surface-sunken);
+    background: var(--panel-bg); border-radius: 12px;
+    padding: 0.5rem 1rem;
+  }
+  [data-theme="light"] .panel {
+    --panel-bg: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px oklch(0 0 0 / 0.10);
+    padding: 0 1rem 0.5rem;
+  }
+  table {
+    border-collapse: collapse; border-spacing: 0;
+    font-size: 0.95rem;
+  }
+  th, td { padding: 0.65rem 1rem; text-align: left; vertical-align: top; }
+  thead th {
+    font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 600; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  tbody td { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ── Full-viewport stage with the ladder's rungs drawn as guides ── */
+  .stage {
+    position: relative;
+    width: calc(100vw - 4rem);
+    margin-left: calc((100% - (100vw - 4rem)) / 2);
+    padding: 1.6rem 0 0.5rem;
+  }
+  .guide {
+    position: absolute; inset-block: 0; left: 50%; transform: translateX(-50%);
+    border-inline: 1px dashed var(--border); pointer-events: none;
+  }
+  .guide span {
+    position: absolute; top: 0; left: 0.5rem;
+    font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .g-col  { width: min(42rem, 100%); }
+  .g-wide { width: min(66rem, 100%); opacity: 0.65; }
+  .g-full { width: min(80rem, 100%); opacity: 0.4; }
+
+  /* ── 6A — continuous: natural width, centered, rungs are only caps ── */
+  .cont { width: fit-content; max-width: min(80rem, 100%); margin: 0 auto 1.5rem; }
+
+  /* ── 6B — stepped: the panel snaps to a rung (authored / zola-plus
+       directive arg — CSS cannot measure natural width to snap on its own);
+       the table centers inside its panel, slack becomes symmetric air ── */
+  .stepped { margin: 0 auto 1.5rem; }
+  .stepped table { margin-inline: auto; }
+  .w-col  { width: min(42rem, 100%); }
+  .w-wide { width: min(66rem, 100%); }
+  .w-full { width: min(80rem, 100%); }
+
+  /* ── 6C — equal-step scale: the panel snaps UP to the next 6rem step,
+       automatically (calc-size measures the intrinsic size; 42 and 66 are
+       multiples of 6, so the old rungs stay on the scale). Browsers without
+       calc-size (Safari/Firefox today) keep the fit-content fallback —
+       continuous and centered, never broken. ── */
+  .step6 {
+    width: fit-content;
+    width: calc-size(fit-content, round(up, size, 6rem));
+    max-width: min(80rem, 100%);
+    margin: 0 auto 1.5rem;
+  }
+  .step6 table { margin-inline: auto; }
+  .gstep { opacity: 0.22; }
+
+  /* overflow past Full: capped + scroll (the shape map's answer) */
+  .scrolly { overflow-x: auto; }
+  .scrolly table { width: max-content; max-width: none; white-space: nowrap; border-collapse: separate; }
+
+  /* ── Part C — sticky coverage guard: rig + clamp ── */
+  .rig { margin: 1rem 0 0.25rem; }
+  .sample {
+    container-type: inline-size;
+    resize: horizontal; overflow: hidden;
+    min-width: 260px; max-width: 100%; width: 100%;
+    padding-right: 14px;
+  }
+  .rig-hint { color: var(--muted); font-size: 0.75rem; margin: 0.25rem 0 0; }
+  .rig-hint::before { content: "starts narrow — pan sideways · drag the corner to resize and watch the clamp track 40% of the container"; }
+  .sticky-col .scrolly th:first-child,
+  .sticky-col .scrolly td:first-child {
+    position: sticky; left: 0; background: var(--panel-bg);
+    border-right: 1px solid var(--border);
+  }
+  .clamped .scrolly th:first-child,
+  .clamped .scrolly td:first-child {
+    max-width: 40cqw; white-space: normal;
+  }
+</style>
+</head>
+<body>
+<button id="theme">theme</button>
+
+<h1>Tables · Round 6 — width, overflow &amp; the sticky guard</h1>
+<p>Round-4's fit-content amendment raised the real question: how does a table
+relate to the <strong>three-rung ladder</strong> (Column 42 / Wide 66 /
+Full 80rem)? Both schemes below center the panel; they differ in whether widths
+are <em>continuous</em> or <em>stepped</em>. The dashed guides are the actual
+rungs — widen the window to see them all. One honest constraint up front: CSS
+cannot measure a table's natural width to auto-snap it to a rung, so stepped
+widths must be chosen at build time (a zola-plus directive argument, defaulting
+to Column) — continuous needs no authoring at all.</p>
+
+<!-- ════════ A ════════ -->
+<h2 class="part">6A — continuous <small>natural width, centered; rungs act as caps only</small></h2>
+<div class="stage">
+  <div class="guide g-full"><span>full 80</span></div>
+  <div class="guide g-wide"><span>wide 66</span></div>
+  <div class="guide g-col"><span>column 42</span></div>
+
+  <div class="panel cont">
+    <table>
+      <thead><tr><th>rung</th><th>cap</th></tr></thead>
+      <tbody>
+        <tr><td>Column</td><td>42rem</td></tr>
+        <tr><td>Wide</td><td>66rem</td></tr>
+        <tr><td>Full</td><td>80rem</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel cont">
+    <table>
+      <thead><tr><th>stage</th><th>p50 (ms)</th><th>p95 (ms)</th><th>p99 (ms)</th><th>mean (ms)</th><th>min (ms)</th><th>max (ms)</th><th>σ (ms)</th><th>runs</th></tr></thead>
+      <tbody>
+        <tr><td>parse</td><td>412</td><td>498</td><td>541</td><td>421</td><td>388</td><td>560</td><td>31</td><td>200</td></tr>
+        <tr><td>dedupe</td><td>38</td><td>51</td><td>66</td><td>41</td><td>33</td><td>71</td><td>8</td><td>200</td></tr>
+        <tr><td>pack</td><td>7</td><td>9</td><td>12</td><td>7.4</td><td>6</td><td>14</td><td>1.4</td><td>200</td></tr>
+        <tr><td>write</td><td>121</td><td>149</td><td>171</td><td>126</td><td>108</td><td>180</td><td>14</td><td>200</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<p class="dim">The small table reads as part of the column; the benchmark table
+steps out exactly as far as it needs, symmetrically. No authoring, no slack —
+but table widths vary freely, so two mid-size tables on one page may be two
+slightly different widths.</p>
+
+<!-- ════════ B ════════ -->
+<h2 class="part">6B — stepped <small>panels come in exactly three sizes; the table centers inside</small></h2>
+<div class="stage">
+  <div class="guide g-full"><span>full 80</span></div>
+  <div class="guide g-wide"><span>wide 66</span></div>
+  <div class="guide g-col"><span>column 42</span></div>
+
+  <div class="panel stepped w-col">
+    <table>
+      <thead><tr><th>rung</th><th>cap</th></tr></thead>
+      <tbody>
+        <tr><td>Column</td><td>42rem</td></tr>
+        <tr><td>Wide</td><td>66rem</td></tr>
+        <tr><td>Full</td><td>80rem</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel stepped w-wide">
+    <table>
+      <thead><tr><th>stage</th><th>p50 (ms)</th><th>p95 (ms)</th><th>p99 (ms)</th><th>mean (ms)</th><th>min (ms)</th><th>max (ms)</th><th>σ (ms)</th><th>runs</th></tr></thead>
+      <tbody>
+        <tr><td>parse</td><td>412</td><td>498</td><td>541</td><td>421</td><td>388</td><td>560</td><td>31</td><td>200</td></tr>
+        <tr><td>dedupe</td><td>38</td><td>51</td><td>66</td><td>41</td><td>33</td><td>71</td><td>8</td><td>200</td></tr>
+        <tr><td>pack</td><td>7</td><td>9</td><td>12</td><td>7.4</td><td>6</td><td>14</td><td>1.4</td><td>200</td></tr>
+        <tr><td>write</td><td>121</td><td>149</td><td>171</td><td>126</td><td>108</td><td>180</td><td>14</td><td>200</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<p class="dim">Every table panel is one of three widths — the page keeps the
+ladder's rhythm, and same-rung tables align edge to edge. The cost is visible
+above: the small table swims in a Column-wide panel, the benchmark table
+carries side slack inside Wide. And the rung is an authoring decision per
+table (<code>&lt;!-- table: wide --&gt;</code>), because the build can't know
+rendered widths.</p>
+
+<!-- ════════ C ════════ -->
+<h2 class="part">6C — equal-step scale <small>snap up to the next 6rem step — below the column and above it</small></h2>
+<p class="dim">The scale is …, 18, 24, 30, 36, <strong>42</strong>, 48, 54, 60,
+<strong>66</strong>, 72, 78, capped at 80 — every 6rem, passing exactly through
+the old rungs. Snapping is automatic (<code>calc-size()</code> measures the
+table), so unlike 6B nothing is authored. Support today: Chrome snaps;
+Safari/Firefox get the continuous 6A behaviour as a built-in fallback.</p>
+<div class="stage">
+  <div class="guide gstep" style="width: min(18rem, 100%)"></div>
+  <div class="guide gstep" style="width: min(24rem, 100%)"></div>
+  <div class="guide gstep" style="width: min(30rem, 100%)"></div>
+  <div class="guide gstep" style="width: min(36rem, 100%)"></div>
+  <div class="guide gstep" style="width: min(48rem, 100%)"></div>
+  <div class="guide gstep" style="width: min(54rem, 100%)"></div>
+  <div class="guide gstep" style="width: min(60rem, 100%)"></div>
+  <div class="guide gstep" style="width: min(72rem, 100%)"></div>
+  <div class="guide gstep" style="width: min(78rem, 100%)"></div>
+  <div class="guide g-full"><span>full 80</span></div>
+  <div class="guide g-wide"><span>wide 66</span></div>
+  <div class="guide g-col"><span>column 42</span></div>
+
+  <div class="panel step6">
+    <table>
+      <thead><tr><th>rung</th><th>cap</th></tr></thead>
+      <tbody>
+        <tr><td>Column</td><td>42rem</td></tr>
+        <tr><td>Wide</td><td>66rem</td></tr>
+        <tr><td>Full</td><td>80rem</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel step6">
+    <table>
+      <thead><tr><th>stage</th><th>p50 (ms)</th><th>p95 (ms)</th><th>p99 (ms)</th><th>mean (ms)</th><th>min (ms)</th><th>max (ms)</th><th>σ (ms)</th><th>runs</th></tr></thead>
+      <tbody>
+        <tr><td>parse</td><td>412</td><td>498</td><td>541</td><td>421</td><td>388</td><td>560</td><td>31</td><td>200</td></tr>
+        <tr><td>dedupe</td><td>38</td><td>51</td><td>66</td><td>41</td><td>33</td><td>71</td><td>8</td><td>200</td></tr>
+        <tr><td>pack</td><td>7</td><td>9</td><td>12</td><td>7.4</td><td>6</td><td>14</td><td>1.4</td><td>200</td></tr>
+        <tr><td>write</td><td>121</td><td>149</td><td>171</td><td>126</td><td>108</td><td>180</td><td>14</td><td>200</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<p class="dim">The small table snaps up to the 18rem step, the benchmark table
+to 54rem — slack is at most 6rem, split symmetrically, so it reads as air
+rather than emptiness. Same-step tables align edge to edge like 6B, but the
+scale is fine enough that nothing swims.</p>
+
+<!-- ════════ overflow ════════ -->
+<h2 class="part">Wider than Full <small>both schemes end the same way</small></h2>
+<div class="stage">
+  <div class="guide g-full"><span>full 80</span></div>
+  <div class="panel cont" style="max-width: min(80rem, 100%); width: fit-content;">
+    <div class="scrolly">
+      <table>
+        <thead><tr><th>page</th><th>375 · dark</th><th>375 · light</th><th>600 · dark</th><th>600 · light</th><th>900 · dark</th><th>900 · light</th><th>1200 · dark</th><th>1200 · light</th><th>1440 · dark</th><th>1440 · light</th><th>1920 · dark</th><th>1920 · light</th><th>2560 · dark</th><th>2560 · light</th></tr></thead>
+        <tbody>
+          <tr><td>home</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>drift</td><td>ok</td><td>drift</td><td>ok</td><td>drift</td><td>ok</td><td>ok</td></tr>
+          <tr><td>wordtree</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td></tr>
+          <tr><td>design-ladder</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td><td>ok</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<p class="dim">Past 80rem the panel stops growing and the grid pans (or the
+author reaches for expand). This is the shape map from round 5, unchanged —
+the width scheme only decides what happens <em>between</em> the rungs.</p>
+
+<!-- ════════ C ════════ -->
+<h2 class="part">Part C — the sticky coverage guard <small>sticky must never own the screen</small></h2>
+<p>Your rule — "not sticky if it covers too much of the screen" — can't be done
+in pure CSS as an on/off switch (measuring the column's share needs JS). The
+CSS-only equivalent attacks the cause instead: the sticky column is
+<strong>clamped to 40% of the container</strong> (<code>40cqw</code>) and wraps,
+so it can never cover more than that, on any screen. Long labels below; drag
+the sample to see the clamp track the container.</p>
+<div class="rig">
+  <div class="sample" style="width: 360px">
+    <div class="panel sticky-col clamped" style="width: fit-content; max-width: 100%;">
+      <div class="scrolly">
+        <table>
+          <thead><tr><th>benchmark</th><th>p50 (ms)</th><th>p95 (ms)</th><th>p99 (ms)</th><th>mean</th><th>runs</th></tr></thead>
+          <tbody>
+            <tr><td>cargo-leptos release build (incremental)</td><td>412</td><td>498</td><td>541</td><td>421</td><td>200</td></tr>
+            <tr><td>reactive-signals propagation, deep graph</td><td>38</td><td>51</td><td>66</td><td>41</td><td>200</td></tr>
+            <tr><td>wordtree index pack + write</td><td>121</td><td>149</td><td>171</td><td>126</td><td>200</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+<p class="dim">Un-clamped, the first column here would take ~65% of a phone
+screen and sticky would feel like a wall. Clamped, the label wraps to at most
+40% and the data keeps the rest. If even 40% feels like too much for a given
+table, that table shouldn't be sticky at all — which stays an authoring choice
+(<code>scroll</code> vs <code>scroll: sticky</code>).</p>
+
+<h2>Decide</h2>
+<ul>
+  <li><strong>W — width scheme</strong>: 6A continuous (automatic, natural,
+  centered), 6B three rungs (authored, maximal rhythm), or 6C equal 6rem steps
+  (automatic via <code>calc-size</code>, Chrome-snapped / elsewhere-continuous)?</li>
+  <li><strong>S — sticky guard</strong>: clamp at 40cqw as shown (or another
+  share), sticky remaining opt-in per table?</li>
+  <li>Still open from round 5: <strong>P1</strong> (shape map) and
+  <strong>P2</strong> (grouped rows).</li>
+</ul>
+<p>Answer like "W 6A, S 40%, P1 ✓, P2 ✓" — that completes the ladder.</p>
+
+<script>
+  const b = document.getElementById('theme');
+  b.onclick = () => {
+    const h = document.documentElement;
+    h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  };
+</script>
+</body>
+</html>

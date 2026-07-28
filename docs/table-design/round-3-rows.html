@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tables · Round 3 — rows &amp; density</title>
+<style>
+  /* ── Site tokens (mirrors sass/_color.scss, hue pinned at 250).
+       Both themes declared as [data-theme] blocks so a sample can force its
+       own theme with a data-theme attribute, independent of the page. ── */
+  :root, [data-theme="dark"] {
+    --hue: 250;
+    --bg: oklch(0.30 0 0);
+    --surface: oklch(0.34 0 0);
+    --surface-sunken: oklch(0.26 0 0);
+    --text: oklch(0.86 0 0);
+    --muted: oklch(0.70 0 0);
+    --border: oklch(0.44 0 0);
+    --accent: oklch(0.76 0.100 var(--hue));
+    --page: var(--bg);
+  }
+  [data-theme="light"] {
+    --bg: oklch(0.985 0 0);
+    --surface: oklch(0.995 0 0);
+    --surface-sunken: oklch(0.95 0 0);
+    --text: oklch(0.28 0 0);
+    --muted: oklch(0.50 0 0);
+    --border: oklch(0.85 0 0);
+    --accent: oklch(0.50 0.100 var(--hue));
+    --page: linear-gradient(to bottom, oklch(0.998 0 0), oklch(0.975 0 0));
+  }
+  @font-face {
+    font-family: "Hanken Grotesk";
+    font-style: normal; font-weight: 400 700; font-display: swap;
+    src: url("../../static/fonts/hanken-grotesk-latin.woff2") format("woff2");
+  }
+  @font-face {
+    font-family: "JetBrains Mono";
+    font-style: normal; font-weight: 400 700; font-display: swap;
+    src: url("../../static/fonts/jetbrains-mono-latin.woff2") format("woff2");
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--page); min-height: 100%; }
+  body {
+    margin: 0 auto; padding: 3rem 1.5rem 6rem; max-width: 46rem;
+    font: 18px/1.6 "Hanken Grotesk", sans-serif; letter-spacing: 0.06em;
+    color: var(--text);
+  }
+  h1 { font-size: 1.6rem; color: var(--accent); }
+  h2 { font-size: 1.15rem; margin: 3.5rem 0 0.25rem; }
+  h2 small { color: var(--muted); font-weight: 400; font-size: 0.85rem; margin-left: 0.5rem; }
+  h2.part { margin-top: 4.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  p { margin: 0.5rem 0 1rem; }
+  p.dim { color: var(--muted); font-size: 0.875rem; }
+  code {
+    font-family: "JetBrains Mono", monospace; font-size: 0.85em;
+    color: var(--accent); letter-spacing: normal;
+    font-variant-ligatures: none;
+  }
+  #theme {
+    position: fixed; top: 1rem; right: 1rem; z-index: 10;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 0.4rem 0.8rem; font: inherit; cursor: pointer;
+  }
+  /* ── Resizable rig (container queries drive the pivot, as zola-plus does) ── */
+  .rig { margin: 1rem 0 0.25rem; }
+  .sample {
+    container-type: inline-size;
+    resize: horizontal; overflow: hidden;
+    min-width: 260px; max-width: 100%; width: 100%;
+    padding-right: 14px;
+  }
+  .rig-hint { color: var(--muted); font-size: 0.75rem; margin: 0.25rem 0 0; }
+  .rig-hint::before { content: "⇤ drag to shrink · the row choice carries into the cards"; }
+
+  /* ── DECIDED container (round 1): dark = sunken panel, light = bare raised
+       card. No caption bar anywhere — titles live in running text. ── */
+  .sample-inner {
+    background: var(--surface-sunken); border-radius: 12px;
+    padding: 0.5rem 1rem;
+  }
+  [data-theme="light"] .sample-inner {
+    background: var(--surface); border: 1px solid var(--border);
+    box-shadow: 0 1px 3px oklch(0 0 0 / 0.10);
+    padding: 0 1rem 0.5rem;
+  }
+
+  /* ── DECIDED header (round 2, 2A): uppercase dimmed, with rule ── */
+  table {
+    border-collapse: collapse; border-spacing: 0; width: 100%;
+    font-size: 0.95rem;
+  }
+  th, td { padding: 0.65rem 1rem; text-align: left; vertical-align: top; }
+  thead th {
+    font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 600; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── ROUND 3 OPTIONS ────────────────────────────────────────────────────
+     Part A: row separation. Part B: density (padding scale).
+     One pick from each part; they compose freely. ── */
+
+  /* Part A — separation */
+  .sep-hairline tbody td { border-bottom: 1px solid var(--border); }
+  .sep-hairline tbody tr:last-child td { border-bottom: none; }
+  .sep-band tbody tr:nth-child(even) {
+    background: color-mix(in srgb, var(--text) 6%, transparent);
+  }
+  /* .sep-space — nothing: whitespace alone separates rows */
+
+  /* Part B — density (Part-B samples only; Part A uses the working default) */
+  .pad-compact th, .pad-compact td { padding: 0.45rem 0.75rem; }
+  .pad-default th, .pad-default td { padding: 0.65rem 1rem; }
+  .pad-airy    th, .pad-airy    td { padding: 0.85rem 1.25rem; }
+
+  /* ── Reflow pivot (zola-plus mechanism, bp 37rem). The separation choice
+       carries into card mode: hairlines between cards / banded cards /
+       whitespace-only cards. Card design itself is round 5. ── */
+  @container (max-width: 37rem) {
+    thead { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    tr { display: block; padding: 0.4rem 0; }
+    td { display: grid; grid-template-columns: auto 1fr; column-gap: 1rem; }
+    td::before {
+      content: attr(data-label);
+      font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+      font-weight: 600; color: var(--muted); align-self: baseline; padding-top: 0.2em;
+    }
+    /* must out-rank the wide-state .sep-hairline tbody td rule */
+    .sep-hairline tbody td { border-bottom: none; }
+    .sep-hairline tr { border-bottom: 1px solid var(--border); }
+    .sep-hairline tbody tr:last-child { border-bottom: none; }
+    .sep-band tbody tr:nth-child(even) { border-radius: 8px; }
+    .sep-space tr { padding: 0.6rem 0; }
+  }
+</style>
+</head>
+<body>
+<button id="theme">theme</button>
+
+<h1>Tables · Round 3 — row separation &amp; density</h1>
+<p>Decided so far: container (dark sunken panel / light bare card) and header
+(<strong>2A</strong> — uppercase dimmed, with rule), both baked into every
+sample below. This round has <strong>two parts</strong>: how rows separate, and
+how much air each cell gets. Pick one from each — they compose freely.</p>
+
+<!-- ════════ Part A ════════ -->
+<h2 class="part">Part A — row separation <small>(all at the default density)</small></h2>
+
+<h2>3A — hairlines <small>a --border line under each row</small></h2>
+<div class="rig">
+  <div class="sample">
+    <div class="sample-inner sep-hairline pad-default">
+      <table>
+        <thead><tr><th>field</th><th>bits</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td data-label="field"><code>first_child_pos</code></td><td data-label="bits">24</td><td data-label="role">relative position of the first child</td></tr>
+          <tr><td data-label="field"><code>node_char</code></td><td data-label="bits">24</td><td data-label="role">UTF-32 codepoint (low 3 bytes)</td></tr>
+          <tr><td data-label="field"><code>is_folder</code></td><td data-label="bits">1</td><td data-label="role">drives the browsable index</td></tr>
+          <tr><td data-label="field"><code>max_child_percentile</code></td><td data-label="bits">10</td><td data-label="role">best frequency in the subtree</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+
+<h2>3B — banding <small>DESIGN.md's "banding, never gridlines" — today's site voice</small></h2>
+<div class="rig">
+  <div class="sample">
+    <div class="sample-inner sep-band pad-default">
+      <table>
+        <thead><tr><th>field</th><th>bits</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td data-label="field"><code>first_child_pos</code></td><td data-label="bits">24</td><td data-label="role">relative position of the first child</td></tr>
+          <tr><td data-label="field"><code>node_char</code></td><td data-label="bits">24</td><td data-label="role">UTF-32 codepoint (low 3 bytes)</td></tr>
+          <tr><td data-label="field"><code>is_folder</code></td><td data-label="bits">1</td><td data-label="role">drives the browsable index</td></tr>
+          <tr><td data-label="field"><code>max_child_percentile</code></td><td data-label="bits">10</td><td data-label="role">best frequency in the subtree</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+
+<h2>3C — whitespace only <small>Butterick's "borders off first" — the panel does the framing</small></h2>
+<div class="rig">
+  <div class="sample">
+    <div class="sample-inner sep-space pad-default">
+      <table>
+        <thead><tr><th>field</th><th>bits</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td data-label="field"><code>first_child_pos</code></td><td data-label="bits">24</td><td data-label="role">relative position of the first child</td></tr>
+          <tr><td data-label="field"><code>node_char</code></td><td data-label="bits">24</td><td data-label="role">UTF-32 codepoint (low 3 bytes)</td></tr>
+          <tr><td data-label="field"><code>is_folder</code></td><td data-label="bits">1</td><td data-label="role">drives the browsable index</td></tr>
+          <tr><td data-label="field"><code>max_child_percentile</code></td><td data-label="bits">10</td><td data-label="role">best frequency in the subtree</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+
+<!-- ════════ Part B ════════ -->
+<h2 class="part">Part B — density <small>(all with hairlines as placeholder; your Part-A pick will apply)</small></h2>
+
+<h2>3D — compact <small>0.45rem × 0.75rem</small></h2>
+<div class="rig">
+  <div class="sample">
+    <div class="sample-inner sep-hairline pad-compact">
+      <table>
+        <thead><tr><th>field</th><th>bits</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td data-label="field"><code>first_child_pos</code></td><td data-label="bits">24</td><td data-label="role">relative position of the first child</td></tr>
+          <tr><td data-label="field"><code>node_char</code></td><td data-label="bits">24</td><td data-label="role">UTF-32 codepoint (low 3 bytes)</td></tr>
+          <tr><td data-label="field"><code>is_folder</code></td><td data-label="bits">1</td><td data-label="role">drives the browsable index</td></tr>
+          <tr><td data-label="field"><code>max_child_percentile</code></td><td data-label="bits">10</td><td data-label="role">best frequency in the subtree</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+
+<h2>3E — default <small>0.65rem × 1rem — the working default so far</small></h2>
+<div class="rig">
+  <div class="sample">
+    <div class="sample-inner sep-hairline pad-default">
+      <table>
+        <thead><tr><th>field</th><th>bits</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td data-label="field"><code>first_child_pos</code></td><td data-label="bits">24</td><td data-label="role">relative position of the first child</td></tr>
+          <tr><td data-label="field"><code>node_char</code></td><td data-label="bits">24</td><td data-label="role">UTF-32 codepoint (low 3 bytes)</td></tr>
+          <tr><td data-label="field"><code>is_folder</code></td><td data-label="bits">1</td><td data-label="role">drives the browsable index</td></tr>
+          <tr><td data-label="field"><code>max_child_percentile</code></td><td data-label="bits">10</td><td data-label="role">best frequency in the subtree</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+
+<h2>3F — airy <small>0.85rem × 1.25rem — the reference screenshots' air</small></h2>
+<div class="rig">
+  <div class="sample">
+    <div class="sample-inner sep-hairline pad-airy">
+      <table>
+        <thead><tr><th>field</th><th>bits</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td data-label="field"><code>first_child_pos</code></td><td data-label="bits">24</td><td data-label="role">relative position of the first child</td></tr>
+          <tr><td data-label="field"><code>node_char</code></td><td data-label="bits">24</td><td data-label="role">UTF-32 codepoint (low 3 bytes)</td></tr>
+          <tr><td data-label="field"><code>is_folder</code></td><td data-label="bits">1</td><td data-label="role">drives the browsable index</td></tr>
+          <tr><td data-label="field"><code>max_child_percentile</code></td><td data-label="bits">10</td><td data-label="role">best frequency in the subtree</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+
+<h2>Decide</h2>
+<p>Two answers this round: separation <strong>3A / 3B / 3C</strong> + density
+<strong>3D / 3E / 3F</strong> (e.g. "3B + 3E"; a theme-split is allowed).
+Note how the separation carries into the reflow cards — hairlines between
+cards, banded cards, or whitespace-only; the card design itself is refined in
+round 5. Round 4 (cell typography &amp; alignment) builds on this.</p>
+
+<script>
+  const b = document.getElementById('theme');
+  b.onclick = () => {
+    const h = document.documentElement;
+    h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  };
+</script>
+</body>
+</html>

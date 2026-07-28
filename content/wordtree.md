@@ -7,6 +7,10 @@ aliases = ["/blog/wordtree/"]
 # Inline SVG figures inflate Zola's word_count (it counts rendered markup), which
 # would skew read-time. This is the true prose count; remove it to fall back to auto.
 words = 2576
+# Table directives below are measured by the blog-tables skill (re-run it after
+# editing any table). No-ops under vanilla zola (production CI) — they render
+# under zola-plus.
+responsive_tables = true
 +++
 
 I just open-sourced [wordtree](https://github.com/akesson/wordtree), a compact
@@ -115,6 +119,8 @@ child" is one 24-bit offset.
 
 Each node is exactly 8 bytes:
 
+<!-- reflow: 37rem width 48rem -->
+
 | field                  | bits | role                                                       |
 | ---------------------- | ---- | ---------------------------------------------------------- |
 | `first_child_pos`      | 24   | relative position of the first child                       |
@@ -201,6 +207,8 @@ frequency (`percentile`, 0–1000) and the 24-bit index of its expression. But o
 those 5 bytes inline would waste them on roughly three out of four nodes.
 
 So they live in side tables instead, all part of the same zero-copy image:
+
+<!-- reflow: 37rem width 42rem -->
 
 | table        | size                 | role                                              |
 | ------------ | -------------------- | ------------------------------------------------- |
@@ -356,6 +364,8 @@ word to the *same* expression index before any timing is trusted.
 **Exact lookup (nanoseconds).** `wordtree` is the slowest of the bunch — it
 linearly scans each node's siblings.
 
+<!-- scroll: width 36rem -->
+
 | case (en)            | wordtree | fst  | boomphf | hashmap  |
 | -------------------- | -------: | ---: | ------: | -------: |
 | short `on`           |     72.0 | 15.3 |    13.5 | **7.5**  |
@@ -368,6 +378,8 @@ wordtree.
 **Size.** The FST is the clear winner: it minimises shared prefixes *and*
 suffixes (DAWG-like), doing exact lookup *and* spelling correction in ~3× less
 space than wordtree does anything.
+
+<!-- scroll: sticky 6rem width 24rem -->
 
 | engine (en)  | live heap | serialized |
 | ------------ | --------: | ---------: |
@@ -386,6 +398,8 @@ trees on a constrained device.)
 
 **Spelling correction.** symspell is in another league on latency.
 
+<!-- scroll: sticky 6rem width 36rem -->
+
 | case (en)      | wordtree | symspell  | fst-lev | brute force |
 | -------------- | -------: | --------: | ------: | ----------: |
 | sub `abxut`    |  44.0 µs | **1.4 µs**| 122.6 µs|   95.1 ms   |
@@ -399,6 +413,8 @@ fst misses entirely — but symspell is the one to beat, and it wins.)
 **Autocomplete.** Closest race. The combined `suggestions()` call runs the
 edit-distance walk every time, so it's the wrong thing to race against a pure
 completer (~43 µs). The autocomplete-only `completions()` call skips the walk:
+
+<!-- scroll: sticky 6rem width 30rem -->
 
 | case (en)   | wordtree `completions()` | pruning-trie |
 | ----------- | -----------------------: | -----------: |
@@ -422,6 +438,8 @@ rebuild at startup.
 wordtree folds all three jobs into one structure that loads by `mmap` with no
 parse or build step, and returns a deliberately short, frequency-ranked,
 single-edit-tolerant list. It even matches symspell's *quality* where it counts:
+
+<!-- scroll: width 48rem -->
 
 | correction recall by edit kind (en) | substitute | transpose | delete | insert |
 | ----------------------------------- | ---------: | --------: | -----: | -----: |

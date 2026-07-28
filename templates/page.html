@@ -1,6 +1,15 @@
 {% extends "index.html" %}
 {% import "macros.html" as macros %}
 
+{# Opt-in per article ([extra] responsive_tables = true): links the stylesheet
+   zola-plus generates from the page's table directives. Opt-in so pages without
+   directives never link a file the build didn't produce. #}
+{% block head_extra %}
+{%- if page.extra.responsive_tables %}
+  <link rel="stylesheet" href="{{ get_url(path="/responsive-tables.css") }}"/>
+{%- endif %}
+{% endblock head_extra %}
+
 {# An article (level 2). The tab strip is dropped; one back arrow returns to the
    Articles index. main.js may re-point it to wherever you actually came from. #}
 {% block header %}{{ macros::back_link(label="Articles", href=config.base_url ~ "/") }}{% endblock header %}

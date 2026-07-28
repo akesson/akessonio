@@ -136,23 +136,15 @@ hr {
   margin: 1.8em auto;
 }
 
-table {
+// Structural reset only — the visual treatment (padding, banding, bold headers)
+// lives on .content tables (DESIGN §1: whitespace and banding, never gridlines).
+// :not(pre *) keeps this off the line-number tables inside highlighted code.
+table:not(pre *) {
   border-collapse: collapse;
   border-spacing: 0;
   empty-cells: show;
   width: 100%;
   max-width: 100%;
-
-  th,
-  td {
-    padding: 1.5%;
-    border: 1px solid;
-  }
-
-  th {
-    font-weight: 700;
-    vertical-align: bottom;
-  }
 }
 
 .section-inner {
@@ -673,6 +665,329 @@ hr.post-end {
     padding: 0;
     margin-left: 1.8em;
   }
+
+  // ── Tables — the decided system (docs/table-design/DECISIONS.md) ──
+  // Panel + 2A header + hairline rows + plain cells. The *panel* is the
+  // directive wrapper when there is one, else the bare table itself. --panel-bg
+  // exists so sticky scroll cells can repaint their own background to match.
+  // :not(pre *) keeps all of this off the line-number tables Zola emits inside
+  // highlighted code blocks (```lang,linenos).
+
+  // Panel skin. Dark: sunken recessed panel (the code-block containment
+  // language). Light: bare raised card — hairline border, soft shadow, no top
+  // padding (the header row's own padding supplies the air under the border).
+  :is(.reflow, .transpose, .table-scroll, .table-expand, .table-width),
+  table:not(pre *, .reflow *, .transpose *, .table-scroll *, .table-expand *, .table-width *) {
+    --panel-bg: var(--surface-sunken);
+    background: var(--panel-bg);
+    border-radius: 12px;
+    padding: $space-2 $space-4;
+    box-sizing: border-box; // --table-w is the panel's outer width, padding in
+
+    [data-theme="light"] & {
+      --panel-bg: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px oklch(0 0 0 / 0.1);
+      padding: 0 $space-4 $space-2;
+    }
+  }
+
+  // Panel width (round 6): the authoring skill measures each table and writes
+  // its 6rem-scale step into --table-w on the wrapper. The panel holds that
+  // width for as long as the viewport has room and then shrinks fluidly with
+  // it — capped by the viewport minus a side margin that itself shrinks to
+  // zero on small screens. Viewport-based on purpose: capping by the column
+  // would snap a wide panel down to the reading measure the moment a
+  // breakpoint drops, instead of letting it use the space that is still there.
+  :is(.reflow, .transpose, .table-scroll, .table-expand, .table-width) {
+    --panel-margin: clamp(0rem, 8vw - 3rem, 2rem); // 0 at ≤600px → 2rem at ≥1000px
+    --panel-w: min(var(--table-w, 100%), calc(100vw - 2 * var(--panel-margin)));
+    width: var(--panel-w);
+    // Centre even when wider than the column: equal margins of (100% - w)/2 go
+    // negative for a symmetric breakout. (In the ≥$bp-xl flex column these are
+    // zeroed and align-self: center takes over — flex centres the margin box.)
+    margin-inline: calc((100% - var(--panel-w)) / 2);
+  }
+  .table-width {
+    // A stale --table-w (table edited wider after measuring) degrades to a pan
+    // inside the panel instead of overflowing it.
+    overflow-x: auto;
+  }
+
+  // The table centres inside its panel: a panel snapped up to the 6rem width
+  // scale leaves ≤6rem slack, split symmetrically (round 6).
+  table:not(pre *) {
+    width: fit-content;
+    margin-inline: auto;
+    font-size: 0.95rem;
+
+    th,
+    td {
+      padding: 0.65rem 1rem; // 3E default density
+      text-align: left; // numbers included — they read like words (4B)
+      vertical-align: top;
+    }
+
+    // 2A: uppercase, letterspaced, dimmed, hairline rule under the header.
+    thead th {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    // 3A: hairline under each body row, none after the last.
+    tbody td {
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    // Grouped rows (round 5 dash-row convention): a full-width group header
+    // inside tbody, speaking the column-header voice one step up.
+    tbody tr.group th {
+      padding: 1.2rem 1rem 0.35rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr.group:first-child th {
+      padding-top: 0.65rem;
+    }
+
+    // 4F: inline code in tables renders in the text colour — the mono shape
+    // alone marks code, less colour per row.
+    code {
+      color: var(--text);
+    }
+  }
+
+  // §6 legibility floor for tables *without* a directive: shrink-wrap to
+  // content, cap at the available width, and pan beyond it — a bare markdown
+  // table must never widen the page. Directive wrappers manage their own
+  // collapse and are excluded (transpose needs the table displayable as grid).
+  table:not(pre *, .reflow *, .transpose *, .table-scroll *, .table-expand-scroll *, .table-width *) {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  // Inside a pan area (zola-plus `scroll`, or `expand`'s scroll box) the table
+  // must keep its natural width — the global width/max-width: 100% would let
+  // cells wrap and squish the table to fit, so it never actually pans.
+  // `border-collapse: separate` (not collapse) because a sticky first column
+  // needs each cell to carry its own hairline along — in collapse mode borders
+  // are painted by the table and stay behind while sticky cells pan.
+  :is(.table-scroll, .table-expand-scroll) > table:not(pre *) {
+    width: max-content;
+    min-width: 100%;
+    max-width: none;
+    white-space: nowrap;
+    border-collapse: separate;
+  }
+
+  // Sticky first column (round 6: written by the authoring skill as
+  // `scroll: sticky` / `scroll: sticky 6rem` — runtime CSS just obeys).
+  // Base sticky: labels fit one line within the 6rem budget, table stays nowrap.
+  .table-scroll-sticky :is(th, td):first-child {
+    position: sticky;
+    left: 0;
+    background: var(--panel-bg);
+    border-right: 1px solid var(--border);
+  }
+  // Clamped sticky: labels need (≤2) lines at the budget width.
+  .table-scroll-clamp :is(th, td):first-child {
+    max-width: var(--sticky-w, 6rem);
+    white-space: normal;
+  }
+}
+
+// ── Media components (DESIGN §5–§6): panels, screenshot sets, theme pairs ──
+// Grid rules live outside the $bp-xl reading-layout query: a diptych still
+// renders 2-up on a laptop or tablet; only the *rung width* is $bp-xl-gated.
+
+// Diptych / triptych (2–3 sibling SVGs in one figure). Panel count drops at the
+// panels' own legibility floor (auto-fit re-wraps below ~18rem per panel),
+// independent of the rung's current width — DESIGN §6 collapse.
+.content .panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: $space-4;
+  align-items: start;
+
+  > figcaption,
+  > p {
+    grid-column: #{"1 / -1"}; // interpolated: bare 1 / -1 is Sass division (compiles to -1)
+  }
+}
+
+// Cross-platform screenshot set: equal labelled cells, one caption for the set.
+.content .shot-set {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: $space-4;
+  align-items: start;
+
+  > figcaption,
+  > p {
+    grid-column: #{"1 / -1"}; // interpolated: bare 1 / -1 is Sass division (compiles to -1)
+  }
+
+  .shot-cell {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+
+    img {
+      width: 100%;
+      margin: 0;
+      border: 1px solid var(--border); // quiet frame — §5 containment
+      border-radius: 4px;
+    }
+  }
+
+  .shot-label {
+    font-size: $text-sm;
+    text-align: center;
+    @include dimmed;
+  }
+}
+
+// Reflow cards (zola-plus `reflow` directive): the generated CSS is layout-only,
+// so the card *appearance* is ours. The ::before label comes from data-label and
+// only exists below the breakpoint; these declarations are inert above it.
+.content .reflow td {
+  column-gap: $space-4;
+}
+.content .reflow td::before {
+  // The card label speaks the 2A header voice (round 2).
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--muted);
+  align-self: baseline;
+  padding-top: 0.2em;
+}
+
+// Card-mode appearance at the site's reflow breakpoint (37rem, decided round
+// 5 — the container is the .reflow wrapper itself, made a query container by
+// the generated responsive-tables.css). Row hairlines become the separators
+// *between* cards; per-cell hairlines go quiet inside a card.
+@container (max-width: 37rem) {
+  .content .reflow table {
+    width: 100%;
+  }
+  .content .reflow tr {
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .content .reflow tbody tr:last-child {
+    border-bottom: none;
+  }
+  .content .reflow tbody td {
+    border-bottom: none;
+  }
+  // Group header rows become section headings between cards.
+  .content .reflow tr.group {
+    padding: 0.8rem 0 0;
+  }
+  .content .reflow tr.group th {
+    display: block;
+    padding: 0 1rem 0.35rem;
+  }
+}
+
+// Transpose (zola-plus `transpose` directive): below the breakpoint the table
+// becomes a column-first grid, and nothing clips a grid that still cannot fit —
+// pan in place as the last resort (§6: never widen the page).
+.content .transpose {
+  overflow-x: auto;
+}
+
+// Flip-mode borders at the site's pivot breakpoint (37rem — transpose
+// directives on this site must use it, like reflow, because these rules are
+// keyed to the value). The base hairline rules assume normal orientation; in
+// the flipped grid the last DOM row is the rightmost COLUMN (its cells need
+// their hairlines back) and the bottom visual row is each DOM row's LAST cell
+// (theirs must go, headers included — thead is the left label column here).
+@container (max-width: 37rem) {
+  .content .transpose tbody tr:last-child td:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+  }
+  .content .transpose :is(thead th, tbody td):last-child {
+    border-bottom: none;
+  }
+}
+
+// Expand overlay (zola-plus `expand` directive): the generated CSS is
+// layout-only — it positions the wrapper `fixed; inset: 0` on :target but draws
+// nothing, so the opaque backdrop and the two link-buttons are ours. Both links
+// exist inline too (the query/:target rules gate their display), so the chrome
+// is declared once.
+.content .table-expand .table-expand-open,
+.content .table-expand .table-expand-close {
+  padding: $space-1 $space-2;
+  line-height: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: none; // no accent underline on an icon button
+}
+.content .table-expand:target {
+  // Glass overlay: a translucent page tint over a strong blur, so the article
+  // stays as a soft presence behind the fullscreen table instead of vanishing.
+  background: color-mix(in oklab, var(--bg) 68%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  backdrop-filter: blur(20px) saturate(120%);
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background: var(--page); // no blur support → opaque, never see-through
+  }
+  padding: $space-4;
+  gap: $space-2;
+  // Expanded, the wrapper stops being a panel: full-viewport overlay, no
+  // rounded corners, no card border/shadow — and no measured width either
+  // (inset: 0 must win, so a written --table-w can't narrow the overlay).
+  // margin: 0 because flow-spacing margins would otherwise offset the fixed
+  // box inside its inset (a slit of page at the top).
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  width: auto;
+  margin: 0;
+}
+// Panning the fullscreen table must not scroll the page behind the glass.
+// flex + auto margins centre the table when it fits and collapse to 0 when it
+// overflows (grid place-items: center would clip the overflowing edges).
+.content .table-expand:target .table-expand-scroll {
+  overscroll-behavior: contain;
+  display: flex;
+}
+.content .table-expand:target .table-expand-scroll > table {
+  margin: auto;
+  min-width: 0; // natural width, centred on the glass — not stretched to fill
+}
+
+// Theme-keyed screenshot pair (§5): a raster can't be recoloured, so a capture
+// ships per theme and the visible one follows data-theme (the manual toggle
+// included — prefers-color-scheme alone would miss it).
+.content .shot-pair img {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+[data-theme="dark"] .shot-pair .shot-light {
+  display: none;
+}
+[data-theme="light"] .shot-pair .shot-dark {
+  display: none;
 }
 
 .footnote-definition {
@@ -776,19 +1091,25 @@ hr.post-end {
     width: auto;
     padding-inline: $space-6; // keep content off the very edge
 
-    // Symmetric media breakout (consumed by the :is(pre, figure, .bleed) rule
-    // below). The cap is the gap between the text column and the page edge:
+    // Rung bleeds (DESIGN §6, consumed by the breakout rules below): two per-side
+    // steps off the shared centre axis. The available room is the gap between the
+    // text column and the page edge:
     //   50vw - 21rem  the text column's LEFT edge (half of the 42rem measure)
     //         - 2rem   the page's padding-inline — the breakout's outer limit
-    // The result grows with the viewport, clamped to 0 (no room near 1300px) and
-    // to --bleed-max (stays tasteful when wide), so one formula holds at every width.
-    --bleed-max: 7rem;
-    --bleed: clamp(0rem, 50vw - 21rem - 2rem, var(--bleed-max));
+    // Each bleed grows from 0 as the viewport widens and stops at its rung's cap,
+    // so a rung with no room simply renders at the Column. The caps derive from
+    // real content constraints, not round numbers:
+    //   Wide  12rem/side → 42 + 2×12 = 66rem: 100-col rustfmt code + linenos gutter
+    //   Full  19rem/side → 42 + 2×19 = 80rem: the three-panel triptych floor
+    // Pinned against the design-ladder calibration page (removed; in git history).
+    --bleed-wide: clamp(0rem, 50vw - 21rem - 2rem, 12rem);
+    --bleed-full: clamp(0rem, 50vw - 21rem - 2rem, 19rem);
   }
 
   // Code blocks and illustrations spill equally past the 42rem reading measure,
-  // by --bleed on each side. Opt a single element out with .no-bleed; opt any
-  // other wide element (e.g. a table) in with .bleed.
+  // onto the Wide rung by default. Opt a single element out with .no-bleed (pin
+  // to the Column); opt any other wide element (e.g. a table wrapper) in with
+  // .bleed; promote to the Full rung with .full.
   // Flex column so wide children can be centred AND overflow the column
   // symmetrically. Block margin:auto left-aligns an overflowing box, and the
   // transform trick (translateX(-50%)) lands text on sub-pixels → soft code.
@@ -799,12 +1120,50 @@ hr.post-end {
     flex-direction: column;
   }
 
-  .reading-layout .content :is(pre, figure, .bleed):not(.no-bleed) {
+  .reading-layout .content :is(pre, figure, .bleed, .full):not(.no-bleed) {
     box-sizing: border-box;
     align-self: center; // centre + symmetric overflow, sharp (no transform)
     width: max-content; // grow to the content's natural width…
     min-width: 100%; // …never narrower than the text column…
-    max-width: calc(100% + 2 * var(--bleed)); // …never past the bleed cap
+    max-width: calc(100% + 2 * var(--bleed-wide)); // …never past the rung cap
+  }
+
+  // Full-rung promotion by class (large tables, triptychs, big illustrations).
+  .reading-layout .content .full:not(.no-bleed) {
+    max-width: calc(100% + 2 * var(--bleed-full));
+  }
+
+  // Table panels centre on the shared axis (round 6). Width comes from the
+  // universal fluid --panel-w rule in .content (viewport-capped, so there is no
+  // snap crossing this breakpoint); here the flex column takes over centring:
+  // margin-inline: 0 because cross-axis auto/calc margins would beat align-self
+  // and mis-place any panel wider than the Column.
+  // .table-expand:not(:target): box alignment applies to *fixed* boxes too, so
+  // align-self: center would collapse the open fullscreen overlay (inset: 0)
+  // into a content-height band centred in the viewport.
+  .reading-layout
+    .content
+    :is(
+      .reflow,
+      .transpose,
+      .table-scroll,
+      .table-expand:not(:target),
+      .table-width,
+      table:not(pre *, .reflow *, .transpose *, .table-scroll *, .table-expand *, .table-width *)
+    ) {
+    align-self: center;
+    margin-inline: 0;
+  }
+
+  // Panel and screenshot sets always fill their rung: their cells scale to the
+  // available width, so max-content (which would ask the cells' natural size)
+  // is circular — give them the rung width outright. The bleed clamps to the
+  // actual room, so this never overflows the page.
+  .reading-layout .content :is(.panels, .shot-set):not(.full) {
+    width: calc(100% + 2 * var(--bleed-wide));
+  }
+  .reading-layout .content :is(.panels, .shot-set).full {
+    width: calc(100% + 2 * var(--bleed-full));
   }
 
   // Let a vector illustration scale to fill its figure (the figure is sized to

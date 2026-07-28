@@ -53,15 +53,22 @@ Every image must work in both themes (dark default + `[data-theme="light"]`, a r
 - **Occasional photo → edit a light and a dark variant.** Same `[data-theme]` swap as screenshots. A photo is the one element that *may* go edge-to-edge (§6), but only as a deliberate exception.
 - **Never let an image glare.** A bright UI capture dropped on the dark theme is a white rectangle punching through the calm — that is the whole reason for dual captures. An image's surrounding value should sit close to the page surface in each theme.
 
-## 6. Content earns its width on one short ladder
+## 6. Content earns its width on a three-rung ladder
 
-Wide things — code, diagrams, screenshot sets — break out of the reading measure, but only as far as the `--bleed` cap. **Two rungs, no more** (restraint, §1):
+Wide things — code, diagrams, screenshot sets, big tables — break out of the reading measure onto **named rungs**, and only as far as each rung's cap. **Three rungs, no more** (restraint, §1). Every width is *derived from a real content constraint*, never a round number, and all rungs share **one centred alignment axis** so a breakout reads as rhythm, not noise.
 
-- **Column** — `$measure` (`42rem`, ~672px, ~75ch of prose). Prose, inline figures, a single small screenshot, code up to ~80 columns.
-- **Wide** — up to `$measure + 2 × --bleed-max` (`--bleed-max: 7rem` → ~`56rem` / ~896px). The default for `pre`, `figure`, and anything tagged `.bleed`: diagrams that need room, side-by-side comparisons, wider code. Symmetric overflow, centred, capped at `--bleed-max`. Opt out with `.no-bleed` (pin a small figure to the column); opt a table in with `.bleed`.
-- **No full-bleed by default.** The ladder stops at the cap on purpose. A true edge-to-edge element (the occasional photo) is the rare exception, never routine.
-- **Side-by-side (cross-platform) sets** — win/lin/mac or android/ios sit as a 2–4-up grid on the **Wide** rung: equal cells, shared aspect ratio and baseline, each cell labelled with its platform, one caption under the whole set held at the reading measure. Collapse to a single stacked column below `$bp-md`. A diagram earns the Wide rung only when its horizontal extent *means* something (a timeline, a spectrum, a comparison); otherwise it stays in the column.
-- **Code measure — design for 80–90 columns.** At the `0.9em` code size (JetBrains Mono, ~0.6em/char) the Wide cap holds ~88 columns without scrolling, and ~65 fit the bare column; 80 is the comfortable house width. Lines past ~90 columns **scroll horizontally** inside the block (`pre { overflow: auto }`) — never shrink code below ~16px, and never soft-wrap it, to force 120 columns to fit. Legibility beats fitting (north star). The only levers if a section genuinely needs more are the `pre` font-size and `--bleed-max`; raising the cap is bounded by the gutter between the column and the page edge. *(Column counts are computed at a 0.6em advance — confirm against the first real code block.)*
+- **Column** — `$measure` (`42rem`, ~672px, ~75ch of prose), zero bleed. The baseline everything reads against: prose, inline figures, a single small screenshot, small tables, code up to ~65 columns.
+- **Wide** — sized so **100 columns of code plus the line-number gutter fit without scrolling.** Code is the most frequent breakout and has a hard, rustfmt-derived width (`max_width = 100`), so it defines this edge instead of a guessed number. **Pinned at `66rem` / 1056px** — a real 100-col `rust,linenos` block (99-char signature line from zola-plus) measures **1018px** natural at `0.9em` JetBrains Mono, so the cap holds it with ~38px slack *(measured 2026-07-17 against `/design-ladder`)*. Everything "medium" snaps to this same line: medium tables, a single illustration with its legend beside it, a 2-up illustration **diptych**, and 2–4-up cross-platform **screenshot** sets (win/lin/mac, android/ios — smaller UI crops, equal cells, shared aspect ratio and baseline, each cell labelled, one caption under the whole set held at `$measure`).
+- **Full** — sized to the **illustration-triptych floor: three legible vector panels side by side plus gaps**. **Pinned at `80rem` / 1280px**: the real `/design-ladder` triptych holds three ≈405px panels plus two `$space-4` gaps at the cap, comfortably above the ~400px panel design width *(measured 2026-07-17)*. Large tables and big single illustrations share it. **Capped and centred — never run to the viewport edge.** A true edge-to-edge element (the occasional photo, §5) stays the rare exception even above this rung.
+
+**Collapse — a rung only exists when there's room.** Each rung's bleed grows from `0` via `clamp()` as the viewport widens, so the page never overflows and a rung with no room simply renders at the Column. Full needs roughly its cap plus two gutters (~1.4k px) before it reaches full size, so on common laptops it sits *between* Wide and Full — expected, not a bug. The *artifact's* internal layout switches at its **own legibility floor**, independent of the rung's current visual width:
+
+- **Code** never shrinks or soft-wraps (legibility beats fitting, north star). When the page can't give it room it **scrolls horizontally inside `pre`** (`overflow: auto`); never drop below ~16px to force a fit.
+- **Diptych / triptych** drop panel count — 3-up → 2-up → stacked — at the width where panels stop being legible, not at the rung edge. One caption under the whole set, held at `$measure`. A diagram earns a rung only when its horizontal extent *means* something (a timeline, a spectrum, a comparison); otherwise it stays in the Column.
+- **Large table** scrolls horizontally inside its own container rather than widening the page or shrinking text (§1: prefer whitespace and subtle row-banding over gridlines regardless of rung).
+- Below `$bp-md`, every rung renders as the single Column.
+
+Rung is chosen per element by class — default `pre`/`figure` → Wide, `.no-bleed` pins to the Column, a `.full` class promotes to Full — exact class names settled at implementation.
 
 ---
 
@@ -96,13 +103,16 @@ $line-base: 1.6;      // generous, comfortable reading
 $gutter:   clamp(1rem, 5vw, 3rem);
 $h1-fluid: clamp(2rem, 1.4rem + 2.4vw, $text-3xl);
 
-// ── Media & breakout (§5–§6) — one short ladder, not a full-bleed system ──
-$measure:    42rem;        // reading column (~75ch prose). Breakout cap = $measure + 2*7rem ≈ 56rem
-$code-size:  0.9em;        // block code (JetBrains Mono ~0.6em/char) → ~88-col cap; target ≤ 80–90
+// ── Media & breakout (§5–§6) — a three-rung ladder, not a full-bleed system ──
+$measure:    42rem;        // Column / reading width (~75ch prose, ~672px). Rung caps derive from this — §6
+$code-size:  0.9em;        // block code (JetBrains Mono ~0.6em/char). Wide rung is sized so 100 cols + line-nums fit
 $frame:      1px solid var(--border);  // quiet frame for a UI screenshot (§1 containment, §5)
-// Breakout width itself is a *runtime* var (lives in style.scss, depends on the viewport):
-//   --bleed-max: 7rem;                                            // widest overflow per side
-//   --bleed: clamp(0rem, 50vw - 21rem - 2rem, var(--bleed-max));  // capped by the gutter
+// Breakout widths are *runtime* vars (live in style.scss, depend on the viewport). Two per-side steps off the
+// shared centre axis, each grown from 0 by a clamp so the page never overflows and rungs collapse to the Column
+// when there's no room. Caps PINNED 2026-07-17 against the design-ladder calibration page (removed; in git history:
+// real 100-col linenos block = 1018px natural; triptych panels ≈405px at the Full cap; overflow 0 at every width):
+//   --bleed-wide: clamp(0rem, 50vw - 21rem - 2rem, 12rem);  // → Wide = 66rem / 1056px  (100-col code + gutter)
+//   --bleed-full: clamp(0rem, 50vw - 21rem - 2rem, 19rem);  // → Full = 80rem / 1280px  (triptych floor; capped)
 ```
 
 **Colour note (for when theming is built):** name colour tokens *semantically* (`$bg`, `$surface`, `$text`, `$accent`, `$muted`) rather than by appearance, so a light theme is a drop-in. **One accent, and it always means something:** `$accent` carries interactive, wayfinding, and structural-emphasis meaning — links, the active nav item, primary CTAs, section headings, and inline code — never ambient decoration; everything else is `$bg`/`$surface`/`$text`/`$muted`. Whatever the palette, the AA contrast rule in the north star is non-negotiable.

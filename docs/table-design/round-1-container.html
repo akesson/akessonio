@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tables · Round 1 — container</title>
+<style>
+  /* ── Site tokens (mirrors sass/_color.scss, hue pinned at 250) ── */
+  :root {
+    --hue: 250;
+    --bg: oklch(0.30 0 0);
+    --surface: oklch(0.34 0 0);
+    --surface-sunken: oklch(0.26 0 0);
+    --text: oklch(0.86 0 0);
+    --muted: oklch(0.70 0 0);
+    --border: oklch(0.44 0 0);
+    --accent: oklch(0.76 0.100 var(--hue));
+    --page: var(--bg);
+  }
+  [data-theme="light"] {
+    --bg: oklch(0.985 0 0);
+    --surface: oklch(0.995 0 0);
+    --surface-sunken: oklch(0.95 0 0);
+    --text: oklch(0.28 0 0);
+    --muted: oklch(0.50 0 0);
+    --border: oklch(0.85 0 0);
+    --accent: oklch(0.50 0.100 var(--hue));
+    --page: linear-gradient(to bottom, oklch(0.998 0 0), oklch(0.975 0 0));
+  }
+  @font-face {
+    font-family: "Hanken Grotesk";
+    font-style: normal; font-weight: 400 700; font-display: swap;
+    src: url("../../static/fonts/hanken-grotesk-latin.woff2") format("woff2");
+  }
+  @font-face {
+    font-family: "JetBrains Mono";
+    font-style: normal; font-weight: 400 700; font-display: swap;
+    src: url("../../static/fonts/jetbrains-mono-latin.woff2") format("woff2");
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--page); min-height: 100%; }
+  body {
+    margin: 0 auto; padding: 3rem 1.5rem 6rem; max-width: 46rem;
+    font: 18px/1.6 "Hanken Grotesk", sans-serif; letter-spacing: 0.06em;
+    color: var(--text);
+  }
+  h1 { font-size: 1.6rem; color: var(--accent); }
+  h2 { font-size: 1.15rem; margin: 3.5rem 0 0.25rem; }
+  h2 small { color: var(--muted); font-weight: 400; font-size: 0.85rem; margin-left: 0.5rem; }
+  p { margin: 0.5rem 0 1rem; }
+  p.dim, li.dim { color: var(--muted); font-size: 0.875rem; }
+  code {
+    font-family: "JetBrains Mono", monospace; font-size: 0.85em;
+    color: var(--accent); letter-spacing: normal;
+    font-variant-ligatures: none;
+  }
+  #theme {
+    position: fixed; top: 1rem; right: 1rem; z-index: 10;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 0.4rem 0.8rem; font: inherit; cursor: pointer;
+  }
+
+  /* ── Resizable sample rig: drag the right edge; the wrapper is the container
+       the reflow pivot queries — exactly zola-plus's mechanism. ── */
+  .rig { margin: 1rem 0 0.25rem; }
+  .sample {
+    container-type: inline-size;
+    resize: horizontal; overflow: hidden;
+    min-width: 260px; max-width: 100%; width: 100%;
+    padding-right: 14px; /* room for the drag corner */
+  }
+  .rig-hint { color: var(--muted); font-size: 0.75rem; margin: 0.25rem 0 0; }
+  .rig-hint::before { content: "⇤ drag the sample's bottom-right corner to shrink it and watch the pivot · "; }
+
+  /* ── Working defaults for parts not yet decided (rounds 2–4):
+       uppercase dimmed header, hairline rows, roomy padding. Placeholder. ── */
+  table {
+    border-collapse: collapse; border-spacing: 0; width: 100%;
+    font-size: 0.95rem;
+  }
+  th, td { padding: 0.65rem 1rem; text-align: left; vertical-align: top; }
+  thead th {
+    font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 600; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  tbody td { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ── Reflow pivot (mirror of the zola-plus generated CSS, bp 37rem) ── */
+  @container (max-width: 37rem) {
+    thead { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    tr { display: block; padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    /* tbody td, not td: must out-rank the wide-state row-hairline rule */
+    tbody td { border-bottom: none; }
+    td { display: grid; grid-template-columns: auto 1fr; column-gap: 1rem; }
+    td::before {
+      content: attr(data-label);
+      font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+      font-weight: 600; color: var(--muted); align-self: baseline; padding-top: 0.2em;
+    }
+  }
+
+  /* ── Option 1A — bare ── */
+  /* (nothing: the table sits directly on the page) */
+
+  /* ── Option 1B — sunken panel ── */
+  .opt-b .sample-inner {
+    background: var(--surface-sunken); border-radius: 12px;
+    padding: 0.5rem 1rem;
+  }
+
+  /* ── Option 1C — captioned card ── */
+  .opt-c .sample-inner {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 0 1rem 0.5rem;
+    box-shadow: 0 1px 3px oklch(0 0 0 / 0.10);
+  }
+  .opt-c .caption-bar {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+    padding: 0.8rem 1rem; margin: 0 -1rem 0.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .opt-c .caption-bar strong { font-size: 0.95rem; }
+  .opt-c .caption-bar span { color: var(--muted); font-size: 0.8rem; text-align: right; }
+  @container (max-width: 26rem) { .opt-c .caption-bar span { display: none; } }
+
+  /* ── Option 1D — booktabs frame ── */
+  .opt-d .sample-inner {
+    border-top: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  }
+  .opt-d tbody td { border-bottom: none; } /* booktabs: rules, not row lines */
+  @container (max-width: 37rem) {
+    .opt-d tr { border-bottom: 1px solid var(--border); } /* cards still need separation */
+    .opt-d tbody tr:last-child { border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+<button id="theme">theme</button>
+
+<h1>Tables · Round 1 — the container</h1>
+<p>How a table sits on the page. One decision; everything else below
+(header style, row separation, density, alignment, card design) is a
+<em>placeholder working default</em> — each gets its own round.</p>
+<p class="dim">Every sample is resizable: drag its bottom-right corner narrower and it
+pivots to cards at 37rem, using the same container-query mechanism zola-plus
+generates. Toggle the theme (top right) — a choice must hold in both.</p>
+
+<!-- ════════ 1A ════════ -->
+<h2>1A — bare <small>the table is content, like a paragraph (closest to today)</small></h2>
+<div class="rig opt-a">
+  <div class="sample">
+    <div class="sample-inner">
+      <table>
+        <thead><tr><th>field</th><th>bits</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td data-label="field"><code>first_child_pos</code></td><td data-label="bits">24</td><td data-label="role">relative position of the first child</td></tr>
+          <tr><td data-label="field"><code>node_char</code></td><td data-label="bits">24</td><td data-label="role">UTF-32 codepoint (low 3 bytes)</td></tr>
+          <tr><td data-label="field"><code>is_folder</code></td><td data-label="bits">1</td><td data-label="role">drives the browsable index</td></tr>
+          <tr><td data-label="field"><code>max_child_percentile</code></td><td data-label="bits">10</td><td data-label="role">best frequency in the subtree</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+
+<!-- ════════ 1B ════════ -->
+<h2>1B — sunken panel <small>the code-block containment language, recessed</small></h2>
+<div class="rig opt-b">
+  <div class="sample">
+    <div class="sample-inner">
+      <table>
+        <thead><tr><th>field</th><th>bits</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td data-label="field"><code>first_child_pos</code></td><td data-label="bits">24</td><td data-label="role">relative position of the first child</td></tr>
+          <tr><td data-label="field"><code>node_char</code></td><td data-label="bits">24</td><td data-label="role">UTF-32 codepoint (low 3 bytes)</td></tr>
+          <tr><td data-label="field"><code>is_folder</code></td><td data-label="bits">1</td><td data-label="role">drives the browsable index</td></tr>
+          <tr><td data-label="field"><code>max_child_percentile</code></td><td data-label="bits">10</td><td data-label="role">best frequency in the subtree</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+
+<!-- ════════ 1C ════════ -->
+<h2>1C — captioned card <small>raised, hairline-framed, with a title bar (your screenshots)</small></h2>
+<div class="rig opt-c">
+  <div class="sample">
+    <div class="sample-inner">
+      <div class="caption-bar">
+        <strong>Node layout</strong>
+        <span>64 bits per node — one cache line holds 8</span>
+      </div>
+      <table>
+        <thead><tr><th>field</th><th>bits</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td data-label="field"><code>first_child_pos</code></td><td data-label="bits">24</td><td data-label="role">relative position of the first child</td></tr>
+          <tr><td data-label="field"><code>node_char</code></td><td data-label="bits">24</td><td data-label="role">UTF-32 codepoint (low 3 bytes)</td></tr>
+          <tr><td data-label="field"><code>is_folder</code></td><td data-label="bits">1</td><td data-label="role">drives the browsable index</td></tr>
+          <tr><td data-label="field"><code>max_child_percentile</code></td><td data-label="bits">10</td><td data-label="role">best frequency in the subtree</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+<p class="dim">The caption bar is part of this option: table title left, a dimmed
+fact right (hides below 26rem). In markdown it would come from the table's
+preceding text or a directive — worth deciding here whether it earns its keep.</p>
+
+<!-- ════════ 1D ════════ -->
+<h2>1D — booktabs frame <small>scientific-typesetting canon: rules, no box</small></h2>
+<div class="rig opt-d">
+  <div class="sample">
+    <div class="sample-inner">
+      <table>
+        <thead><tr><th>field</th><th>bits</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td data-label="field"><code>first_child_pos</code></td><td data-label="bits">24</td><td data-label="role">relative position of the first child</td></tr>
+          <tr><td data-label="field"><code>node_char</code></td><td data-label="bits">24</td><td data-label="role">UTF-32 codepoint (low 3 bytes)</td></tr>
+          <tr><td data-label="field"><code>is_folder</code></td><td data-label="bits">1</td><td data-label="role">drives the browsable index</td></tr>
+          <tr><td data-label="field"><code>max_child_percentile</code></td><td data-label="bits">10</td><td data-label="role">best frequency in the subtree</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+
+<h2>Decide</h2>
+<p>Reply with <strong>1A / 1B / 1C / 1D</strong> — plus any tweak ("1C but no
+shadow", "1D but rules in --border"). Mixed verdicts are fine too, e.g. a default
+container for ordinary tables and 1C reserved for headline tables. Round 2
+(header treatment) builds on the winner.</p>
+
+<script>
+  const b = document.getElementById('theme');
+  b.onclick = () => {
+    const h = document.documentElement;
+    h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  };
+</script>
+</body>
+</html>

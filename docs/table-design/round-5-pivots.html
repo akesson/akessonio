@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tables · Round 5 — pivots</title>
+<style>
+  /* ── Site tokens (mirrors sass/_color.scss, hue pinned at 250). ── */
+  :root, [data-theme="dark"] {
+    --hue: 250;
+    --bg: oklch(0.30 0 0);
+    --surface: oklch(0.34 0 0);
+    --surface-sunken: oklch(0.26 0 0);
+    --text: oklch(0.86 0 0);
+    --muted: oklch(0.70 0 0);
+    --border: oklch(0.44 0 0);
+    --accent: oklch(0.76 0.100 var(--hue));
+    --page: var(--bg);
+  }
+  [data-theme="light"] {
+    --bg: oklch(0.985 0 0);
+    --surface: oklch(0.995 0 0);
+    --surface-sunken: oklch(0.95 0 0);
+    --text: oklch(0.28 0 0);
+    --muted: oklch(0.50 0 0);
+    --border: oklch(0.85 0 0);
+    --accent: oklch(0.50 0.100 var(--hue));
+    --page: linear-gradient(to bottom, oklch(0.998 0 0), oklch(0.975 0 0));
+  }
+  @font-face {
+    font-family: "Hanken Grotesk";
+    font-style: normal; font-weight: 400 700; font-display: swap;
+    src: url("../../static/fonts/hanken-grotesk-latin.woff2") format("woff2");
+  }
+  @font-face {
+    font-family: "JetBrains Mono";
+    font-style: normal; font-weight: 400 700; font-display: swap;
+    src: url("../../static/fonts/jetbrains-mono-latin.woff2") format("woff2");
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--page); min-height: 100%; }
+  body {
+    margin: 0 auto; padding: 3rem 1.5rem 6rem; max-width: 46rem;
+    font: 18px/1.6 "Hanken Grotesk", sans-serif; letter-spacing: 0.06em;
+    color: var(--text);
+  }
+  h1 { font-size: 1.6rem; color: var(--accent); }
+  h2 { font-size: 1.15rem; margin: 3.5rem 0 0.25rem; }
+  h2 small { color: var(--muted); font-weight: 400; font-size: 0.85rem; margin-left: 0.5rem; }
+  h2.part { margin-top: 4.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  p { margin: 0.5rem 0 1rem; }
+  p.dim { color: var(--muted); font-size: 0.875rem; }
+  ul { margin: 0.5rem 0 1rem; }
+  li { margin: 0.25rem 0; }
+  code {
+    font-family: "JetBrains Mono", monospace; font-size: 0.85em;
+    color: var(--text); letter-spacing: normal;
+    font-variant-ligatures: none;
+  }
+  #theme {
+    position: fixed; top: 1rem; right: 1rem; z-index: 10;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 0.4rem 0.8rem; font: inherit; cursor: pointer;
+  }
+  /* ── Resizable rig ── */
+  .rig { margin: 1rem 0 0.25rem; }
+  .sample {
+    container-type: inline-size;
+    resize: horizontal; overflow: hidden;
+    min-width: 260px; max-width: 100%; width: 100%;
+    padding-right: 14px;
+  }
+  .rig-hint { color: var(--muted); font-size: 0.75rem; margin: 0.25rem 0 0; }
+  .rig-hint::before { content: "⇤ drag to shrink"; }
+  .rig-hint.pan::before { content: "starts narrow — pan the table sideways, then compare · drag the corner to widen"; }
+
+  /* ── DECIDED SYSTEM (rounds 1–4), incl. the round-4 width amendment:
+       the panel hugs the table (fit-content), capped by the space it has. ── */
+  .sample-inner {
+    --panel-bg: var(--surface-sunken);
+    width: fit-content; max-width: 100%;
+    background: var(--panel-bg); border-radius: 12px;
+    padding: 0.5rem 1rem;
+  }
+  [data-theme="light"] .sample-inner {
+    --panel-bg: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px oklch(0 0 0 / 0.10);
+    padding: 0 1rem 0.5rem;
+  }
+  table {
+    border-collapse: collapse; border-spacing: 0;
+    font-size: 0.95rem;
+  }
+  th, td { padding: 0.65rem 1rem; text-align: left; vertical-align: top; }
+  thead th {
+    font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 600; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  tbody td { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ── Grouped rows (complex-variant candidate): a full-width group header
+       row inside tbody, speaking the column-header voice one step up. ── */
+  tr.group th {
+    padding: 1.2rem 1rem 0.35rem;
+    font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 600; color: var(--muted); text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr.group:first-child th { padding-top: 0.65rem; }
+
+  /* ── Scroll mechanism (+ optional sticky first column) ──
+       separate, not collapse: in collapse mode borders are painted by the
+       table and stay behind while sticky cells pan — separate lets each
+       cell carry its own hairline along. ── */
+  .scrolly { overflow-x: auto; }
+  .scrolly table { width: max-content; max-width: none; white-space: nowrap; border-collapse: separate; }
+  .sticky-col .scrolly th:first-child,
+  .sticky-col .scrolly td:first-child {
+    position: sticky; left: 0; background: var(--panel-bg);
+    border-right: 1px solid var(--border);
+  }
+
+  /* ── Reflow pivot — scoped to .reflow samples only (bp 37rem) ── */
+  @container (max-width: 37rem) {
+    .reflow { width: auto; }
+    .reflow table { width: 100%; }
+    .reflow thead { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .reflow tr { display: block; padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
+    .reflow tbody tr:last-child { border-bottom: none; }
+    .reflow tbody td { border-bottom: none; }
+    .reflow td { display: grid; grid-template-columns: auto 1fr; column-gap: 1rem; }
+    .reflow td::before {
+      content: attr(data-label);
+      font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+      font-weight: 600; color: var(--muted); align-self: baseline; padding-top: 0.2em;
+    }
+    /* group header rows become section headings between cards */
+    .reflow tr.group { padding: 0.8rem 0 0; }
+    .reflow tr.group th { display: block; padding: 0 1rem 0.35rem; }
+  }
+
+  /* side-by-side static pair for the transpose comparison */
+  .pair { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
+</style>
+</head>
+<body>
+<button id="theme">theme</button>
+
+<h1>Tables · Round 5 — the pivots</h1>
+<p>Everything decided in rounds 1–4 is baked in, including the round-4
+amendment: <strong>the panel now hugs its table</strong> (fit-content, capped
+by the available width) instead of stretching. This round maps where each
+responsive mechanism works and where it breaks, adds <strong>grouped rows</strong>
+as the first complex variant, and ends with three conventions to confirm.</p>
+
+<!-- ════════ 0 ════════ -->
+<h2 class="part">The width amendment, live</h2>
+<p class="dim">A small table no longer drags a full-width panel with it — the
+panel is the table's size. Nothing to decide; verify it feels right.</p>
+<div class="rig">
+  <div class="sample">
+    <div class="sample-inner">
+      <table>
+        <thead><tr><th>rung</th><th>cap</th></tr></thead>
+        <tbody>
+          <tr><td>Column</td><td>42rem</td></tr>
+          <tr><td>Wide</td><td>66rem</td></tr>
+          <tr><td>Full</td><td>80rem</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ A ════════ -->
+<h2 class="part">Part A — where reflow works, and where it fails</h2>
+
+<h2>5·1 — reflow at its best <small>record-shaped rows: each row is one <em>thing</em></small></h2>
+<div class="rig">
+  <div class="sample">
+    <div class="sample-inner reflow">
+      <table>
+        <thead><tr><th>field</th><th>bits</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td data-label="field"><code>first_child_pos</code></td><td data-label="bits">24</td><td data-label="role">relative position of the first child</td></tr>
+          <tr><td data-label="field"><code>node_char</code></td><td data-label="bits">24</td><td data-label="role">UTF-32 codepoint (low 3 bytes)</td></tr>
+          <tr><td data-label="field"><code>is_folder</code></td><td data-label="bits">1</td><td data-label="role">drives the browsable index</td></tr>
+          <tr><td data-label="field"><code>max_child_percentile</code></td><td data-label="bits">10</td><td data-label="role">best frequency in the subtree</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+<p class="dim">Rows are records (a field and its attributes); nobody compares
+<em>down</em> a column. Cards lose nothing. This is the reflow sweet spot:
+label:value semantics, ≲ 8 rows, prose-ish cells.</p>
+
+<h2>5·2 — the same pivot on a matrix <small>watch what breaks</small></h2>
+<div class="rig">
+  <div class="sample">
+    <div class="sample-inner reflow">
+      <table>
+        <thead><tr><th>guest</th><th>sync (s)</th><th>build (s)</th><th>test (s)</th><th>total (s)</th></tr></thead>
+        <tbody>
+          <tr><td data-label="guest">linux</td><td data-label="sync (s)">1.2</td><td data-label="build (s)">41</td><td data-label="test (s)">96</td><td data-label="total (s)">138</td></tr>
+          <tr><td data-label="guest">macos</td><td data-label="sync (s)">1.4</td><td data-label="build (s)">58</td><td data-label="test (s)">122</td><td data-label="total (s)">181</td></tr>
+          <tr><td data-label="guest">windows</td><td data-label="sync (s)">2.1</td><td data-label="build (s)">87</td><td data-label="test (s)">140</td><td data-label="total (s)">229</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+<p class="dim">A matrix is read <em>across both axes</em> — "which guest builds
+slowest?" Narrow, that question now takes three cards and your short-term
+memory: the column is gone, and with it the comparison. Reflow also repeats
+every label per row (verbose past ~8 rows) and gives up numeric alignment.
+Matrices should keep their grid — that's scroll, below.</p>
+
+<!-- ════════ B ════════ -->
+<h2 class="part">Part B — scroll for matrices <small>(and a sticky first column?)</small></h2>
+
+<h2>5·3 — scroll, plain <small>the grid survives; the row's name pans away</small></h2>
+<div class="rig">
+  <div class="sample" style="width: 340px">
+    <div class="sample-inner">
+      <div class="scrolly">
+        <table>
+          <thead><tr><th>guest</th><th>sync (s)</th><th>build (s)</th><th>test (s)</th><th>shot (s)</th><th>deploy (s)</th><th>total (s)</th></tr></thead>
+          <tbody>
+            <tr><td>linux</td><td>1.2</td><td>41</td><td>96</td><td>0.8</td><td>6</td><td>145</td></tr>
+            <tr><td>macos</td><td>1.4</td><td>58</td><td>122</td><td>1.1</td><td>9</td><td>191</td></tr>
+            <tr><td>windows</td><td>2.1</td><td>87</td><td>140</td><td>1.9</td><td>14</td><td>245</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <p class="rig-hint pan"></p>
+</div>
+
+<h2>5·4 — scroll + sticky first column <small>the row keeps its name while the data pans</small></h2>
+<div class="rig">
+  <div class="sample" style="width: 340px">
+    <div class="sample-inner sticky-col">
+      <div class="scrolly">
+        <table>
+          <thead><tr><th>guest</th><th>sync (s)</th><th>build (s)</th><th>test (s)</th><th>shot (s)</th><th>deploy (s)</th><th>total (s)</th></tr></thead>
+          <tbody>
+            <tr><td>linux</td><td>1.2</td><td>41</td><td>96</td><td>0.8</td><td>6</td><td>145</td></tr>
+            <tr><td>macos</td><td>1.4</td><td>58</td><td>122</td><td>1.1</td><td>9</td><td>191</td></tr>
+            <tr><td>windows</td><td>2.1</td><td>87</td><td>140</td><td>1.9</td><td>14</td><td>245</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <p class="rig-hint pan"></p>
+</div>
+<p class="dim">Scroll's weaknesses: panning is invisible without an affordance
+(the cut-off column edge is the only hint), and once you pan, the first column
+— the row's identity — scrolls away. A sticky first column fixes the second
+problem for exactly the tables scroll is right for. It needs an opaque
+background (here the panel token), which shows as a subtle seam while panning.</p>
+
+<!-- ════════ C ════════ -->
+<h2 class="part">Part C — transpose &amp; expand <small>the other two, briefly</small></h2>
+<div class="pair">
+  <div class="sample-inner">
+    <table>
+      <thead><tr><th>guest</th><th>launch</th><th>capture</th></tr></thead>
+      <tbody>
+        <tr><td>linux</td><td>systemd-run --user</td><td>vm shot</td></tr>
+        <tr><td>macos</td><td>.command + open</td><td>vm shot</td></tr>
+        <tr><td>windows</td><td>wt.exe</td><td>vm shot</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sample-inner">
+    <table>
+      <tbody>
+        <tr><td><strong>guest</strong></td><td>linux</td><td>macos</td><td>windows</td></tr>
+        <tr><td><strong>launch</strong></td><td>systemd-run --user</td><td>.command + open</td><td>wt.exe</td></tr>
+        <tr><td><strong>capture</strong></td><td>vm shot</td><td>vm shot</td><td>vm shot</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<p class="dim">Transpose (left → right) trades width for height: good when a
+table is much wider than it is tall (many columns, ≤ 4 data rows) — each row
+becomes a column, so past ~4 rows the transposed form overflows again and you're
+back where you started. Expand is the last resort: a table too big even for the
+Full rung stays clipped and opens full-bleed via the <code>:target</code>
+overlay (live on /design-ladder). Both already work in zola-plus; their skin
+just inherits this system.</p>
+
+<!-- ════════ D ════════ -->
+<h2 class="part">Part D — grouped rows <small>first complex variant</small></h2>
+<div class="rig">
+  <div class="sample">
+    <div class="sample-inner reflow">
+      <table>
+        <thead><tr><th>flag</th><th>arity</th><th>effect</th></tr></thead>
+        <tbody>
+          <tr class="group"><th colspan="3">sync behaviour</th></tr>
+          <tr><td data-label="flag"><code>--no-sync</code></td><td data-label="arity">0</td><td data-label="effect">skip the snapshot push</td></tr>
+          <tr><td data-label="flag"><code>--with-file</code></td><td data-label="arity">1+</td><td data-label="effect">carry a gitignored file</td></tr>
+          <tr class="group"><th colspan="3">execution</th></tr>
+          <tr><td data-label="flag"><code>-e</code></td><td data-label="arity">1+</td><td data-label="effect">env var for the guest command</td></tr>
+          <tr><td data-label="flag"><code>--writeback</code></td><td data-label="arity">0</td><td data-label="effect">pull guest edits back</td></tr>
+          <tr><td data-label="flag"><code>--with-snapshot</code></td><td data-label="arity">0</td><td data-label="effect">run, then roll the guest back</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="rig-hint"></p>
+</div>
+<p class="dim">A group header row spans the table and speaks the column-header
+voice; wide it reads as a section rule, narrow it becomes a heading between
+cards — the pivot survives it because the group row carries no data labels.
+Markdown pipe tables can't express this, so it is a <strong>zola-plus
+convention</strong> (decided): a body row whose cells after the first are all
+dashes — <code>| **sync behaviour** |-------|-------|</code> — becomes a
+spanning group header, echoing the delimiter row so the source itself reads as
+a section divider.</p>
+
+<h2>Decided</h2>
+<ul>
+  <li><strong>P1 ✓ — the shape map</strong>: when a table is too wide, its
+  shape picks the escape hatch — self-contained rows → reflow · few rows ×
+  many columns → transpose · compare-both-ways numbers → scroll · too big
+  even for Full → expand.</li>
+  <li><strong>P2 ✓ — grouped rows</strong> via the dash-row convention
+  (<code>| **group** |-------|-------|</code>).</li>
+  <li><strong>P3</strong> — superseded: sticky is decided per table by the
+  measured policy in round 6 (6rem budget, ≤2-line labels, else not sticky).</li>
+</ul>
+
+<script>
+  const b = document.getElementById('theme');
+  b.onclick = () => {
+    const h = document.documentElement;
+    h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  };
+</script>
+</body>
+</html>
