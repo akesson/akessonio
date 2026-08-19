@@ -13,6 +13,17 @@ Expect: a topic or angle, a pointer to a repo/code, and optionally personal note
 
 Go **straight to a full draft** — no outline-approval step. Henrik reacts to real prose.
 
+## Drafts: `draft = true`, local-only until promoted
+
+Every article starts as a **draft**: `content/<slug>.md` with `draft = true` in front-matter. Drafting happens here (not in `../outreach`) because rendering can only be validated here — preview with `zola-plus serve --drafts`. Two mechanisms keep unfinished work out of the public eye, since this repo is public and pushing `main` deploys:
+
+1. **Zola excludes drafts from normal builds** — CI runs a plain `zola-plus build`, so a draft can never deploy, even if pushed by mistake.
+2. **Unpromoted drafts are never pushed** (the *source* is public too). The pre-push hook (`scripts/pre-push-no-drafts.sh`, installed as `.git/hooks/pre-push`) blocks any push whose tree contains `draft = true`. Keep drafts uncommitted or on a local-only branch.
+
+**Promotion** = remove `draft = true` and set the final `date`. Only promote when Henrik says the article is ready to ship.
+
+For launch/promotional articles, the research, positioning, and launch plan live in `../outreach/projects/<name>/` — mine them as input. The draft itself still lives here.
+
 ## Before writing, read
 
 1. `docs/VOICE.md` — the rules the draft is measured against. Non-negotiable.
@@ -26,8 +37,9 @@ Articles are top-level files: `content/<slug>.md` (short kebab-case slug). The r
 ```toml
 +++
 title = "..."          # concrete and a little wry, sentence case — see existing titles
-date = 2026-07-28      # today, YYYY-MM-DD
+date = 2026-07-28      # today, YYYY-MM-DD (final date set at promotion)
 description = "..."    # one honest sentence for the listing; no marketing adjectives
+draft = true           # every article starts as a draft — removed only at promotion
 +++
 ```
 

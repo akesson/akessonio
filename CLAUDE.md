@@ -72,5 +72,7 @@ Current routing:
 
 - **Articles are top-level** `content/<slug>.md` files with `date` set; the root section (`content/_index.md`, "Articles", `sort_by = "date"`) lists them. Subsections (`content/projects/`) are directories with an `_index.md`.
 - **Writing an article? Use the `write-article` skill** — it encodes the workflow (voice pass against `docs/VOICE.md`, front-matter, `blog-tables`, math guard, build check).
+- **Drafts carry `draft = true` and are never pushed until promoted.** Articles are drafted here (only place rendering can be validated: `zola-plus serve --drafts`); Zola keeps drafts out of production builds, and the pre-push hook (`scripts/pre-push-no-drafts.sh` → install as `.git/hooks/pre-push`) blocks pushing a tree that still contains one — the repo source is public. Promotion = removing `draft = true` + final `date`. Research/positioning for launch articles lives in the private `../outreach` repo.
+- `docs/VOICE.md` is the canonical voice doc for **all** of Henrik's outreach copy (blog, HN, reddit, newsletters); the `../outreach` repo reads it cross-repo and keeps no copy.
 - Standalone informational pages use `template = "description.html"` (currently only `content/about/_index.md`).
 - Shortcodes would live in `templates/shortcodes/`, invoked from Markdown as `{{ name() }}` — but that directory is **currently empty** (no shortcodes defined yet).
