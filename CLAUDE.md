@@ -44,7 +44,6 @@ Current routing:
 |---|---|---|
 | `/` home = article list | `index.html` + `content/_index.md` (`section.html`, "Articles") | articles are **top-level** `content/*.md` files |
 | Articles (e.g. `content/wordtree.md`) | `page.html` (default mapping) | prev/next via `post_nav()` macro, read-time; old `/blog/...` URLs kept via `aliases` |
-| `content/projects/` | `projects.html` / `project.html` | set in front-matter; old `/opensource/...` URLs kept via `aliases` |
 | `content/about/_index.md` | `description.html` | set in front-matter |
 
 `macros.html` holds shared partials: `read_time()`, `social_icon()`, `icon()`, `tabstrip()` (the section nav strip, with `aria-current`), `back_link()`, `post_nav()`. Navigation is **not** duplicated across templates anymore — header blocks call the macros (e.g. `page.html` calls `back_link()`).
@@ -70,7 +69,7 @@ Current routing:
 
 ## Content authoring conventions
 
-- **Articles are top-level** `content/<slug>.md` files with `date` set; the root section (`content/_index.md`, "Articles", `sort_by = "date"`) lists them. Subsections (`content/projects/`) are directories with an `_index.md`.
+- **Articles are top-level** `content/<slug>.md` files with `date` set; the root section (`content/_index.md`, "Articles", `sort_by = "date"`) lists them. Subsections (currently only `content/about/`) are directories with an `_index.md`. There is no Projects section — it was removed 2026-08-25 (stale duplicate of About's "What I'm working on"); re-add only with 4+ maintained projects that have something a README can't say.
 - **Writing an article? Use the `write-article` skill** — it encodes the workflow (voice pass against `docs/VOICE.md`, front-matter, `blog-tables`, math guard, build check).
 - **Drafts carry `draft = true` and are never pushed until promoted.** Articles are drafted here (only place rendering can be validated: `zola-plus serve --drafts`); Zola keeps drafts out of production builds, and the pre-push hook (`scripts/pre-push-no-drafts.sh` → install as `.git/hooks/pre-push`) blocks pushing a tree that still contains one — the repo source is public. Promotion = removing `draft = true` + final `date`. Research/positioning for launch articles lives in the private `../outreach` repo.
 - `docs/VOICE.md` is the canonical voice doc for **all** of Henrik's outreach copy (blog, HN, reddit, newsletters); the `../outreach` repo reads it cross-repo and keeps no copy.

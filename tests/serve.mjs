@@ -1,5 +1,5 @@
 // Minimal static file server for the built `public/` directory. No deps.
-// Maps Zola's pretty URLs (`/projects/foo/`) to their `index.html`.
+// Maps Zola's pretty URLs (`/about/`) to their `index.html`.
 // Usage: node tests/serve.mjs [port]
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';

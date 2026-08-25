@@ -307,8 +307,8 @@
 </svg>
 {% endmacro icon %}
 
-{# ── Top tab strip. The persistent chrome on the three index pages (/, /projects/,
-   /about/). Real links with navigation semantics — aria-current marks the active
+{# ── Top tab strip. The persistent chrome on the index pages (/ and /about/).
+   Real links with navigation semantics — aria-current marks the active
    section, not ARIA tab roles. `current` is passed in (Zola's current_path) so the
    macro never relies on global scope. The view-transition-name in style.scss keeps
    the strip anchored while the page body cross-fades between navigations. ── #}
@@ -325,7 +325,7 @@
 </header>
 {% endmacro tabstrip %}
 
-{# ── Back link for level-2 pages (an article, a project page). The strip is dropped
+{# ── Back link for level-2 pages (an article). The strip is dropped
    here; one arrow returns "up". The href is deterministic and server-rendered;
    main.js upgrades the label + target from a same-origin referrer / the Navigation
    API so it points back to wherever you actually came from. ── #}

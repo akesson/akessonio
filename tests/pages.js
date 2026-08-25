@@ -1,5 +1,5 @@
 // The dynamic page list: parsed from the built `public/sitemap.xml`, so adding
-// an article, project, or tag is captured with zero edits here. Build first
+// an article or page is captured with zero edits here. Build first
 // (`zola build`, or just use `npm run screenshots`) or this throws.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

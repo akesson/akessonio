@@ -36,12 +36,12 @@ home_subtitle = "Independent software developer — Rust & open source"
 
 footer_copyright = ' &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
 
-# Top tab strip — three real-URL sections rendered as tabs. `path` is matched
+# Top tab strip — real-URL sections rendered as tabs. `path` is matched
 # against Zola's `current_path` to mark the active tab (aria-current). Articles
-# is the home, served at "/". Order is Articles · Projects · About.
+# is the home, served at "/". (A Projects tab was removed 2026-08-25: it duplicated
+# About's "What I'm working on" in a stale, third-person voice.)
 tabs = [
     { path = "/", name = "Articles" },
-    { path = "/projects/", name = "Projects" },
     { path = "/about/", name = "About" },
 ]
 

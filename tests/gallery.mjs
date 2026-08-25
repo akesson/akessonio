@@ -8,7 +8,7 @@
 //   node tests/gallery.mjs        # or: npm run gallery
 //
 // `npm run screenshots` runs it automatically after a capture, so adding an
-// article/project surfaces a new row with zero edits here.
+// article surfaces a new row with zero edits here.
 
 import { readdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

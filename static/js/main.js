@@ -105,17 +105,15 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
 
 // Back link — history-aware "up"
 //
-// A level-2 page (article, project) renders a deterministic back link to its
-// section index. This upgrades the label + target to wherever you *actually*
-// came from, when that was another section on this site — so an article reached
-// from Projects offers "← Projects", not "← Articles". Defensive by design: the
+// A level-2 page (an article) renders a deterministic back link to its section
+// index. This upgrades the label + target to wherever you *actually* came from,
+// when that was another strip section on this site. Defensive by design: the
 // server default already works with JS off, and we only trust a same-origin
 // origin (the Navigation API on Chromium, else document.referrer).
 const backLink = document.querySelector('.back-link');
 if (backLink) {
   // Known strip sections, most specific first so "/" is the catch-all.
   const sections = [
-    { path: '/projects/', label: 'Projects' },
     { path: '/', label: 'Articles' },
   ];
 

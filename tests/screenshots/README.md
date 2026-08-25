@@ -2,10 +2,10 @@
 
 Committed visual record of every page, in **light** and **dark** themes at **6 viewport
 widths** (`375 · 600 · 900 · 1200 · 1440 · 1920`). Filenames are
-`<slug>__<theme>__<width>w.png` (e.g. `projects-cargo-leptos__dark__1200w.png`).
+`<slug>__<theme>__<width>w.png` (e.g. `about__dark__1200w.png`).
 
 The page list is **dynamic** — parsed from `public/sitemap.xml` at run time — so adding an
-article, project, or tag captures it automatically with no test changes.
+article or page captures it automatically with no test changes.
 
 ## Regenerate
 

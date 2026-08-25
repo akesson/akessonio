@@ -87,7 +87,7 @@
       {{ macros::icon(name="sun") }}{{ macros::icon(name="moon") }}{{ macros::icon(name="monitor") }}
     </button>
 
-    {# Default chrome: the persistent tab strip. Level-2 pages (article, project)
+    {# Default chrome: the persistent tab strip. Level-2 pages (articles)
        override `header` with macros::back_link instead. #}
     {% block header %}{{ macros::tabstrip(current=current_path) }}{% endblock header %}
 
