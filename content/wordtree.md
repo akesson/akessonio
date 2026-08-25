@@ -229,7 +229,7 @@ function. It also made exact lookup ~10–20% *faster*, because more siblings no
 fit in a cache line and `index_of` scans siblings linearly. I don't often get
 smaller and faster out of the same change.
 
-## The fun part: edit distance that rides down the trie
+## Edit distance that rides down the trie
 
 The third job is the interesting one. How do you find every word within
 Damerau-Levenshtein distance 1 of a typo, frequency-ranked, without scanning the
