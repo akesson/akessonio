@@ -7,18 +7,12 @@
   <meta itemprop="name" content="{{config.title}}" />
   <meta itemprop="description" content="{{config.description}}" />
 
-  <link rel="apple-touch-icon" sizes="180x180" href="{{get_url(path="apple-touch-icon.png")}}"/>
-  <link rel="icon" type="image/png" sizes="32x32" href="{{get_url(path="favicon-32x32.png")}}" />
-  <link
-    rel="icon"
-    type="image/png"
-    sizes="16x16"
-    href="{{get_url(path="favicon-16x16.png")}}"
-  />
-  <link
-    rel="shortcut icon"
-    href="{{get_url(path="favicon.ico")}}"
-  />
+  {#- Only two tab icons: the ICO with an explicit small size (Safari/legacy) and the
+      size-less SVG. Listing PNGs or a size-less ICO makes Chrome pick them over the SVG. #}
+  <link rel="icon" href="{{get_url(path="favicon.ico", cachebust=true)}}" sizes="32x32" />
+  <link rel="icon" type="image/svg+xml" href="{{get_url(path="favicon.svg", cachebust=true)}}" />
+  <link rel="apple-touch-icon" sizes="180x180" href="{{get_url(path="apple-touch-icon.png", cachebust=true)}}" />
+  <link rel="manifest" href="{{get_url(path="site.webmanifest")}}" />
   <link rel="preload" href="{{get_url(path="fonts/hanken-grotesk-latin.woff2")}}" as="font" type="font/woff2" crossorigin/>
   <!-- Syntax highlighting: both theme sheets load; the active one is chosen to
        match the resolved data-theme (below + main.js) — which may be a manual
