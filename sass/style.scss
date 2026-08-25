@@ -490,15 +490,6 @@ h1.title {
   }
 }
 
-// ── About — lead paragraph ───────────────────────────────────────────────────
-// The opening paragraph is set larger and calm, giving the page an anchored,
-// confident open in place of the (visually hidden) h1.
-.about-intro > p:first-of-type {
-  font-size: $text-lg;
-  line-height: 1.55;
-  color: var(--text);
-}
-
 // list.html
 //
 .posts-group {
@@ -591,15 +582,24 @@ hr.post-end {
   }
 
   a {
-    color: inherit; // links read in body colour, not the accent
-    font-weight: 700;
-    text-decoration: underline; // plain default underline, no offset, body-text size
+    // Links are quiet: accent colour at body weight, with a thin underline
+    // (DESIGN §colour — the accent means "link"). Hover keeps the accent.
+    color: var(--accent);
+    font-weight: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+    text-decoration-color: var(--accent);
     border-bottom: none;
     box-shadow: none;
     transition: color 0.2s ease-out;
 
     &:hover {
-      color: var(--accent); // accent only appears on interaction
+      text-decoration-thickness: 2px; // colour is already the accent; hover thickens the line
+    }
+
+    &.social-link {
+      text-decoration: none; // the icon is the link marker; an underline doubles it
     }
   }
 

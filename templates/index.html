@@ -77,8 +77,10 @@
   <title>{{ config.title }}</title>
   {% endif %}
 
-  {% if config.generate_feed %}
-  <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ get_url(path=config.feed_filename, trailing_slash=false) }}">
+  {% if config.generate_feeds %}
+  {% for feed in config.feed_filenames %}
+  <link rel="alternate" type="application/atom+xml" title="{{ config.title }}" href="{{ get_url(path=feed, trailing_slash=false) }}">
+  {% endfor %}
   {% endif %}
 
   <body id="page">

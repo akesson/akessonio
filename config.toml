@@ -9,6 +9,11 @@ compile_sass = true
 # Whether to build a search index to be used later on by a JavaScript library
 build_search_index = false
 
+# Atom feed at /atom.xml (Zola's built-in template). Lists the root section's
+# articles, newest first; drafts are excluded by Zola.
+generate_feeds = true
+feed_filenames = ["atom.xml"]
+
 # The taxonomies to be rendered for that site and their configuration
 # Example:
 #     taxonomies = [
