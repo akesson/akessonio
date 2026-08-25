@@ -49,7 +49,7 @@ Each of those jobs has a specialist crate that does it better. What almost
 nothing does is all three from *one* structure, from one file that loads with
 zero parsing. That last constraint is the whole story, so I'll start there.
 
-## The structure: 8 bytes a node, and not a byte more
+## The structure: 8 bytes a node
 
 The tree is a width-first array of fixed-size nodes: a node is immediately
 followed by all its siblings, so "next sibling" is the next slot and "first
