@@ -50,10 +50,5 @@ tabs = [
     { path = "/about/", name = "About" },
 ]
 
-hermit_social = [
-    { name = "GitHub", link = "https://github.com/akesson" },
-    { name = "twitter", link = "https://x.com/hakesso" },
-]
-
 [extra.author]
 name = "Henrik Åkesson"

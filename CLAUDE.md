@@ -52,7 +52,8 @@ Current routing:
 
 `config.toml` `[extra]` drives site chrome — edit here, not in templates:
 
-- `hermit_social` — social links (`{name, link}`); `name` must match a branch in the `social_icon()` macro or it falls back to a generic link icon. (There is no `hermit_menu` anymore — section nav is the `tabstrip()` macro in `macros.html`.)
+- `tabs` — the section nav strip (`{path, name}`), rendered by the `tabstrip()` macro in `macros.html`.
+- Social links are **not** config-driven: the only social row is on the About page, via the `social()` shortcode (`templates/shortcodes/social.html`); `name` must match a branch in the `social_icon()` macro or it falls back to a generic link icon. (`hermit_social`/`hermit_menu` are gone — the last template reading them was removed before 2026-08-25.)
 - `home_subtitle`, `footer_copyright`, `author.name`, `highlightjs.*`.
 
 ## Styling & assets
