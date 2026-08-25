@@ -1,6 +1,6 @@
 +++
 title = "One trie, three jobs, zero benchmarks won"
-date = 2026-06-06
+date = 2026-08-25
 description = "A compact word-list trie that loses every benchmark to a specialist — and why I shipped it anyway."
 aliases = ["/blog/wordtree/"]
 [extra]
