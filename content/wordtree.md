@@ -288,46 +288,66 @@ already `> K` and can never be a kept correction nor lower a surviving minimum.
 Only the `2K + 1` cells in a diagonal **band** around `j = depth` can ever matter.
 At the default `K = 1` that's **three cells**, stored as a fixed `[u8; 3]`.
 
+Concretely: the query is `cart`, the walk is descending root → `c` → `ca` →
+`cat`, and each row is that node's `[u8; 3]`. The typo is an inserted `r` — the
+kind the state machine used to drop.
+
 <figure>
-<svg viewBox="0 0 620 440" role="img" aria-label="A dynamic-programming grid of query index against trie depth. Only the three-cell diagonal band, where the absolute difference of j and depth is at most K equals one, is computed and stored as a u8 array of length three. All cells outside the band are guaranteed greater than K and are never visited." style="display:block;margin:0 auto;width:100%;height:auto;max-width:640px;font-family:inherit">
-<title>The diagonal band: three cells per row</title>
-<text x="281" y="38" text-anchor="middle" fill="currentColor" font-size="13" opacity="0.7">query index  j →</text>
-<g text-anchor="middle" fill="currentColor" font-size="12" opacity="0.6">
-<text x="143" y="60">0</text><text x="189" y="60">1</text><text x="235" y="60">2</text><text x="281" y="60">3</text><text x="327" y="60">4</text><text x="373" y="60">5</text><text x="419" y="60">6</text>
+<svg viewBox="0 0 620 330" role="img" aria-label="The edit-distance grid for the query cart against the trie path root, c, ca, cat. Rows are trie nodes, columns are query prefixes. Only the diagonal band of cells with absolute difference of j and depth at most one is computed; each row's three band cells hold real values, ending in a one at the terminal node cat, which is at most K so cat is kept. The out-of-band cells, shown faded, are all two or more and are never computed. The optimal alignment path stays inside the band; its single insertion moves it one cell to the right." style="display:block;margin:0 auto;width:100%;height:auto;max-width:640px;font-family:inherit">
+<title>The band on a real query: cart against the path to cat</title>
+<defs><marker id="band-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent,#91bce6)"/></marker></defs>
+<text x="265" y="34" text-anchor="middle" fill="currentColor" font-size="13" opacity="0.7">query  cart   (j →)</text>
+<g text-anchor="middle" fill="currentColor" font-size="11" opacity="0.5">
+<text x="173" y="54">0</text><text x="219" y="54">1</text><text x="265" y="54">2</text><text x="311" y="54">3</text><text x="357" y="54">4</text>
 </g>
-<text x="92" y="231" text-anchor="middle" fill="currentColor" font-size="13" opacity="0.7" transform="rotate(-90 92 231)">trie depth  d ↓</text>
-<g text-anchor="end" fill="currentColor" font-size="12" opacity="0.6">
-<text x="108" y="101">0</text><text x="108" y="147">1</text><text x="108" y="193">2</text><text x="108" y="239">3</text><text x="108" y="285">4</text><text x="108" y="331">5</text><text x="108" y="377">6</text>
+<g text-anchor="middle" fill="currentColor" font-size="14" font-family="monospace">
+<text x="173" y="72" opacity="0.5">ε</text><text x="219" y="72">c</text><text x="265" y="72">a</text><text x="311" y="72">r</text><text x="357" y="72">t</text>
+</g>
+<text x="66" y="172" text-anchor="middle" fill="currentColor" font-size="13" opacity="0.7" transform="rotate(-90 66 172)">trie node  (depth ↓)</text>
+<g text-anchor="end" fill="currentColor" font-size="13" font-family="monospace">
+<text x="138" y="108" opacity="0.6">root</text><text x="138" y="154">c</text><text x="138" y="200">ca</text><text x="138" y="246">cat</text>
 </g>
 <g fill="var(--accent,#91bce6)" fill-opacity="0.12">
-<rect x="166" y="70" width="46" height="46"/>
-<rect x="120" y="116" width="46" height="46"/><rect x="212" y="116" width="46" height="46"/>
-<rect x="166" y="162" width="46" height="46"/><rect x="258" y="162" width="46" height="46"/>
-<rect x="212" y="208" width="46" height="46"/><rect x="304" y="208" width="46" height="46"/>
-<rect x="258" y="254" width="46" height="46"/><rect x="350" y="254" width="46" height="46"/>
-<rect x="304" y="300" width="46" height="46"/><rect x="396" y="300" width="46" height="46"/>
-<rect x="350" y="346" width="46" height="46"/>
+<rect x="196" y="80" width="46" height="46"/>
+<rect x="150" y="126" width="46" height="46"/><rect x="242" y="126" width="46" height="46"/>
+<rect x="196" y="172" width="46" height="46"/><rect x="288" y="172" width="46" height="46"/>
+<rect x="242" y="218" width="46" height="46"/><rect x="334" y="218" width="46" height="46"/>
 </g>
 <g fill="var(--accent,#91bce6)" fill-opacity="0.28">
-<rect x="120" y="70" width="46" height="46"/><rect x="166" y="116" width="46" height="46"/><rect x="212" y="162" width="46" height="46"/><rect x="258" y="208" width="46" height="46"/><rect x="304" y="254" width="46" height="46"/><rect x="350" y="300" width="46" height="46"/><rect x="396" y="346" width="46" height="46"/>
+<rect x="150" y="80" width="46" height="46"/><rect x="196" y="126" width="46" height="46"/><rect x="242" y="172" width="46" height="46"/><rect x="288" y="218" width="46" height="46"/>
 </g>
 <g stroke="currentColor" stroke-opacity="0.13" fill="none">
-<line x1="120" y1="70" x2="442" y2="70"/><line x1="120" y1="116" x2="442" y2="116"/><line x1="120" y1="162" x2="442" y2="162"/><line x1="120" y1="208" x2="442" y2="208"/><line x1="120" y1="254" x2="442" y2="254"/><line x1="120" y1="300" x2="442" y2="300"/><line x1="120" y1="346" x2="442" y2="346"/><line x1="120" y1="392" x2="442" y2="392"/>
-<line x1="120" y1="70" x2="120" y2="392"/><line x1="166" y1="70" x2="166" y2="392"/><line x1="212" y1="70" x2="212" y2="392"/><line x1="258" y1="70" x2="258" y2="392"/><line x1="304" y1="70" x2="304" y2="392"/><line x1="350" y1="70" x2="350" y2="392"/><line x1="396" y1="70" x2="396" y2="392"/><line x1="442" y1="70" x2="442" y2="392"/>
+<line x1="150" y1="80" x2="380" y2="80"/><line x1="150" y1="126" x2="380" y2="126"/><line x1="150" y1="172" x2="380" y2="172"/><line x1="150" y1="218" x2="380" y2="218"/><line x1="150" y1="264" x2="380" y2="264"/>
+<line x1="150" y1="80" x2="150" y2="264"/><line x1="196" y1="80" x2="196" y2="264"/><line x1="242" y1="80" x2="242" y2="264"/><line x1="288" y1="80" x2="288" y2="264"/><line x1="334" y1="80" x2="334" y2="264"/><line x1="380" y1="80" x2="380" y2="264"/>
 </g>
-<line x1="143" y1="93" x2="419" y2="369" stroke="var(--accent,#91bce6)" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="3 4"/>
-<rect x="212" y="208" width="138" height="46" rx="4" fill="none" stroke="var(--accent,#91bce6)" stroke-width="1.6"/>
-<g text-anchor="middle" fill="var(--accent,#91bce6)" font-size="13" font-family="monospace">
-<text x="235" y="236">0</text><text x="281" y="236">1</text><text x="327" y="236">2</text>
+<g text-anchor="middle" fill="currentColor" font-size="14" font-family="monospace">
+<text x="173" y="108">0</text><text x="219" y="108">1</text><text x="265" y="108" opacity="0.3">2</text><text x="311" y="108" opacity="0.3">3</text><text x="357" y="108" opacity="0.3">4</text>
+<text x="173" y="154">1</text><text x="219" y="154">0</text><text x="265" y="154">1</text><text x="311" y="154" opacity="0.3">2</text><text x="357" y="154" opacity="0.3">3</text>
+<text x="173" y="200" opacity="0.3">2</text><text x="219" y="200">1</text><text x="265" y="200">0</text><text x="311" y="200">1</text><text x="357" y="200" opacity="0.3">2</text>
+<text x="173" y="246" opacity="0.3">3</text><text x="219" y="246" opacity="0.3">2</text><text x="265" y="246">1</text><text x="311" y="246">1</text><text x="357" y="246">1</text>
 </g>
-<line x1="350" y1="231" x2="430" y2="231" stroke="var(--accent,#91bce6)" stroke-opacity="0.6"/>
-<text x="436" y="228" fill="currentColor" font-size="12" font-family="monospace" opacity="0.85">[u8; 3]</text>
-<text x="436" y="244" fill="currentColor" font-size="12" opacity="0.6">one band row</text>
-<text x="128" y="286" fill="currentColor" font-size="12" opacity="0.7">out of band</text>
-<text x="128" y="303" fill="currentColor" font-size="12" font-family="monospace" opacity="0.7">|j − d| &gt; K</text>
-<text x="281" y="422" text-anchor="middle" fill="currentColor" font-size="12" opacity="0.65">only the 2K + 1 = 3 band cells per row are computed</text>
+<g stroke="var(--accent,#91bce6)" stroke-width="2" fill="none">
+<line x1="184" y1="114" x2="206" y2="136" marker-end="url(#band-arrow)"/>
+<line x1="230" y1="160" x2="252" y2="182" marker-end="url(#band-arrow)"/>
+<line x1="280" y1="195" x2="296" y2="195" marker-end="url(#band-arrow)"/>
+<line x1="322" y1="206" x2="344" y2="228" marker-end="url(#band-arrow)"/>
+</g>
+<rect x="242" y="218" width="138" height="46" rx="4" fill="none" stroke="var(--accent,#91bce6)" stroke-width="1.6"/>
+<line x1="380" y1="241" x2="404" y2="241" stroke="var(--accent,#91bce6)" stroke-opacity="0.6"/>
+<text x="410" y="238" fill="currentColor" font-size="12" font-family="monospace" opacity="0.85">[u8; 3]</text>
+<text x="410" y="254" fill="currentColor" font-size="12" opacity="0.6">node cat's band row</text>
+<text x="410" y="270" fill="currentColor" font-size="12" opacity="0.6">last cell 1 ≤ K → keep cat</text>
+<rect x="410" y="92" width="12" height="12" fill="var(--accent,#91bce6)" fill-opacity="0.28"/>
+<text x="428" y="103" fill="currentColor" font-size="12" opacity="0.7">diagonal  j = depth</text>
+<rect x="410" y="116" width="12" height="12" fill="var(--accent,#91bce6)" fill-opacity="0.12"/>
+<text x="428" y="127" fill="currentColor" font-size="12" opacity="0.7">band  |j − depth| ≤ 1</text>
+<rect x="410" y="140" width="12" height="12" fill="none" stroke="currentColor" stroke-opacity="0.3"/>
+<text x="428" y="151" fill="currentColor" font-size="12" opacity="0.7">out of band: ≥ 2, never computed</text>
+<line x1="410" y1="176" x2="424" y2="176" stroke="var(--accent,#91bce6)" stroke-width="2"/>
+<text x="428" y="180" fill="currentColor" font-size="12" opacity="0.7">alignment: c, a, insert r, t</text>
+<text x="265" y="306" text-anchor="middle" fill="currentColor" font-size="12" opacity="0.65">the one insertion shifts the path a single cell right — it can never leave a K = 1 band</text>
 </svg>
-<p>For a query of length <em>n</em>, a full row would cost <em>O(n)</em> per node. But any cell with <code>|j − depth| &gt; K</code> is already <code>&gt; K</code>, so only the <code>2K + 1</code> band cells can change a keep-or-prune decision — three at <code>K = 1</code>, carried as a <code>[u8; 3]</code> that rides the diagonal.</p>
+<p>Every value the search acts on is inside the band, computed exactly: node <code>cat</code>'s <code>[u8; 3]</code> ends in <code>1 ≤ K</code>, so <code>cat</code> is kept. The faded cells are what a full <em>n</em>-wide row would also compute — all <code>≥ 2</code>, none able to change a keep-or-prune decision — so they are skipped, and a node costs three bytes instead of <em>O(n)</em>.</p>
 </figure>
 
 Shifting to band-local coordinates turns every DP neighbour into a *constant*
