@@ -8,23 +8,24 @@ aliases = ["/blog/wordtree/"]
 # would skew read-time. This is the true prose count; remove it to fall back to auto.
 words = 2576
 # Table directives below are measured by the blog-tables skill (re-run it after
-# editing any table). No-ops under vanilla zola (production CI) — they render
-# under zola-plus.
+# editing any table). No-ops under vanilla zola; CI builds with zola-plus, which
+# renders them.
 responsive_tables = true
 +++
 
+*I dusted off an old project of mine and, with the help of AI, freshened it up
+and made some improvements. This article is written with the help of AI too, but
+it's my project, my design, and I can explain every line.*
+
 I just open-sourced [wordtree](https://github.com/akesson/wordtree), a compact
-trie for word lists. Before I tell you what it does, here is what it is *not*: it
+trie for word lists. First of all, here is what it is *not*: it
 is not the fastest at anything. I benchmarked it against a specialist crate for
-each job it does, and on every head-to-head axis a specialist beat it. Exact
+each job it does, and each specialist beat it in its own domain. Exact
 lookup is slower than a `HashMap`. The file is three times larger than an FST.
 Spelling correction is an order of magnitude slower than symspell.
 
-I shipped it anyway, and I'd reach for it again. This post is about why a data
-structure that loses every micro-benchmark can still be the right dependency —
-and about the two genuinely fun pieces of engineering inside it: an
-edit-distance computation that rides *down the trie* in a fixed three-byte
-window, and an 8-byte node that pushes everything else off to the side.
+So why did I do it? Because I needed it! A structure that loses every micro-benchmark can
+still be the right dependency.
 
 The whole comparative study is reproducible — every number below comes from
 [comparisons/REPORT.md](https://github.com/akesson/wordtree/blob/main/comparisons/REPORT.md), regenerable with four `cargo`
@@ -45,15 +46,14 @@ word list, all at once, on devices where startup time and memory both mattered:
    distance ≤ 1 (`"aple"` → `apple`). `suggestions("aple", …)`.
 
 Each of those jobs has a specialist crate that does it better. What almost
-nothing does is all three from *one* structure — and, crucially, from one file
-that loads with zero parsing. That last constraint is the whole story, so let me
-start there.
+nothing does is all three from *one* structure, from one file that loads with
+zero parsing. That last constraint is the whole story, so I'll start there.
 
 ## The structure: 8 bytes a node, and not a byte more
 
 The tree is a width-first array of fixed-size nodes: a node is immediately
-followed by all its siblings, so "next sibling" is just the next slot and "first
-child" is one 24-bit offset.
+followed by all its siblings, so "next sibling" is the next slot and "first
+child" is one 24-bit index.
 
 <figure>
 <svg viewBox="0 0 544 356" role="img" aria-label="A trie for ape, apple and apply drawn above the flat width-first array that stores it. A parent reaches its first child by one forward offset, and sibling nodes occupy contiguous array slots." style="display:block;margin:0 auto;width:100%;height:auto;max-width:600px;font-family:inherit">
@@ -123,7 +123,7 @@ Each node is exactly 8 bytes:
 
 | field                  | bits | role                                                       |
 | ---------------------- | ---- | ---------------------------------------------------------- |
-| `first_child_pos`      | 24   | relative position of the first child                       |
+| `first_child_pos`      | 24   | array index of the first child                             |
 | `node_char`            | 24   | UTF-32 codepoint (low 3 bytes)                             |
 | `is_folder`            | 1    | drives the browsable index                                 |
 | `is_last_sibling`      | 1    | terminates a sibling run                                   |
@@ -186,7 +186,7 @@ Each node is exactly 8 bytes:
 
 Why fixed 8-byte records and not a tidy struct? Because the on-disk format *is*
 the in-memory format. The tree serialises with [`rkyv`](https://rkyv.org), and an
-`ArchivedTree` is queried directly out of an `mmap` — no parse, no rebuild, no
+`ArchivedTree` is queried directly out of an `mmap`: no parse, no rebuild, no
 pointer fix-up. Loading a 21 MiB English dictionary is an `mmap` call. For
 English, `live heap == serialized == 21.11 MiB`: the bytes you store are the bytes
 you query.
@@ -194,16 +194,16 @@ you query.
 That `max_child_percentile` field earns its 10 inline bits because it is read on
 *every* node during a suggestion walk. It records the highest word frequency
 anywhere in the subtree below a node, which is exactly the lower bound a
-[pruning-radix-trie](https://towardsdatascience.com/the-pruning-radix-trie-a-radix-trie-on-steroids-412807f77abc)
+[pruning-radix-trie](https://seekstorm.com/blog/pruning-radix-trie/)
 (Wolf Garbe's design, which wordtree's pruning is modelled on) needs: if a
 subtree's best possible frequency can't beat the current top-k, skip the whole
 subtree. Top-k autocomplete then touches a tiny fraction of the tree.
 
 ### Pushing the sparse data off-node
 
-Here is the first optimisation I'm happy with. A word needs two more values: its
-frequency (`percentile`, 0–1000) and the 24-bit index of its expression. But only
-~28% of nodes actually *end* a word — the rest are interior characters. Storing
+A word needs two more values: its frequency (`percentile`, 0–1000) and the
+24-bit index of its expression. But only ~28% of nodes actually *end* a word;
+the rest are interior characters. Storing
 those 5 bytes inline would waste them on roughly three out of four nodes.
 
 So they live in side tables instead, all part of the same zero-copy image:
@@ -219,22 +219,22 @@ So they live in side tables instead, all part of the same zero-copy image:
 The trick is the classic succinct-structure move: a word node at position `i`
 finds its value at `values[rank(i)]`, where `rank(i)` is the number of word-nodes
 before it. The `word_bits` bitvector plus the cumulative `rank_index` answer that
-rank query in O(1) — popcount the partial 64-bit word, add the precomputed prefix
+rank query in O(1): popcount the partial 64-bit word, add the precomputed prefix
 sum. The bit probe sits on the hot descent path; the rank query only fires when a
 value is actually consumed (an exact lookup, or a suggestion you decided to keep).
 
 Moving those 5 bytes off-node took the node from 12 bytes to 8, which on English
-trimmed the structure from ~26.5 MiB to ~21.1 MiB — about 20% — with no loss of
+trimmed the structure from ~26.5 MiB to ~21.1 MiB (about 20%) with no loss of
 function. It also made exact lookup ~10–20% *faster*, because more siblings now
-fit in a cache line and `index_of` scans siblings linearly. Smaller and faster
-from the same change is rare enough to enjoy.
+fit in a cache line and `index_of` scans siblings linearly. I don't often get
+smaller and faster out of the same change.
 
 ## The fun part: edit distance that rides down the trie
 
 The third job is the interesting one. How do you find every word within
 Damerau-Levenshtein distance 1 of a typo, frequency-ranked, without scanning the
-dictionary? (A brute-force DL≤1 scan over English takes ~90 ms — far too slow for
-as-you-type.)
+dictionary? (A brute-force DL≤1 scan over English takes ~90–100 ms, far too slow
+for as-you-type.)
 
 The answer is to compute the edit distance *incrementally as you walk the trie*.
 Each node carries one dynamic-programming row recording the edit distance between
@@ -246,31 +246,33 @@ grandparent's). Conceptually, for a query of length `n`, the row holds
 row[j] = edit_distance(query[0..j], word spelled to this node)
 ```
 
-and two quantities drive everything:
+and two quantities matter:
 
 - `row[n]` is the distance from the *whole* query to this node's word. If the node
   ends a word and `row[n] ≤ K`, it's a correction.
-- `min(row)` is the distance to the closest *prefix* — a lower bound on every word
+- `min(row)` is the distance to the closest *prefix*, a lower bound on every word
   in the subtree below. Once `min(row) > K`, the entire subtree is pruned.
 
 So the walk descends at most `K` levels past the query length and, in practice,
-visits ~2–3% of the tree. One traversal does autocomplete and correction at the
-same time.
+visits well under 1% of the tree (0.3% on English, 0.8% on Swedish, measured
+over generated single-edit typos). The same walk also collects the nodes that
+the completion sweep extends from, so one call returns corrections and
+completions together.
 
 ### The bug that made me rewrite it
 
 I didn't start here. The first version used a hand-rolled 4-window state machine
-that tracked a few edit positions as it descended. It looked fine. It passed my
-hand-written tests. It was wrong.
+that tracked a few edit positions as it descended. It looked fine and passed my
+hand-written tests, and it was wrong.
 
-What exposed it was building the comparison harness — specifically, a recall
+What exposed it was building the comparison harness, specifically a recall
 table broken down by edit *kind*. Substitution and transposition: fine.
 Deletion: ~6–10% recall. Insertion: **0%**. The state machine, run over a
 *branching* trie rather than a single string, mis-scored mid-word insertions and
 deletions and pruned the correct word away before it was ever reached. My
 autocomplete had been silently dropping every insertion typo and I had no idea
-until a table told me. That is the entire argument for building the benchmark
-harness, in one anecdote.
+until a table told me. If you want one reason to build a comparison harness
+before trusting your own tests, that's mine.
 
 The DP-row-over-trie version replaced it and corrects all four single-edit kinds
 at 100% (more on that below).
@@ -338,16 +340,18 @@ cur[o] = min(prev[o+1] + 1,     // deletion       (word longer than query)
              pp[o]     + 1)      // transposition  (grandparent row)
 ```
 
-By Ukkonen's banding argument, the optimal alignment to any cell whose true
-distance is ≤ K stays inside the band. So every value the search actually acts on
-is computed exactly, and **the kept corrections, their order, and the exact set of
-visited nodes are bit-identical to a full-row walk.** Out-of-band cells may be
-over-estimated, but they stay `> K`, so no keep/prune decision changes. Banding
-changes only the per-node cost — O(K) instead of O(n) — which is why longer
-queries gain the most: a 14-character fuzzy query runs ~80% faster than the
-full-row walk; short typos roughly halve.
+By Ukkonen's banding argument (Robert Jacobson has a [readable
+walkthrough](https://www.robertjacobson.dev/posts/2024-12-02-edit-distance-optimizations/#limited-distance-variant-the-banded-algorithm)),
+the optimal alignment to any cell whose true distance is ≤ K stays inside the
+band. So every value the search actually acts on is computed exactly, and **the
+kept corrections, their order, and the exact set of visited nodes are
+bit-identical to a full-row walk.** Out-of-band cells may be over-estimated, but
+they stay `> K`, so no keep/prune decision changes. Banding changes only the
+per-node cost, O(K) instead of O(n), which is why longer queries gain the most: a
+14-character fuzzy query runs ~80% faster than the full-row walk; short typos
+roughly halve.
 
-(One Rust wrinkle worth a footnote: stable Rust can't size `[u8; 2*K + 1]` from a
+(One Rust wrinkle: stable Rust can't size `[u8; 2*K + 1]` from a
 `K` parameter, so the band *width* `W` is the const generic and `K = (W − 1) / 2`
 is derived. Want distance-2 suggestions? Instantiate the search with `W = 5`.)
 
@@ -361,19 +365,19 @@ on the same word lists — [fst](https://crates.io/crates/fst) (BurntSushi's FSA
 `HashMap`/`Vec` baselines. A correctness gate asserts every engine resolves a
 word to the *same* expression index before any timing is trusted.
 
-**Exact lookup (nanoseconds).** `wordtree` is the slowest of the bunch — it
+**Exact lookup (nanoseconds).** `wordtree` is the slowest of the bunch; it
 linearly scans each node's siblings.
 
 <!-- scroll: width 36rem -->
 
 | case (en)            | wordtree | fst  | boomphf | hashmap  |
 | -------------------- | -------: | ---: | ------: | -------: |
-| short `on`           |     72.0 | 15.3 |    13.5 | **7.5**  |
-| long `alphanumerical`|    108.9 | 94.4 |    25.7 | **8.6**  |
+| short `on`           |     74.3 | 15.3 |    14.1 | **8.1**  |
+| long `alphanumerical`|    112.0 |107.4 |    25.9 | **8.7**  |
 
-`HashMap` wins outright at ~8 ns, flat. wordtree is ~8–13× slower. All are tens
-of nanoseconds in absolute terms — fine — but exact lookup is not a reason to pick
-wordtree.
+`HashMap` wins outright at ~8 ns, flat. wordtree is ~9–13× slower. All are tens
+of nanoseconds in absolute terms, which is fine, but exact lookup is not a reason
+to pick wordtree.
 
 **Size.** The FST is the clear winner: it minimises shared prefixes *and*
 suffixes (DAWG-like), doing exact lookup *and* spelling correction in ~3× less
@@ -390,11 +394,10 @@ space than wordtree does anything.
 | hashmap      | 38.7 MiB  |     —      |
 | symspell     | 300.4 MiB |     —      |
 
-So the honest framing: wordtree is the **smallest of the naive key-storing
-structures**, but still ~3× *larger* than an FSA. Its "size-optimised" claim holds
-against a naive trie, not against fst. (And one more honesty note: wordtree's
-*build* peaks at ~224 MiB to produce 21 MiB — ~11× — which matters if you generate
-trees on a constrained device.)
+So: wordtree is the **smallest of the naive key-storing structures**, but still
+~3× *larger* than an FSA. Its "size-optimised" claim holds against a naive trie,
+not against fst. (Also, wordtree's *build* peaks at ~224 MiB to produce 21 MiB,
+about 11×, which matters if you generate trees on a constrained device.)
 
 **Spelling correction.** symspell is in another league on latency.
 
@@ -402,13 +405,14 @@ trees on a constrained device.)
 
 | case (en)      | wordtree | symspell  | fst-lev | brute force |
 | -------------- | -------: | --------: | ------: | ----------: |
-| sub `abxut`    |  44.0 µs | **1.4 µs**| 122.6 µs|   95.1 ms   |
-| del `abut`     |  48.7 µs | **8.0 µs**| 124.3 µs|   86.4 ms   |
+| sub `abxut`    |  46.2 µs | **1.5 µs**| 132.6 µs|  102.6 ms   |
+| del `abut`     |  49.3 µs | **8.4 µs**| 129.6 µs|   91.5 ms   |
 
 symspell does a handful of hash lookups against a precomputed delete-dictionary;
-wordtree walks the trie. It's ~25–31× slower than symspell. (It is ~2.5–3.2×
-*faster* than fst's Levenshtein automaton, and corrects transpositions that
-fst misses entirely — but symspell is the one to beat, and it wins.)
+wordtree walks the trie. It's ~25–31× slower than symspell on a substitution
+typo and ~6–10× slower on a deletion. (It is ~2.6–3.1× *faster* than fst's
+Levenshtein automaton, and corrects transpositions that fst misses entirely,
+but symspell is the one to beat, and it wins.)
 
 **Autocomplete.** Closest race. The combined `suggestions()` call runs the
 edit-distance walk every time, so it's the wrong thing to race against a pure
@@ -418,26 +422,28 @@ completer (~43 µs). The autocomplete-only `completions()` call skips the walk:
 
 | case (en)   | wordtree `completions()` | pruning-trie |
 | ----------- | -----------------------: | -----------: |
-| `co`        |                   2.5 µs |  **1.2 µs**  |
+| `co`        |                   3.1 µs |  **1.2 µs**  |
 
-Within ~2× on English, ~1.2× on Swedish. The pruning trie also tracks the
-frequency oracle a bit better (recall@5 93% vs 85% on Swedish). Close, but still
-a loss.
+Roughly 2–4× on English and 1–2.5× on Swedish, widening with the prefix's
+fan-out: the pruning trie stays flat at ~1–2 µs whatever the prefix, while
+`completions()` scales with how many descendants it sweeps. wordtree is
+slightly *ahead* on quality (recall@5 80% vs 74% on English, 96% vs 93% on
+Swedish), but on the latency axis, the one being raced, it's still a loss.
 
-So: across the four jobs, on each job's home axis, a specialist wins. The title
-isn't false modesty.
+So on all four axes (lookup speed, size, correction latency, autocomplete
+latency) a specialist wins on its home turf. Hence the title.
 
 ## The one place it doesn't lose: doing all of it from one file
 
 Here's the part the per-axis tables hide. Every alternative above does *one* job
 (boomphf, symspell, pruning-trie) or *two* (fst: lookup + correction). Picking
 specialists means assembling three or four structures, three or four files, three
-or four load paths — and `HashMap`/symspell can't be memory-mapped at all, so they
+or four load paths, and `HashMap`/symspell can't be memory-mapped at all, so they
 rebuild at startup.
 
 wordtree folds all three jobs into one structure that loads by `mmap` with no
 parse or build step, and returns a deliberately short, frequency-ranked,
-single-edit-tolerant list. It even matches symspell's *quality* where it counts:
+single-edit-tolerant list. On correction quality it matches symspell:
 
 <!-- scroll: width 48rem -->
 
@@ -447,30 +453,30 @@ single-edit-tolerant list. It even matches symspell's *quality* where it counts:
 | symspell                            |       100% |      100% |   100% |   100% |
 | fst-lev                             |       100% |    **0%** |   100% |   100% |
 
-(fst's `Levenshtein` is plain Levenshtein — a transposition costs 2, so it misses
-every transposed typo at distance 1.) wordtree returns a small frequency-capped
-top-k rather than the exhaustive DL≤1 set symspell gives you, which is the right
-trade for an as-you-type box and the wrong one for a batch spell-checker.
+(fst's `Levenshtein` is plain Levenshtein: a transposition costs 2, so it misses
+every transposed typo at distance 1.) By default wordtree returns a small
+frequency-capped top-k rather than the exhaustive DL≤1 set symspell gives you,
+the right trade for an as-you-type box. For a batch spell-checker,
+`corrections_with(q, f, Caps::uniform(n))` lifts the cap and returns the complete
+set, at 100% of the brute-force oracle.
 
 ## When to use it (and when not)
 
-I'll be blunt, because the benchmarks are:
-
-- Need **just one** of these jobs, or the lowest latency, or the smallest file?
+- Need **only one** of these jobs, or the lowest latency, or the smallest file?
   Use the specialist. fst for lookup + fuzzy in minimal space; symspell for
   exhaustive correction; pruning_radix_trie for pure autocomplete; a `HashMap`
   for raw lookup speed.
 - Need a **browsable index + frequency + typo-tolerant autocomplete from one
   mmap-able file**, with a short ranked suggestion list and no startup cost? Then
   one 21 MiB file you `mmap` and query three ways is a reasonable single
-  dependency — which is exactly the spot wordtree was built for.
+  dependency, which is the spot wordtree was built for.
 
-The repo is an unmaintained showcase — a snapshot extracted to accompany this
+The repo is a snapshot extracted from a private project to accompany this
 post, not a crate I'm asking you to depend on. But the comparison harness is real
-and reproducible, the edit-distance walk is genuinely nice, and the broader lesson
-is the one I keep relearning: **benchmark against the specialists, expect to lose,
-and find out whether the thing you're actually optimising for — here, three jobs
-in one zero-copy file — is even on the axis you're measuring.** Usually it isn't.
+and reproducible, the edit-distance walk is worth reading, and the lesson is one
+I keep relearning: benchmark against the specialists, expect to lose, and find
+out whether the thing you're actually optimising for (here, three jobs in one
+zero-copy file) is even on the axis you're measuring. Usually it isn't.
 
 ---
 
