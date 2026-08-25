@@ -17,7 +17,7 @@ responsive_tables = true
 and made some improvements. This article is written with the help of AI too, but
 it's my project, my design, and I can explain every line.*
 
-I just open-sourced [wordtree](https://github.com/akesson/wordtree), a compact
+I recently open-sourced [wordtree](https://github.com/akesson/wordtree), a compact
 trie for word lists. First of all, here is what it is *not*: it
 is not the fastest at anything. I benchmarked it against a specialist crate for
 each job it does, and each specialist beat it in its own domain. Exact
