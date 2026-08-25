@@ -18,9 +18,9 @@ I spend a lot of my time working out how to use AI well: what it's good
 for and not, and how to keep the quality the product needs. Turns out that
 pushing it further is, in this case, not premature.
 
-I work in English, Swedish, French and Spanish.
-
 I like to start a paragraph with 'I'.
+
+Write to me in English, Swedish, French or Spanish — whichever is easiest for you.
 
 ### Find me
 
