@@ -4,9 +4,6 @@ date = 2026-08-25
 description = "A compact word-list trie that loses every benchmark to a specialist — and why I shipped it anyway."
 aliases = ["/blog/wordtree/"]
 [extra]
-# Inline SVG figures inflate Zola's word_count (it counts rendered markup), which
-# would skew read-time. This is the true prose count; remove it to fall back to auto.
-words = 2576
 # Table directives below are measured by the blog-tables skill (re-run it after
 # editing any table). No-ops under vanilla zola; CI builds with zola-plus, which
 # renders them.

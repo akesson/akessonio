@@ -43,7 +43,7 @@ draft = true           # every article starts as a draft — removed only at pro
 +++
 ```
 
-Add `[extra]` keys only when needed: `responsive_tables = true` when the article has tables; `words = N` (true prose count) when inline SVG would inflate Zola's word count and skew read-time.
+Add `[extra]` keys only when needed: `responsive_tables = true` when the article has tables. (Don't override the word count — zola-plus ≥ 1.1.0 counts prose only, skipping code blocks, raw HTML/SVG, link targets and shortcode calls.)
 
 **No math notation** — the site has no math renderer and `scripts/check-no-math.mjs` rejects `$…$`/`\(…\)` delimiters in CI. Write it out in words or code.
 

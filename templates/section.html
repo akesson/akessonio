@@ -22,7 +22,7 @@
         {% endif %}
         <p class="article-meta">
           <time datetime="{{ page.date }}">{{ page.date | date(format="%b %-d, %Y") }}</time>
-          <span class="meta-sep">·</span>{{ macros::read_time(words=page.extra.words | default(value=page.word_count)) }}
+          <span class="meta-sep">·</span>{{ macros::read_time(words=page.word_count) }}
         </p>
       </li>
       {% endfor %}

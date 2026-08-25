@@ -21,7 +21,7 @@
       <div class="post-meta">
         {% if page.date %}
         <span>{{ page.date | date(format="%b %d, %Y")}}</span>
-        <small> - {{ macros::read_time(words=page.extra.words | default(value=page.word_count)) }}</small>
+        <small> - {{ macros::read_time(words=page.word_count) }}</small>
         {% endif %}
       </div>
       <h1>{{ page.title }}</h1>
@@ -32,7 +32,7 @@
     </div>
     <hr class="post-end">
     <footer class="post-info">
-      <p>{{ macros::icon(name="file-text") }}{{ page.extra.words | default(value=page.word_count) }} Words</p>
+      <p>{{ macros::icon(name="file-text") }}{{ page.word_count }} Words</p>
       {% if page.date %}
       <p>{{ macros::icon(name="calendar") }}{{ page.date }}</p>
       {% endif %}
