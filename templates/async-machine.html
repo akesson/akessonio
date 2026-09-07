@@ -1,0 +1,708 @@
+{% extends "index.html" %}
+{% import "macros.html" as macros %}
+
+{# Step-through illustration of the async state machine.
+   Discrete stepper: the side chevrons (≥1150px), the bottom bar (below) and
+   the ←/→ keys drive the step;
+   static/js/async-machine.js toggles .vis/.on classes on [data-s]/[data-on]
+   elements. Layout: left column = "you write" code, a small terminal block,
+   then the sequence panel (its skeleton fades in with poll #1, arrows per step);
+   right column = the three compiler desugar blocks (the tall poll() block sets
+   the row height). Note cards move with the story — n-left below the code
+   (steps 1–7), n-right over the macro/enum blocks once those stop highlighting
+   (8–11), n-gap above the diagram for the wake/second-poll finale (12–15) — so
+   each step's note, code highlight, and diagram arrows share one screenful.
+   All colours come from the runtime theme tokens (_color.scss); motion obeys
+   DESIGN.md (opacity/transform only, ≤320ms, reduced-motion honoured).
+   Below 1150px the stage becomes a per-step FOCUS CARD — see the mobile
+   section of the stylesheet. #}
+
+{% block header %}{{ macros::back_link(label="Articles", href=config.base_url ~ "/") }}{% endblock header %}
+
+{% block head_extra %}
+<style>
+  /* ── layout ─────────────────────────────────────────────────────────── */
+  .am-intro { max-width: 42rem; margin: 0 auto; padding: 0 clamp(1rem, 5vw, 3rem);
+              font-size: 1.125rem; line-height: 1.7; /* match .content reading size */ }
+  .am-intro h1 { margin-bottom: 0.4rem; }
+  .am-intro p { color: var(--muted); }
+
+  .am-frame {
+    width: min(86rem, calc(100vw - 2 * clamp(1rem, 4vw, 3rem)));
+    margin: 1.5rem auto 3rem;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .am-top { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: stretch;
+            position: relative; }
+  /* left column: code, terminal, sequence — filling the column with only the
+     gap between them. The compiler panel drives the row height; code and
+     terminal keep their natural (width-independent) heights so the note
+     overlays can anchor against them, and the sequence panel alone absorbs
+     the leftover, centering its diagram. */
+  .am-left { display: flex; flex-direction: column; gap: 0.6rem; min-width: 0; }
+  .am-left .am-seq { flex: 1 1 auto; display: flex; flex-direction: column; }
+
+  /* big step chevrons flanking the code panels (centered on them, not the diagram) */
+  .am-side {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    appearance: none; background: none; border: none; cursor: pointer;
+    padding: 0.4rem; color: var(--muted); line-height: 0;
+    transition: color 120ms cubic-bezier(0.2,0,0,1), opacity 120ms cubic-bezier(0.2,0,0,1);
+  }
+  .am-side:hover { color: var(--accent); }
+  .am-side:disabled { opacity: 0.25; cursor: default; }
+  .am-side.am-prev { right: calc(100% + 0.25rem); }
+  .am-side.am-next { left: calc(100% + 0.25rem); }
+
+  .am-panel {
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface-sunken);
+    padding: 0.8rem 1rem 0.9rem;
+    min-width: 0;
+  }
+  .am-panel-label {
+    font-family: "JetBrains Mono", Consolas, Menlo, monospace; font-size: 0.68rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 0.55rem;
+  }
+
+  /* ── code rendering (both top panels) ───────────────────────────────── */
+  .am-code-pre {
+    font-family: "JetBrains Mono", Consolas, Menlo, monospace; line-height: 1.5;
+    font-size: 0.95rem; /* 15.2px — optical match for the 18px intro (mono x-height runs large) */
+    color: var(--text); white-space: pre; overflow-x: auto; margin: 0;
+    /* the global pre rule pads 1.1em; unindented code must sit flush with
+       the panel label. Keep 0.4rem so the lines' -0.4rem highlight bleed
+       stays inside the box (no phantom h-scroll), and pull it back out. */
+    padding-inline: 0.4rem; margin-inline: -0.4rem;
+  }
+  .am-ln { display: block; border-radius: 3px; padding: 0 0.4rem; margin: 0 -0.4rem;
+           /* as wide as the longest text, never narrower than the box: a
+              highlight stays under the line when the block is scrolled */
+           width: max-content; min-width: calc(100% + 0.8rem); box-sizing: border-box;
+           transition: background 200ms cubic-bezier(0.2,0,0,1); }
+  .am-ln .cm { color: var(--muted); opacity: 0.75; }
+  .am-ln .cm.step { opacity: 0; transition: opacity 200ms cubic-bezier(0.2,0,0,1); }
+  .am-ln .cm.step.vis { opacity: 0.75; }
+  /* .am-mb: phone-only text (a line break + continuation indent, or a
+     shorter comment); .am-dt: the desktop-only text it replaces */
+  .am-mb { display: none; }
+  .am-ln.on { background: color-mix(in oklab, var(--accent) 16%, transparent); }
+  /* the "you write" code is hidden at step 0 (empty stage) */
+  .am-code-pre[data-s] { opacity: 0; transform: translateY(6px);
+    transition: opacity 320ms cubic-bezier(0.2,0,0,1), transform 320ms cubic-bezier(0.2,0,0,1); }
+  .am-code-pre[data-s].vis { opacity: 1; transform: none; }
+  .am-stdout {
+    font-family: "JetBrains Mono", Consolas, Menlo, monospace; font-size: 0.85rem; color: var(--muted);
+  }
+  .am-stdout .am-out { display: block; opacity: 0; transform: translateY(3px);
+    transition: opacity 320ms cubic-bezier(0.2,0,0,1), transform 320ms cubic-bezier(0.2,0,0,1); }
+  .am-stdout .am-out.vis { opacity: 1; transform: none; }
+  .am-stdout .am-out::before { content: "› "; color: var(--accent); }
+  /* the echoed stdin line, distinct from program output */
+  .am-stdout .am-out.in { font-style: italic; }
+  .am-stdout .am-out.in::before { content: "you type "; color: var(--muted); }
+
+  /* ── compiler panel: three desugar blocks ───────────────────────────── */
+  .am-mm { opacity: 0; transform: translateY(6px);
+    transition: opacity 320ms cubic-bezier(0.2,0,0,1), transform 320ms cubic-bezier(0.2,0,0,1);
+    margin: 0 0 0.7rem; }
+  .am-mm.vis { opacity: 1; transform: none; }
+  .am-mm:last-of-type { margin-bottom: 0; }
+  .am-mm-tag {
+    font-family: "JetBrains Mono", Consolas, Menlo, monospace; font-size: 0.7rem;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    display: block; margin-bottom: 0.2rem;
+    transition: color 200ms cubic-bezier(0.2,0,0,1);
+  }
+  .am-mm-tag.on { color: var(--accent); }
+  .am-resume {
+    margin: 0.55rem 0 0; font-size: 0.8rem; color: var(--accent);
+    font-family: "JetBrains Mono", Consolas, Menlo, monospace;
+    opacity: 0; transform: translateY(3px);
+    transition: opacity 200ms cubic-bezier(0.2,0,0,1), transform 200ms cubic-bezier(0.2,0,0,1);
+  }
+  .am-resume.vis { opacity: 1; transform: none; }
+
+  /* ── overlaid note cards ────────────────────────────────────────────── */
+  .am-frame { position: relative; }
+
+  /* ── the step track: the JS clones the stage once per step and lays the
+     clones side by side in a horizontal scroll-snap track, so a swipe, a
+     trackpad swipe, a key and a chevron all scroll the same thing (with the
+     native physics). The track's height is set by the JS to the current
+     stage; the scrollbar is hidden — the chevrons and the bar show the
+     position. overscroll-behavior keeps a trackpad overscroll at either end
+     from turning into the browser's back/forward gesture. */
+  html { scrollbar-gutter: stable; } /* classic scrollbars: the track's
+    height changes per step; a page scrollbar coming and going would
+    change the slide width under a scroll in flight */
+  .am-track { display: flex; align-items: flex-start; overflow: auto hidden;
+    scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+    scrollbar-width: none; }
+  .am-track::-webkit-scrollbar { display: none; }
+  .am-slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+  .am-notes { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+  .am-note {
+    position: absolute; box-sizing: border-box;
+    background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 1.35rem 1.6rem 1.45rem;
+    max-width: 32rem;
+    opacity: 0; transform: translateY(5px);
+    transition: opacity 200ms cubic-bezier(0.2,0,0,1), transform 200ms cubic-bezier(0.2,0,0,1);
+  }
+  .am-note.on { opacity: 1; transform: none; }
+  .am-note .t {
+    display: block; font-family: "JetBrains Mono", Consolas, Menlo, monospace;
+    font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 0.55rem;
+  }
+  .am-note p { margin: 0; font-size: 1.125rem; line-height: 1.7; color: var(--text); /* = intro */ }
+  .am-note p + p, .am-note ul + p, .am-note p + ul { margin-top: 0.7rem; }
+  .am-note ul { margin: 0; padding-left: 1.25rem; }
+  .am-note li { font-size: 1.125rem; line-height: 1.7; color: var(--text); }
+  .am-note li + li { margin-top: 0.3rem; }
+  .am-note li::marker { color: var(--accent); }
+  .am-note h1 { margin: 0 0 0.6rem; font-size: 1.7rem; line-height: 1.25; }
+  .am-note code { font-size: 0.82em; }
+  /* steps 2–8: below the "you write" code, over the terminal block (empty
+     until step 9) and the gap above the sequence */
+  .am-note.n-left { right: calc(50% + 1rem); top: 28rem; width: min(32rem, 45%); }
+  /* steps 9–12: over the compiler panel's macro/enum blocks — they never carry
+     a highlight after step 7, and the poll() block below stays clear */
+  .am-note.n-right { left: calc(50% + 1rem); top: 2.5rem; width: min(32rem, 45%); }
+  /* steps 13–16: bottom edge pinned at 37.5rem — just over the "what runs"
+     panel's title area, above the diagram's header row — via translateY(-100%)
+     so notes of different heights share the same bottom line (grow upward,
+     over the terminal's empty right half). The translate keeps the base
+     5px entry offset. */
+  .am-note.n-gap { right: calc(50% + 1rem); top: 37.5rem; width: min(38rem, 47%);
+    transform: translateY(calc(-100% + 5px)); }
+  .am-note.n-gap.on { transform: translateY(-100%); }
+  /* denser type so the tallest n-gap note stays clear of the terminal's
+     "hi henrik!" line, which lands at the same step */
+  .am-note.n-gap p, .am-note.n-gap li { font-size: 1rem; line-height: 1.6; }
+  /* the opening note: centered over the empty stage */
+  .am-note.n-center { left: 50%; top: 6rem; width: min(34rem, 56%);
+    transform: translate(-50%, 5px); }
+  .am-note.n-center.on { transform: translate(-50%, 0); }
+
+  /* ── sequence panel (frame + label always visible; the skeleton fades in
+     with the first poll, arrows appear per step) ──────────────────────── */
+  /* the 560-unit viewBox renders ~1:1 in the left column, keeping labels ≥11px;
+     auto margins center it in the flexed panel */
+  .am-seq svg { width: 100%; height: auto; max-height: 40vh; display: block; margin: auto; }
+  .am-seq svg[data-s] { opacity: 0; transition: opacity 320ms cubic-bezier(0.2,0,0,1); }
+  .am-seq svg[data-s].vis { opacity: 1; }
+  .am-seq svg text { font-family: "JetBrains Mono", Consolas, Menlo, monospace; }
+
+  .am-a { color: var(--muted); opacity: 0;
+    transition: opacity 200ms cubic-bezier(0.2,0,0,1); }
+  .am-a.vis { opacity: 0.35; }
+  .am-a.vis.on { opacity: 1; color: var(--accent); }
+  .am-a line, .am-a path { stroke: currentColor; }
+  .am-a text { fill: currentColor; }
+  /* arrowheads: inside a <marker>, currentColor is the marker's own inherited
+     colour (the body text colour), not the arrow's — the head came out
+     near-white on a light-blue arrow (dark) and near-black on a teal one
+     (light). context-stroke would fix it but WebKit lacks it, so each SVG
+     carries two markers, muted and accent, and the JS points an .on arrow
+     at the accent one (see applyStep). */
+  .am-seq marker { color: var(--muted); }
+  .am-seq marker.on { color: var(--accent); }
+
+  /* --wk-dx: the token's horizontal travel from the timer lane to the executor
+     lane, set per SVG (the wide and portrait cuts have different lane spacing) */
+  .am-wk { opacity: 0; transition: opacity 320ms cubic-bezier(0.2,0,0,1),
+           transform 320ms cubic-bezier(0.2,0,0,1); }
+  .am-wk.wk-timer { opacity: 1; transform: translate(0, 0); }
+  .am-wk.wk-exec  { opacity: 1; transform: translate(var(--wk-dx, -400px), 122px); }
+
+  .am-strip {
+    display: flex; justify-content: center; gap: 2.5rem; align-items: baseline;
+    font-family: "JetBrains Mono", Consolas, Menlo, monospace; font-size: 0.75rem; color: var(--muted);
+    margin-top: 0.4rem; min-height: 1.2rem;
+  }
+  .am-thread { opacity: 0; transition: opacity 200ms cubic-bezier(0.2,0,0,1); }
+  .am-thread.vis { opacity: 1; }
+  .am-thread .dot { display: inline-block; width: 0.5em; height: 0.5em; border-radius: 50%;
+    background: var(--accent); margin-right: 0.45em; vertical-align: 0.05em;
+    transition: opacity 200ms cubic-bezier(0.2,0,0,1); }
+  .am-thread.parked .dot { opacity: 0.3; }
+  .am-thread .t-run, .am-thread .t-park { display: none; }
+  .am-thread:not(.parked) .t-run { display: inline; }
+  .am-thread.parked .t-park { display: inline; }
+
+  /* ── phone / portrait-tablet: the per-step focus card (<1150px) ───────
+     The desktop stage works because note, highlight and diagram share one
+     screen; below ~1150px that is impossible (measured at 390px: a naive
+     stack is 2400px tall, code needs 470–620px of width, sequence labels
+     drop to 8px). So each step shows only its note, first in flow, plus
+     the block(s) it highlights — the note's data-focus, at BLOCK level
+     (code / term / seq / macro / enum / poll); showing a whole panel would
+     put step 6's highlight 1200px down. Everything else is display:none.
+     Code keeps its lines: long ones get hand-placed phone-only breaks
+     (.am-mb spans), and anything still wider scrolls horizontally inside the
+     block (DESIGN.md §6); a swipe that starts inside an overflowing block
+     scrolls it instead of stepping (see the JS). The sequence diagram swaps to a portrait
+     re-cut (.am-seq-tall) that carries the same data-s/data-on attributes.
+     Navigation moves to a bar after the content, scrolling with it; the
+     side chevrons sit outside the frame and would be off-screen. Swiping
+     is the track itself (see the JS).
+     touch-action: manipulation keeps pinch-zoom but drops the double-tap
+     zoom that quick taps on the bar buttons would otherwise trigger. */
+  .am-seq .am-seq-tall, .am-bar { display: none; }
+  @media (max-width: 1149px) {
+    .am-stepper { touch-action: manipulation; }
+    .am-frame { display: flex; flex-direction: column; max-width: 42rem; margin-top: 0.5rem; margin-bottom: 1rem; }
+    .am-top, .am-left { display: contents; }
+    .am-side { display: none; }
+    .am-panel:not(.foc), .am-mm:not(.foc) { display: none; }
+    .am-mm.foc { margin: 0; }
+    /* notes: in flow, first; note and block scroll together (a pinned note
+       ate most of the screen and the block slid under it) */
+    .am-notes { position: static; inset: auto; order: -1; pointer-events: auto; }
+    .am-notes .am-note { display: none; position: static; width: auto; max-width: none;
+      padding: 1rem 1.1rem 1.1rem; opacity: 1; }
+    .am-notes .am-note.on { display: block; transform: none; }
+    .am-note p, .am-note li, .am-note.n-gap p, .am-note.n-gap li { font-size: 1rem; line-height: 1.55; }
+    .am-note h1 { font-size: 1.4rem; }
+    /* code: smaller, never wrapped; long lines scroll inside the block */
+    .am-code-pre { font-size: 0.85rem;
+      max-height: none; /* the global pre cap (40em) would nest a scroll box */ }
+    /* hand-placed line breaks (.am-mb / .am-dt, see above): every line then
+       fits the 39 monospace columns a 390px phone gives, so no block needs
+       to scroll; the highlight bar covers all of a line's physical lines
+       because .am-ln is a block. A step-gated comment that is hidden must
+       not leave its line break behind, hence the :not(.vis) rule. */
+    .am-mb { display: inline; }
+    .am-dt, .am-ln.am-dt { display: none; }
+    .am-mb.step:not(.vis) { display: none; }
+    /* "you write": the scroll box spans the panel border to border, so an
+       overflowing line is clipped by the border itself (the cut-off text is
+       the hint); the padding keeps the text on the label's left edge and the
+       usual inset once scrolled to the end */
+    .am-panel[data-f="code"] .am-code-pre { margin-inline: -1rem; padding-inline: 1rem; }
+    /* sequence: portrait cut replaces the wide one; labels get a surface-
+       coloured halo so they stay legible where they cross a lifeline */
+    .am-seq .am-seq-wide { display: none; }
+    .am-seq .am-seq-tall { display: block; max-height: none; max-width: 26rem; }
+    .am-seq-tall .am-a text { paint-order: stroke; stroke: var(--surface-sunken);
+      stroke-width: 4px; stroke-linejoin: round; }
+    /* bar: ‹  n / 16  › — 44px targets, in flow after the card (as wide as
+       the frame) so card and bar scroll as one; the swipe handler on the
+       document covers the blank page below it */
+    .am-bar {
+      width: min(42rem, calc(100vw - 2 * clamp(1rem, 4vw, 3rem)));
+      margin: 0 auto 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.6rem 0 0;
+      font-family: "JetBrains Mono", Consolas, Menlo, monospace; font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .am-bar button {
+      appearance: none; width: 2.75rem; height: 2.75rem; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); border-radius: 8px; background: none;
+      color: var(--text); cursor: pointer; touch-action: manipulation;
+      transition: color 120ms cubic-bezier(0.2,0,0,1), opacity 120ms cubic-bezier(0.2,0,0,1);
+    }
+    .am-bar button:disabled { opacity: 0.25; cursor: default; }
+  }
+  /* narrow-desktop band: notes wrap taller; smaller type keeps them clear of
+     the stdout strip and the poll() block */
+  @media (max-width: 1279px) {
+    .am-note p, .am-note li { font-size: 1rem; line-height: 1.6; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .am-stepper * { transition: none !important; }
+  }
+</style>
+{% endblock head_extra %}
+
+{% block main %}
+<main class="site-main">
+  <div class="am-stepper" id="am" data-steps="16">
+    <div class="am-frame" data-step="0">
+
+      <!-- ── top: code + sequence | compiler output ──────────────────── -->
+      <div class="am-top">
+        <div class="am-left">
+        <section class="am-panel" data-f="code">
+          <span class="am-panel-label">you write</span>
+          <pre class="am-code-pre" data-s="1"><span class="am-ln" data-on="2,4">async fn hi(who: &amp;str) {</span><span class="am-ln" data-on="8">    println!("ready…");</span><span class="am-ln" data-on="2,5,9">    sleep(1s).await;</span><span class="am-ln" data-on="14">    println!("hi {who}!");</span><span class="am-ln">}</span><span class="am-ln"> </span><span class="am-ln" data-on="2,3"><span class="cm">#[tokio::main]</span></span><span class="am-ln" data-on="4">async fn main() {</span><span class="am-ln" data-on="6,8">    let mut buf = [0u8; 32];</span><span class="am-ln" data-on="8">    <span class="cm">// type your name + ⏎</span></span><span class="am-ln" data-on="8">    let n = stdin().read(&amp;mut buf);</span><span class="am-ln" data-on="6,8">    let me = str::from_utf8(&amp;buf[..n])<span class="am-mb">
+        </span>.trim_end();</span><span class="am-ln" data-on="5,6,8">    hi(me).await;</span><span class="am-ln">}</span></pre>
+        </section>
+
+        <!-- ── terminal: the program's stdin/stdout ─────────────────── -->
+        <section class="am-panel am-term" data-f="term">
+          <span class="am-panel-label">terminal</span>
+          <div class="am-stdout" aria-label="Program output">
+            <span class="am-out in" data-s="8">henrik</span>
+            <span class="am-out" data-s="8">ready…</span>
+            <span class="am-out" data-s="14">hi henrik!</span>
+          </div>
+        </section>
+
+        <!-- ── sequence: what runs ─────────────────────────────────── -->
+        <section class="am-panel am-seq" data-f="seq">
+          <span class="am-panel-label">what runs</span>
+          <svg class="am-seq-wide" viewBox="0 0 560 348" data-s="8" role="img" aria-label="Sequence diagram: the executor polls the main machine, which polls hi, which polls Sleep; Sleep stores the waker with the timer and returns Pending, the thread parks for one second, the timer fires the waker to unpark it, and a second poll finishes the machines.">
+            <defs>
+              <marker id="am-ah" class="am-ah" markerWidth="7" markerHeight="7" refX="5" refY="2.6" orient="auto">
+                <path d="M0 0 L5.5 2.6 L0 5.2 z" fill="currentColor"/>
+              </marker>
+              <marker id="am-ah-on" class="am-ah on" markerWidth="7" markerHeight="7" refX="5" refY="2.6" orient="auto">
+                <path d="M0 0 L5.5 2.6 L0 5.2 z" fill="currentColor"/>
+              </marker>
+            </defs>
+            <g font-size="12" fill="var(--text)">
+              <rect x="20"  y="6" width="100" height="26" rx="5" fill="none" stroke="var(--border)"/>
+              <text x="70" y="23" text-anchor="middle">executor</text>
+              <rect x="170" y="6" width="110" height="26" rx="5" fill="none" stroke="var(--accent)"/>
+              <text x="225" y="23" text-anchor="middle">machines</text>
+              <rect x="340" y="6" width="90" height="26" rx="5" fill="none" stroke="var(--border)"/>
+              <text x="385" y="23" text-anchor="middle">Sleep</text>
+              <rect x="470" y="6" width="90" height="26" rx="5" fill="none" stroke="var(--border)"/>
+              <text x="515" y="23" text-anchor="middle">timer</text>
+            </g>
+            <g stroke="var(--border)" stroke-dasharray="2 5">
+              <line x1="70"  y1="34" x2="70"  y2="342"/>
+              <line x1="225" y1="34" x2="225" y2="342"/>
+              <line x1="385" y1="34" x2="385" y2="342"/>
+              <line x1="515" y1="34" x2="515" y2="342"/>
+            </g>
+
+            <g class="am-a" data-s="8" data-on="8">
+              <line x1="70" y1="66" x2="219" y2="66" stroke-width="1.5" marker-end="url(#am-ah)"/>
+              <text x="145" y="57" text-anchor="middle" font-size="11">poll #1</text>
+            </g>
+            <g class="am-a" data-s="9" data-on="9">
+              <line x1="225" y1="96" x2="379" y2="96" stroke-width="1.5" marker-end="url(#am-ah)"/>
+              <text x="302" y="87" text-anchor="middle" font-size="11">poll</text>
+            </g>
+            <g class="am-a" data-s="10" data-on="10">
+              <line x1="385" y1="126" x2="509" y2="126" stroke-width="1.5" marker-end="url(#am-ah)"/>
+              <text x="447" y="117" text-anchor="middle" font-size="11">waker @ t+1s</text>
+            </g>
+            <g class="am-a" data-s="11" data-on="11">
+              <line x1="379" y1="156" x2="231" y2="156" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#am-ah)"/>
+              <text x="302" y="147" text-anchor="middle" font-size="11">Pending</text>
+            </g>
+            <g class="am-a" data-s="11" data-on="11">
+              <line x1="219" y1="180" x2="76" y2="180" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#am-ah)"/>
+              <text x="145" y="171" text-anchor="middle" font-size="11">Pending</text>
+            </g>
+
+            <g class="am-a" data-s="12" data-on="12">
+              <rect x="20" y="198" width="520" height="24" rx="4" fill="currentColor" opacity="0.07" stroke="none"/>
+              <text x="280" y="214" text-anchor="middle" font-size="11" font-style="italic">≈ 1 s — thread parked, future inert</text>
+            </g>
+
+            <g class="am-a" data-s="13" data-on="13">
+              <path d="M 510 240 C 390 280, 190 280, 79 246" fill="none" stroke-width="1.8" marker-end="url(#am-ah)"/>
+              <text x="290" y="284" text-anchor="middle" font-size="11">wake() → thread unparks</text>
+            </g>
+            <circle class="am-wk" cx="485" cy="126" r="5" fill="var(--accent)"/>
+
+            <g class="am-a" data-s="14" data-on="14">
+              <line x1="70" y1="300" x2="219" y2="300" stroke-width="1.5" marker-end="url(#am-ah)"/>
+              <text x="145" y="291" text-anchor="middle" font-size="11">poll #2</text>
+            </g>
+            <g class="am-a" data-s="14" data-on="14">
+              <line x1="379" y1="322" x2="231" y2="322" stroke-width="1.5" marker-end="url(#am-ah)"/>
+              <text x="302" y="313" text-anchor="middle" font-size="11">Ready(())</text>
+            </g>
+            <g class="am-a" data-s="15" data-on="15">
+              <line x1="219" y1="338" x2="76" y2="338" stroke-width="1.5" marker-end="url(#am-ah)"/>
+              <text x="145" y="333" text-anchor="middle" font-size="11">Ready(()) — done</text>
+            </g>
+          </svg>
+          <!-- portrait re-cut for the focus layout: same rows, lanes 85 apart,
+               12-unit labels (≈11px at 390px wide). Same data-s/data-on so the
+               engine drives both; only one is displayed at a time. -->
+          <svg class="am-seq-tall" viewBox="0 0 340 348" data-s="8" role="img" style="--wk-dx: -216px" aria-label="Sequence diagram: the executor polls the main machine, which polls hi, which polls Sleep; Sleep stores the waker with the timer and returns Pending, the thread parks for one second, the timer fires the waker to unpark it, and a second poll finishes the machines.">
+            <defs>
+              <marker id="am-ah-t" class="am-ah" markerWidth="7" markerHeight="7" refX="5" refY="2.6" orient="auto">
+                <path d="M0 0 L5.5 2.6 L0 5.2 z" fill="currentColor"/>
+              </marker>
+              <marker id="am-ah-t-on" class="am-ah on" markerWidth="7" markerHeight="7" refX="5" refY="2.6" orient="auto">
+                <path d="M0 0 L5.5 2.6 L0 5.2 z" fill="currentColor"/>
+              </marker>
+            </defs>
+            <g font-size="12" fill="var(--text)">
+              <rect x="7"   y="6" width="76" height="26" rx="5" fill="none" stroke="var(--border)"/>
+              <text x="45"  y="23" text-anchor="middle">executor</text>
+              <rect x="92"  y="6" width="76" height="26" rx="5" fill="none" stroke="var(--accent)"/>
+              <text x="130" y="23" text-anchor="middle">machines</text>
+              <rect x="177" y="6" width="76" height="26" rx="5" fill="none" stroke="var(--border)"/>
+              <text x="215" y="23" text-anchor="middle">Sleep</text>
+              <rect x="262" y="6" width="76" height="26" rx="5" fill="none" stroke="var(--border)"/>
+              <text x="300" y="23" text-anchor="middle">timer</text>
+            </g>
+            <g stroke="var(--border)" stroke-dasharray="2 5">
+              <line x1="45"  y1="34" x2="45"  y2="342"/>
+              <line x1="130" y1="34" x2="130" y2="342"/>
+              <line x1="215" y1="34" x2="215" y2="342"/>
+              <line x1="300" y1="34" x2="300" y2="342"/>
+            </g>
+
+            <g class="am-a" data-s="8" data-on="8">
+              <line x1="45" y1="66" x2="124" y2="66" stroke-width="1.5" marker-end="url(#am-ah-t)"/>
+              <text x="87" y="57" text-anchor="middle" font-size="12">poll #1</text>
+            </g>
+            <g class="am-a" data-s="9" data-on="9">
+              <line x1="130" y1="96" x2="209" y2="96" stroke-width="1.5" marker-end="url(#am-ah-t)"/>
+              <text x="172" y="87" text-anchor="middle" font-size="12">poll</text>
+            </g>
+            <g class="am-a" data-s="10" data-on="10">
+              <line x1="215" y1="126" x2="294" y2="126" stroke-width="1.5" marker-end="url(#am-ah-t)"/>
+              <text x="257" y="117" text-anchor="middle" font-size="12">waker @ t+1s</text>
+            </g>
+            <g class="am-a" data-s="11" data-on="11">
+              <line x1="209" y1="156" x2="136" y2="156" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#am-ah-t)"/>
+              <text x="172" y="147" text-anchor="middle" font-size="12">Pending</text>
+            </g>
+            <g class="am-a" data-s="11" data-on="11">
+              <line x1="124" y1="180" x2="51" y2="180" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#am-ah-t)"/>
+              <text x="87" y="171" text-anchor="middle" font-size="12">Pending</text>
+            </g>
+
+            <g class="am-a" data-s="12" data-on="12">
+              <rect x="20" y="198" width="300" height="24" rx="4" fill="currentColor" opacity="0.07" stroke="none"/>
+              <text x="170" y="214" text-anchor="middle" font-size="12" font-style="italic">≈ 1 s — thread parked, future inert</text>
+            </g>
+
+            <g class="am-a" data-s="13" data-on="13">
+              <path d="M 295 240 C 220 282, 115 282, 54 246" fill="none" stroke-width="1.8" marker-end="url(#am-ah-t)"/>
+              <text x="175" y="284" text-anchor="middle" font-size="12">wake() → thread unparks</text>
+            </g>
+            <circle class="am-wk" cx="270" cy="126" r="5" fill="var(--accent)"/>
+
+            <g class="am-a" data-s="14" data-on="14">
+              <line x1="45" y1="300" x2="124" y2="300" stroke-width="1.5" marker-end="url(#am-ah-t)"/>
+              <text x="87" y="291" text-anchor="middle" font-size="12">poll #2</text>
+            </g>
+            <g class="am-a" data-s="14" data-on="14">
+              <line x1="209" y1="322" x2="136" y2="322" stroke-width="1.5" marker-end="url(#am-ah-t)"/>
+              <text x="172" y="313" text-anchor="middle" font-size="12">Ready(())</text>
+            </g>
+            <g class="am-a" data-s="15" data-on="15">
+              <line x1="124" y1="338" x2="51" y2="338" stroke-width="1.5" marker-end="url(#am-ah-t)"/>
+              <text x="87" y="333" text-anchor="middle" font-size="12">Ready(()) — done</text>
+            </g>
+          </svg>
+          <div class="am-strip">
+            <span class="am-thread" data-s="8" id="am-thread">
+              <span class="dot"></span>main thread —
+              <span class="t-run">&nbsp;running</span><span class="t-park">&nbsp;parked · 0% CPU</span>
+            </span>
+          </div>
+        </section>
+        </div>
+
+        <section class="am-panel">
+          <span class="am-panel-label">the compiler produces</span>
+
+          <div class="am-mm" data-s="3" data-f="macro">
+            <span class="am-mm-tag" data-on="3">#[tokio::main] — just a macro</span>
+            <pre class="am-code-pre"><span class="am-ln am-dt" data-on="3,7"><span class="cm">//               your async main, as a value ↓</span></span><span class="am-ln" data-on="3,7">fn main() {<span class="am-dt"> </span><span class="am-mb">
+    </span>Runtime::new().unwrap()<span class="am-mb">
+        <span class="cm">// async main, as a value ↓</span>
+        </span>.block_on(MainMachine::Start)<span class="am-dt"> </span><span class="am-mb">
+</span>}</span></pre>
+          </div>
+
+          <div class="am-mm" data-s="4" data-f="enum">
+            <span class="am-mm-tag" data-on="4">async fn — a plain fn returning a machine</span>
+            <pre class="am-code-pre"><span class="am-ln" data-on="4"><span class="cm">// the arg becomes a field</span></span><span class="am-ln" data-on="4">fn hi(who: &amp;str) -&gt; Hi&lt;'_&gt; {<span class="am-dt"> </span><span class="am-mb">
+    </span>Hi::Start { who }<span class="am-dt"> </span><span class="am-mb">
+</span>}</span><span class="am-ln" data-on="4">enum Hi&lt;'a&gt; {</span><span class="am-ln">    Start { who: &amp;'a str },</span><span class="am-ln">    AwaitingSleep {<span class="am-dt"> </span><span class="am-mb">
+        </span>sleep: Sleep,<span class="am-dt"> </span><span class="am-mb">
+        </span>who: &amp;'a str<span class="am-mb">,
+    </span><span class="am-dt"> </span>},</span><span class="am-ln">    Done,</span><span class="am-ln">}</span><span class="am-ln" data-on="4"><span class="cm">// async main becomes one too</span></span><span class="am-ln" data-on="4">enum MainMachine {</span><span class="am-ln">    Start,</span><span class="am-ln" data-on="4,6">    <span class="cm">// ↓ hi.who points into buf</span></span><span class="am-ln" data-on="4,6">    AwaitingHi {<span class="am-dt"> </span><span class="am-mb">
+        </span>buf: [u8; 32],<span class="am-dt"> </span><span class="am-mb">
+        </span>hi: Hi&lt;'…&gt;<span class="am-mb">,
+    </span><span class="am-dt"> </span>},</span><span class="am-ln">    Done,</span><span class="am-ln">}</span></pre>
+          </div>
+
+          <div class="am-mm" data-s="5" data-f="poll">
+            <span class="am-mm-tag" data-on="5">its poll() — and what .await desugars to</span>
+            <pre class="am-code-pre"><span class="am-ln">impl Future for Hi&lt;'_&gt; {</span><span class="am-ln" data-on="6">  fn poll(self: Pin&lt;&amp;mut Self&gt;,<span class="am-dt"> </span><span class="am-mb">
+          </span>cx: &amp;mut Context&lt;'_&gt;)</span><span class="am-ln" data-on="6">      -&gt; Poll&lt;()&gt; {</span><span class="am-ln" data-on="8,14">    loop {</span><span class="am-ln">      match *self {</span><span class="am-ln" data-on="8">        Start { who } =&gt; {</span><span class="am-ln" data-on="8">          println!("ready…");</span><span class="am-ln" data-on="8">          *self = AwaitingSleep { … };</span><span class="am-ln" data-on="8">        }</span><span class="am-ln" data-on="5,9">        <span class="cm">// the .await: poll the child…</span></span><span class="am-ln" data-on="5,9">        AwaitingSleep { sleep, who }<span class="am-dt"> </span><span class="am-mb">
+          </span>=&gt; match sleep.poll(cx) {</span><span class="am-ln" data-on="5,11">          <span class="cm">// …on Pending,<span class="am-dt"> return Pending yourself</span><span class="am-mb">
+          // return Pending yourself</span></span></span><span class="am-ln" data-on="5,11">          Pending  =&gt; return Pending,</span><span class="am-ln" data-on="14">          <span class="cm step am-mb" data-s="14-14">// loop iteration 1
+          </span>Ready(_) =&gt; {<span class="am-dt">  <span class="cm step" data-s="14-14">// loop iteration 1</span></span></span><span class="am-ln" data-on="14">            println!("hi {who}!");</span><span class="am-ln" data-on="14">            *self = Done;</span><span class="am-ln" data-on="14">          }</span><span class="am-ln">        },</span><span class="am-ln" data-on="14,15">        <span class="cm step am-mb" data-s="14-14">// loop iteration 2
+        </span>Done =&gt; return Ready(()),<span class="am-dt">  <span class="cm step" data-s="14-14">// loop iteration 2</span></span></span><span class="am-ln">      }</span><span class="am-ln">    }</span><span class="am-ln">  }</span><span class="am-ln">}</span></pre>
+            <p class="am-resume" data-s="14-14">↑ poll #2 resumes at AwaitingHi → AwaitingSleep — not from the top</p>
+          </div>
+        </section>
+
+        <button type="button" class="am-side am-prev" aria-label="Previous step">
+          <svg width="14" height="22" viewBox="0 0 9 14" aria-hidden="true"><path d="M8 1 L2 7 L8 13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" class="am-side am-next" aria-label="Next step">
+          <svg width="14" height="22" viewBox="0 0 9 14" aria-hidden="true"><path d="M1 1 L7 7 L1 13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <!-- ── overlaid notes ──────────────────────────────────────────── -->
+      <div class="am-notes" aria-live="polite">
+        <div class="am-note n-center" data-on="0">
+          <span class="t">1/16 · why this page</span>
+          <h1>{{ page.title }}</h1>
+          <p>I have always felt that I missed some parts of the async story. I could never
+          visualize it.</p>
+          <p>So I asked an LLM to explain it to me and I was really happy with it, so I
+          decided to share it. A lot of beating and kicking an LLM ensued until I had
+          something I think can be genuinely useful for a lot of people. Enjoy!</p>
+          <p>Step with your keyboard arrow-keys or the buttons.</p>
+        </div>
+        <div class="am-note n-left" data-on="1" data-focus="code">
+          <span class="t">2/16 · the program</span>
+          <p>One tiny program: read a name from the keyboard, print <code>ready…</code>,
+          sleep one second, then greet — type <code>henrik⏎</code> and it answers
+          <code>hi henrik!</code>.</p>
+          <p>The rest of this page traces how those few lines actually run.</p>
+        </div>
+        <div class="am-note n-left" data-on="2" data-focus="code">
+          <span class="t">3/16 · the sugar</span>
+          <p>Three pieces of sugar hide everything that follows:</p>
+          <ul>
+            <li><code>#[tokio::main]</code></li>
+            <li>the two <code>async fn</code>s</li>
+            <li>the <code>.await</code>s</li>
+          </ul>
+          <p>None is runtime magic — each is a mechanical rewrite the compiler performs.
+          The next four steps show what each one becomes.</p>
+        </div>
+        <div class="am-note n-left" data-on="3" data-focus="macro">
+          <span class="t">4/16 · the macro</span>
+          <p><code>#[tokio::main]</code> is an ordinary macro. It wraps your async main in a
+          plain <code>fn main</code> that builds a <code>Runtime</code> and hands
+          <code>block_on</code> one value: your whole async main body, compiled into a machine
+          (next step).</p>
+          <p>The runtime enters as a library call — the language ships no executor.</p>
+        </div>
+        <div class="am-note n-left" data-on="4" data-focus="enum">
+          <span class="t">5/16 · async fn — a value</span>
+          <p>Every <code>async fn</code> becomes a plain fn that just builds an enum — one
+          variant per pause point, holding whatever must survive the pause.</p>
+          <p>Arguments are fields from birth: <code>hi(me)</code> runs no body, it constructs
+          <code>Hi::Start { who: me }</code>. And async main is no exception — its machine owns
+          <code>buf</code> and stores the nested <code>hi</code> machine inline.</p>
+        </div>
+        <div class="am-note n-left" data-on="5" data-focus="poll">
+          <span class="t">6/16 · .await — poll + early return</span>
+          <p>Each <code>.await</code> compiles to:</p>
+          <ul>
+            <li>poll the child</li>
+            <li>on <code>Pending</code>, return <code>Pending</code> yourself, handing the
+            thread back</li>
+          </ul>
+          <p>The next poll lands in the same match arm. A return statement with a bookmark —
+          not a queue operation.</p>
+        </div>
+        <div class="am-note n-left" data-on="6" data-focus="enum">
+          <span class="t">7/16 · why Pin&lt;&amp;mut Self&gt;</span>
+          <p><code>Hi&lt;'a&gt;</code> alone is fine — <code>who</code> points at data outside
+          it. The trouble is the composition: main's machine owns <code>buf</code> <em>and</em>
+          stores <code>hi</code>, whose <code>who</code> points into <code>buf</code>.</p>
+          <p>The composed machine points <em>into itself</em> — move it in memory and
+          <code>who</code> dangles. That is what <code>Pin&lt;&amp;mut Self&gt;</code>
+          guarantees: once polling begins, the machine never moves again.</p>
+        </div>
+        <div class="am-note n-left" data-on="7" data-focus="macro">
+          <span class="t">8/16 · block_on</span>
+          <p>The runtime takes ownership of the main machine and will poll it. Everything so far
+          was construction — zero lines of your code have executed.</p>
+        </div>
+        <div class="am-note n-right" data-on="8" data-focus="term poll">
+          <span class="t">9/16 · poll #1</span>
+          <p><code>poll()</code> enters main's machine at <code>Start</code>:</p>
+          <ul>
+            <li>the plain blocking read waits for your name — poll&nbsp;#1 simply lasts
+            that long</li>
+            <li>it builds <code>Hi::Start { who }</code> and stores it beside
+            <code>buf</code></li>
+            <li>it polls it: <code>ready…</code> prints and the <code>Sleep</code> is
+            created</li>
+          </ul>
+          <p>All ordinary synchronous code.</p>
+        </div>
+        <div class="am-note n-right" data-on="9" data-focus="seq">
+          <span class="t">10/16 · nested polls</span>
+          <p>The <code>hi</code> machine polls <code>Sleep</code>, forwarding <code>cx</code>.</p>
+          <p>Awaiting <em>nests</em>: main's machine polled <code>hi</code>, <code>hi</code>
+          polls <code>Sleep</code> — no new task, no queue entry, just function calls going
+          down.</p>
+        </div>
+        <div class="am-note n-right" data-on="10" data-focus="seq">
+          <span class="t">11/16 · the waker contract</span>
+          <p>Sleep isn't ready. Before saying so, it clones the <strong>waker</strong> out of
+          <code>cx</code> and registers it with the timer.</p>
+          <p>The contract: you may only return <code>Pending</code> after arranging your own
+          wake-up call.</p>
+        </div>
+        <div class="am-note n-right" data-on="11" data-focus="seq">
+          <span class="t">12/16 · pending bubbles</span>
+          <p>Every <code>.await</code> up the chain sees <code>Pending</code> and early-returns
+          it, machine by machine, until the executor holds the thread again. The stack unwinds
+          completely.</p>
+        </div>
+        <div class="am-note n-gap" data-on="12" data-focus="seq">
+          <span class="t">13/16 · parked</span>
+          <p>Nothing is left to poll, so the thread parks in the OS.</p>
+          <p>The future isn't running slowly — it's an enum variant sitting in memory.
+          Nobody polls; nobody checks the clock.</p>
+        </div>
+        <div class="am-note n-gap" data-on="13" data-focus="seq">
+          <span class="t">14/16 · wake()</span>
+          <p>The timer driver hits the deadline and fires the stored waker — which, for a
+          <code>block_on</code> future, simply unparks the blocked thread.</p>
+          <p>This wake is the only scheduling event in the entire program — the
+          <code>.await</code>s never touched a queue.</p>
+        </div>
+        <div class="am-note n-gap" data-on="14" data-focus="term poll">
+          <span class="t">15/16 · poll #2</span>
+          <p>The match reads the stored state and resumes where it left off —
+          <code>AwaitingHi</code>, then <code>AwaitingSleep</code> inside it.
+          <code>ready…</code> doesn't print twice.</p>
+          <p>Sleep answers <code>Ready</code>, and the last <code>println!</code> greets
+          henrik through <code>who</code> — a pointer into the machine itself, still valid
+          because the pinned machine never moved.</p>
+        </div>
+        <div class="am-note n-gap" data-on="15" data-focus="seq">
+          <span class="t">16/16 · done</span>
+          <p><code>poll</code> returns <code>Ready(())</code>; <code>block_on</code> returns;
+          <code>main</code> exits.</p>
+          <p>The whole async story of this program: two polls, one wake.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── phone navigation (hidden ≥1150px, where the side chevrons live) ── -->
+    <div class="am-bar">
+      <button type="button" class="am-prev" aria-label="Previous step">
+        <svg width="12" height="19" viewBox="0 0 9 14" aria-hidden="true"><path d="M8 1 L2 7 L8 13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+      <span class="am-pos" aria-hidden="true"><span class="am-pos-n">1</span> / 16</span>
+      <button type="button" class="am-next" aria-label="Next step">
+        <svg width="12" height="19" viewBox="0 0 9 14" aria-hidden="true"><path d="M1 1 L7 7 L1 13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+  </div>
+
+  <noscript>
+    <style>.am-code-pre[data-s] { opacity: 1; transform: none; }</style>
+    <p class="am-intro">The step-through needs JavaScript; without it you're seeing step one only.</p>
+  </noscript>
+</main>
+{% endblock main %}
+
+{% block js_footer %}
+<script defer src="{{ get_url(path="js/async-machine.js", cachebust=true) }}"></script>
+{% endblock js_footer %}
