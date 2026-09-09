@@ -1,0 +1,508 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Henrik Åkesson</title>
+    <link rel="self" type="application/atom+xml" href="https://akesson.io/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://akesson.io"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2026-09-07T00:00:00+00:00</updated>
+    <id>https://akesson.io/atom.xml</id>
+    <entry xml:lang="en">
+        <title>A visual guide to Rust async</title>
+        <published>2026-09-07T00:00:00+00:00</published>
+        <updated>2026-09-07T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://akesson.io/a-visual-guide-to-rust-async/"/>
+        <id>https://akesson.io/a-visual-guide-to-rust-async/</id>
+        
+        <content type="html" xml:base="https://akesson.io/a-visual-guide-to-rust-async/"></content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>One trie, three jobs, zero benchmarks won</title>
+        <published>2026-08-25T00:00:00+00:00</published>
+        <updated>2026-08-25T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://akesson.io/wordtree/"/>
+        <id>https://akesson.io/wordtree/</id>
+        
+        <content type="html" xml:base="https://akesson.io/wordtree/">&lt;p&gt;&lt;em&gt;I dusted off an old project of mine and, with the help of AI, freshened it up
+and made some improvements. This article is written with the help of AI too, but
+it&#x27;s my project, my design, and I can explain every line.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;I recently open-sourced &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;akesson&#x2F;wordtree&quot;&gt;wordtree&lt;&#x2F;a&gt;, a compact
+trie for word lists. First of all, here is what it is &lt;em&gt;not&lt;&#x2F;em&gt;: it
+is not the fastest at anything. I benchmarked it against a specialist crate for
+each job it does, and each specialist beat it in its own domain. Exact
+lookup is slower than a &lt;code&gt;HashMap&lt;&#x2F;code&gt;. The file is three times larger than an FST.
+Spelling correction is an order of magnitude slower than symspell.&lt;&#x2F;p&gt;
+&lt;p&gt;So why did I do it? Because I needed it! A structure that loses every micro-benchmark can
+still be the right dependency.&lt;&#x2F;p&gt;
+&lt;p&gt;The whole comparative study is reproducible — every number below comes from
+&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;akesson&#x2F;wordtree&#x2F;blob&#x2F;main&#x2F;comparisons&#x2F;REPORT.md&quot;&gt;comparisons&#x2F;REPORT.md&lt;&#x2F;a&gt;, regenerable with four &lt;code&gt;cargo&lt;&#x2F;code&gt;
+commands against the word lists bundled in the repo.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;three-jobs&quot;&gt;Three jobs&lt;&#x2F;h2&gt;
+&lt;p&gt;wordtree came out of a translation app that needed three things from one big
+word list, all at once, on devices where startup time and memory both mattered:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;A browsable index.&lt;&#x2F;strong&gt; Group the words into folders (~100 per folder) so a UI
+can page through them. &lt;code&gt;path_of(&quot;apricot&quot;)&lt;&#x2F;code&gt; returns the folder path.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Exact lookup.&lt;&#x2F;strong&gt; Resolve a word to the index of its expression in
+&lt;code&gt;O(word length)&lt;&#x2F;code&gt;. &lt;code&gt;index_of(&quot;apple&quot;)&lt;&#x2F;code&gt; → &lt;code&gt;Some(1)&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Typo-tolerant autocomplete.&lt;&#x2F;strong&gt; Frequency-ranked, as-you-type suggestions that
+&lt;em&gt;both&lt;&#x2F;em&gt; extend a prefix (&lt;code&gt;&quot;ap&quot;&lt;&#x2F;code&gt; → &lt;code&gt;apple&lt;&#x2F;code&gt;, &lt;code&gt;apply&lt;&#x2F;code&gt;) &lt;em&gt;and&lt;&#x2F;em&gt; fix a single typo —
+substitution, transposition, insertion, or deletion at Damerau-Levenshtein
+distance ≤ 1 (&lt;code&gt;&quot;aple&quot;&lt;&#x2F;code&gt; → &lt;code&gt;apple&lt;&#x2F;code&gt;). &lt;code&gt;suggestions(&quot;aple&quot;, …)&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;Each of those jobs has a specialist crate that does it better. What almost
+nothing does is all three from &lt;em&gt;one&lt;&#x2F;em&gt; structure, from one file that loads with
+zero parsing. That last constraint is the whole story, so I&#x27;ll start there.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-structure-8-bytes-a-node&quot;&gt;The structure: 8 bytes a node&lt;&#x2F;h2&gt;
+&lt;p&gt;The tree is a width-first array of fixed-size nodes: a node is immediately
+followed by all its siblings, so &quot;next sibling&quot; is the next slot and &quot;first
+child&quot; is one 24-bit index.&lt;&#x2F;p&gt;
+&lt;figure&gt;
+&lt;svg viewBox=&quot;0 0 544 356&quot; role=&quot;img&quot; aria-label=&quot;A trie for ape, apple and apply drawn above the flat width-first array that stores it. A parent reaches its first child by one forward offset, and sibling nodes occupy contiguous array slots.&quot; style=&quot;display:block;margin:0 auto;width:100%;height:auto;max-width:600px;font-family:inherit&quot;&gt;
+&lt;title&gt;Logical trie versus its flat node array&lt;&#x2F;title&gt;
+&lt;defs&gt;&lt;marker id=&quot;wt-fc-arrow&quot; markerWidth=&quot;8&quot; markerHeight=&quot;8&quot; refX=&quot;5&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;path d=&quot;M0 0 L6 3 L0 6 z&quot; fill=&quot;var(--accent,#91bce6)&quot;&#x2F;&gt;&lt;&#x2F;marker&gt;&lt;&#x2F;defs&gt;
+&lt;text x=&quot;20&quot; y=&quot;20&quot; fill=&quot;currentColor&quot; font-size=&quot;13&quot; opacity=&quot;0.6&quot;&gt;logical trie&lt;&#x2F;text&gt;
+&lt;text x=&quot;20&quot; y=&quot;210&quot; fill=&quot;currentColor&quot; font-size=&quot;13&quot; opacity=&quot;0.6&quot;&gt;flat node array · width-first&lt;&#x2F;text&gt;
+&lt;g stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.45&quot; stroke-width=&quot;1.5&quot; fill=&quot;none&quot;&gt;
+&lt;line x1=&quot;52&quot; y1=&quot;95&quot; x2=&quot;110&quot; y2=&quot;95&quot;&#x2F;&gt;
+&lt;line x1=&quot;110&quot; y1=&quot;95&quot; x2=&quot;175&quot; y2=&quot;95&quot;&#x2F;&gt;
+&lt;line x1=&quot;175&quot; y1=&quot;95&quot; x2=&quot;240&quot; y2=&quot;55&quot;&#x2F;&gt;
+&lt;line x1=&quot;175&quot; y1=&quot;95&quot; x2=&quot;240&quot; y2=&quot;135&quot;&#x2F;&gt;
+&lt;line x1=&quot;240&quot; y1=&quot;135&quot; x2=&quot;305&quot; y2=&quot;135&quot;&#x2F;&gt;
+&lt;line x1=&quot;305&quot; y1=&quot;135&quot; x2=&quot;370&quot; y2=&quot;105&quot;&#x2F;&gt;
+&lt;line x1=&quot;305&quot; y1=&quot;135&quot; x2=&quot;370&quot; y2=&quot;165&quot;&#x2F;&gt;
+&lt;&#x2F;g&gt;
+&lt;rect x=&quot;38&quot; y=&quot;88&quot; width=&quot;14&quot; height=&quot;14&quot; transform=&quot;rotate(45 45 95)&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.12&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.45&quot;&#x2F;&gt;
+&lt;g font-size=&quot;15&quot; text-anchor=&quot;middle&quot;&gt;
+&lt;circle cx=&quot;110&quot; cy=&quot;95&quot; r=&quot;15&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.08&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;&lt;text x=&quot;110&quot; y=&quot;100&quot; fill=&quot;currentColor&quot;&gt;a&lt;&#x2F;text&gt;
+&lt;circle cx=&quot;175&quot; cy=&quot;95&quot; r=&quot;15&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.08&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;&lt;text x=&quot;175&quot; y=&quot;100&quot; fill=&quot;currentColor&quot;&gt;p&lt;&#x2F;text&gt;
+&lt;circle cx=&quot;240&quot; cy=&quot;55&quot; r=&quot;15&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.08&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;&lt;text x=&quot;240&quot; y=&quot;60&quot; fill=&quot;currentColor&quot;&gt;e&lt;&#x2F;text&gt;
+&lt;circle cx=&quot;240&quot; cy=&quot;135&quot; r=&quot;15&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.08&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;&lt;text x=&quot;240&quot; y=&quot;140&quot; fill=&quot;currentColor&quot;&gt;p&lt;&#x2F;text&gt;
+&lt;circle cx=&quot;305&quot; cy=&quot;135&quot; r=&quot;15&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.08&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;&lt;text x=&quot;305&quot; y=&quot;140&quot; fill=&quot;currentColor&quot;&gt;l&lt;&#x2F;text&gt;
+&lt;circle cx=&quot;370&quot; cy=&quot;105&quot; r=&quot;15&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.08&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;&lt;text x=&quot;370&quot; y=&quot;110&quot; fill=&quot;currentColor&quot;&gt;e&lt;&#x2F;text&gt;
+&lt;circle cx=&quot;370&quot; cy=&quot;165&quot; r=&quot;15&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.08&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;&lt;text x=&quot;370&quot; y=&quot;170&quot; fill=&quot;currentColor&quot;&gt;y&lt;&#x2F;text&gt;
+&lt;&#x2F;g&gt;
+&lt;g font-size=&quot;12&quot; fill=&quot;currentColor&quot; opacity=&quot;0.5&quot; font-style=&quot;italic&quot;&gt;
+&lt;text x=&quot;240&quot; y=&quot;34&quot; text-anchor=&quot;middle&quot;&gt;ape&lt;&#x2F;text&gt;
+&lt;text x=&quot;392&quot; y=&quot;109&quot;&gt;apple&lt;&#x2F;text&gt;
+&lt;text x=&quot;392&quot; y=&quot;169&quot;&gt;apply&lt;&#x2F;text&gt;
+&lt;&#x2F;g&gt;
+&lt;g&gt;
+&lt;rect x=&quot;70&quot; y=&quot;236&quot; width=&quot;60&quot; height=&quot;46&quot; rx=&quot;3&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.06&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;
+&lt;rect x=&quot;134&quot; y=&quot;236&quot; width=&quot;60&quot; height=&quot;46&quot; rx=&quot;3&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.06&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;
+&lt;rect x=&quot;198&quot; y=&quot;236&quot; width=&quot;60&quot; height=&quot;46&quot; rx=&quot;3&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.06&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;
+&lt;rect x=&quot;262&quot; y=&quot;236&quot; width=&quot;60&quot; height=&quot;46&quot; rx=&quot;3&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.06&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;
+&lt;rect x=&quot;326&quot; y=&quot;236&quot; width=&quot;60&quot; height=&quot;46&quot; rx=&quot;3&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.06&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;
+&lt;rect x=&quot;390&quot; y=&quot;236&quot; width=&quot;60&quot; height=&quot;46&quot; rx=&quot;3&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.06&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;
+&lt;rect x=&quot;454&quot; y=&quot;236&quot; width=&quot;60&quot; height=&quot;46&quot; rx=&quot;3&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.06&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;
+&lt;&#x2F;g&gt;
+&lt;g font-size=&quot;18&quot; text-anchor=&quot;middle&quot; fill=&quot;currentColor&quot;&gt;
+&lt;text x=&quot;100&quot; y=&quot;265&quot;&gt;a&lt;&#x2F;text&gt;&lt;text x=&quot;164&quot; y=&quot;265&quot;&gt;p&lt;&#x2F;text&gt;&lt;text x=&quot;228&quot; y=&quot;265&quot;&gt;e&lt;&#x2F;text&gt;&lt;text x=&quot;292&quot; y=&quot;265&quot;&gt;p&lt;&#x2F;text&gt;&lt;text x=&quot;356&quot; y=&quot;265&quot;&gt;l&lt;&#x2F;text&gt;&lt;text x=&quot;420&quot; y=&quot;265&quot;&gt;e&lt;&#x2F;text&gt;&lt;text x=&quot;484&quot; y=&quot;265&quot;&gt;y&lt;&#x2F;text&gt;
+&lt;&#x2F;g&gt;
+&lt;g font-size=&quot;12&quot; text-anchor=&quot;middle&quot; fill=&quot;currentColor&quot; opacity=&quot;0.45&quot;&gt;
+&lt;text x=&quot;100&quot; y=&quot;296&quot;&gt;0&lt;&#x2F;text&gt;&lt;text x=&quot;164&quot; y=&quot;296&quot;&gt;1&lt;&#x2F;text&gt;&lt;text x=&quot;228&quot; y=&quot;296&quot;&gt;2&lt;&#x2F;text&gt;&lt;text x=&quot;292&quot; y=&quot;296&quot;&gt;3&lt;&#x2F;text&gt;&lt;text x=&quot;356&quot; y=&quot;296&quot;&gt;4&lt;&#x2F;text&gt;&lt;text x=&quot;420&quot; y=&quot;296&quot;&gt;5&lt;&#x2F;text&gt;&lt;text x=&quot;484&quot; y=&quot;296&quot;&gt;6&lt;&#x2F;text&gt;
+&lt;&#x2F;g&gt;
+&lt;g stroke=&quot;var(--accent,#91bce6)&quot; stroke-width=&quot;1.5&quot; fill=&quot;none&quot;&gt;
+&lt;path d=&quot;M100 234 Q132 210 164 234&quot; marker-end=&quot;url(#wt-fc-arrow)&quot;&#x2F;&gt;
+&lt;path d=&quot;M164 234 Q196 210 228 234&quot; marker-end=&quot;url(#wt-fc-arrow)&quot;&#x2F;&gt;
+&lt;path d=&quot;M292 234 Q324 210 356 234&quot; marker-end=&quot;url(#wt-fc-arrow)&quot;&#x2F;&gt;
+&lt;path d=&quot;M356 234 Q388 210 420 234&quot; marker-end=&quot;url(#wt-fc-arrow)&quot;&#x2F;&gt;
+&lt;&#x2F;g&gt;
+&lt;text x=&quot;356&quot; y=&quot;205&quot; text-anchor=&quot;middle&quot; fill=&quot;var(--accent,#91bce6)&quot; font-size=&quot;12&quot; font-family=&quot;monospace&quot;&gt;first_child_pos&lt;&#x2F;text&gt;
+&lt;g stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.5&quot; fill=&quot;none&quot;&gt;
+&lt;path d=&quot;M198 312 V306 H322 V312&quot;&#x2F;&gt;
+&lt;path d=&quot;M390 312 V306 H514 V312&quot;&#x2F;&gt;
+&lt;&#x2F;g&gt;
+&lt;text x=&quot;260&quot; y=&quot;326&quot; text-anchor=&quot;middle&quot; fill=&quot;currentColor&quot; font-size=&quot;12&quot; opacity=&quot;0.7&quot;&gt;contiguous siblings&lt;&#x2F;text&gt;
+&lt;text x=&quot;452&quot; y=&quot;326&quot; text-anchor=&quot;middle&quot; fill=&quot;currentColor&quot; font-size=&quot;12&quot; opacity=&quot;0.5&quot;&gt;siblings&lt;&#x2F;text&gt;
+&lt;&#x2F;svg&gt;
+&lt;p&gt;The same nodes, linearised. A parent reaches its children with one forward &lt;code&gt;first_child_pos&lt;&#x2F;code&gt; jump; the children then sit in adjacent slots, so walking siblings is just stepping forward until the &lt;code&gt;is_last_sibling&lt;&#x2F;code&gt; flag ends the run.&lt;&#x2F;p&gt;
+&lt;&#x2F;figure&gt;
+&lt;p&gt;Each node is exactly 8 bytes:&lt;&#x2F;p&gt;
+&lt;div class=&quot;reflow reflow-bp-37rem&quot; style=&quot;--table-w: 48rem&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th scope=&quot;col&quot;&gt;field&lt;&#x2F;th&gt;&lt;th scope=&quot;col&quot;&gt;bits&lt;&#x2F;th&gt;&lt;th scope=&quot;col&quot;&gt;role&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td data-label=&quot;field&quot;&gt;&lt;code&gt;first_child_pos&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td data-label=&quot;bits&quot;&gt;24&lt;&#x2F;td&gt;&lt;td data-label=&quot;role&quot;&gt;array index of the first child&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td data-label=&quot;field&quot;&gt;&lt;code&gt;node_char&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td data-label=&quot;bits&quot;&gt;24&lt;&#x2F;td&gt;&lt;td data-label=&quot;role&quot;&gt;UTF-32 codepoint (low 3 bytes)&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td data-label=&quot;field&quot;&gt;&lt;code&gt;is_folder&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td data-label=&quot;bits&quot;&gt;1&lt;&#x2F;td&gt;&lt;td data-label=&quot;role&quot;&gt;drives the browsable index&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td data-label=&quot;field&quot;&gt;&lt;code&gt;is_last_sibling&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td data-label=&quot;bits&quot;&gt;1&lt;&#x2F;td&gt;&lt;td data-label=&quot;role&quot;&gt;terminates a sibling run&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td data-label=&quot;field&quot;&gt;&lt;code&gt;max_child_percentile&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td data-label=&quot;bits&quot;&gt;10&lt;&#x2F;td&gt;&lt;td data-label=&quot;role&quot;&gt;best frequency in the subtree — drives top-k pruning&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td data-label=&quot;field&quot;&gt;(spare)&lt;&#x2F;td&gt;&lt;td data-label=&quot;bits&quot;&gt;4&lt;&#x2F;td&gt;&lt;td data-label=&quot;role&quot;&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;&#x2F;div&gt;&lt;figure&gt;
+&lt;svg viewBox=&quot;0 0 720 188&quot; role=&quot;img&quot; aria-label=&quot;The 64-bit, 8-byte node record split into fields: a 24-bit first-child position, a 24-bit character codepoint, a 1-bit is_folder flag, a 1-bit is_last_sibling flag, a 10-bit max_child_percentile, and 4 spare bits.&quot; style=&quot;display:block;margin:0 auto;width:100%;height:auto;max-width:720px;font-family:inherit&quot;&gt;
+&lt;title&gt;The 8-byte node bit layout&lt;&#x2F;title&gt;
+&lt;text x=&quot;40&quot; y=&quot;28&quot; fill=&quot;currentColor&quot; font-size=&quot;13&quot; opacity=&quot;0.6&quot;&gt;one node record&lt;&#x2F;text&gt;
+&lt;g stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.12&quot; stroke-width=&quot;1&quot;&gt;
+&lt;line x1=&quot;120&quot; y1=&quot;78&quot; x2=&quot;120&quot; y2=&quot;138&quot;&#x2F;&gt;
+&lt;line x1=&quot;200&quot; y1=&quot;78&quot; x2=&quot;200&quot; y2=&quot;138&quot;&#x2F;&gt;
+&lt;line x1=&quot;360&quot; y1=&quot;78&quot; x2=&quot;360&quot; y2=&quot;138&quot;&#x2F;&gt;
+&lt;line x1=&quot;440&quot; y1=&quot;78&quot; x2=&quot;440&quot; y2=&quot;138&quot;&#x2F;&gt;
+&lt;line x1=&quot;600&quot; y1=&quot;78&quot; x2=&quot;600&quot; y2=&quot;138&quot;&#x2F;&gt;
+&lt;&#x2F;g&gt;
+&lt;g stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.6&quot; stroke-width=&quot;1&quot;&gt;
+&lt;rect x=&quot;40&quot; y=&quot;78&quot; width=&quot;240&quot; height=&quot;60&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.07&quot;&#x2F;&gt;
+&lt;rect x=&quot;280&quot; y=&quot;78&quot; width=&quot;240&quot; height=&quot;60&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.07&quot;&#x2F;&gt;
+&lt;rect x=&quot;520&quot; y=&quot;78&quot; width=&quot;10&quot; height=&quot;60&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.07&quot;&#x2F;&gt;
+&lt;rect x=&quot;530&quot; y=&quot;78&quot; width=&quot;10&quot; height=&quot;60&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.07&quot;&#x2F;&gt;
+&lt;rect x=&quot;540&quot; y=&quot;78&quot; width=&quot;100&quot; height=&quot;60&quot; fill=&quot;var(--accent,#91bce6)&quot; fill-opacity=&quot;0.20&quot; stroke=&quot;var(--accent,#91bce6)&quot;&#x2F;&gt;
+&lt;rect x=&quot;640&quot; y=&quot;78&quot; width=&quot;40&quot; height=&quot;60&quot; fill=&quot;currentColor&quot; fill-opacity=&quot;0.04&quot;&#x2F;&gt;
+&lt;&#x2F;g&gt;
+&lt;g text-anchor=&quot;middle&quot; fill=&quot;currentColor&quot;&gt;
+&lt;text x=&quot;160&quot; y=&quot;104&quot; font-size=&quot;13&quot; font-family=&quot;monospace&quot;&gt;first_child_pos&lt;&#x2F;text&gt;
+&lt;text x=&quot;160&quot; y=&quot;121&quot; font-size=&quot;12&quot; opacity=&quot;0.6&quot;&gt;24 bits&lt;&#x2F;text&gt;
+&lt;text x=&quot;400&quot; y=&quot;104&quot; font-size=&quot;13&quot; font-family=&quot;monospace&quot;&gt;node_char&lt;&#x2F;text&gt;
+&lt;text x=&quot;400&quot; y=&quot;121&quot; font-size=&quot;12&quot; opacity=&quot;0.6&quot;&gt;24 bits&lt;&#x2F;text&gt;
+&lt;text x=&quot;590&quot; y=&quot;98&quot; font-size=&quot;12&quot; font-family=&quot;monospace&quot;&gt;max_child&lt;&#x2F;text&gt;
+&lt;text x=&quot;590&quot; y=&quot;112&quot; font-size=&quot;12&quot; font-family=&quot;monospace&quot;&gt;percentile&lt;&#x2F;text&gt;
+&lt;text x=&quot;590&quot; y=&quot;126&quot; font-size=&quot;12&quot; opacity=&quot;0.7&quot;&gt;10 bits&lt;&#x2F;text&gt;
+&lt;text x=&quot;660&quot; y=&quot;104&quot; font-size=&quot;12&quot; font-family=&quot;monospace&quot;&gt;spare&lt;&#x2F;text&gt;
+&lt;text x=&quot;660&quot; y=&quot;121&quot; font-size=&quot;12&quot; opacity=&quot;0.55&quot;&gt;4 b&lt;&#x2F;text&gt;
+&lt;&#x2F;g&gt;
+&lt;g stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.5&quot;&gt;
+&lt;line x1=&quot;535&quot; y1=&quot;78&quot; x2=&quot;476&quot; y2=&quot;48&quot;&#x2F;&gt;
+&lt;line x1=&quot;525&quot; y1=&quot;78&quot; x2=&quot;452&quot; y2=&quot;64&quot;&#x2F;&gt;
+&lt;&#x2F;g&gt;
+&lt;g fill=&quot;currentColor&quot; font-size=&quot;12&quot; font-family=&quot;monospace&quot;&gt;
+&lt;text x=&quot;472&quot; y=&quot;46&quot; text-anchor=&quot;end&quot;&gt;is_last_sibling · 1&lt;&#x2F;text&gt;
+&lt;text x=&quot;448&quot; y=&quot;62&quot; text-anchor=&quot;end&quot;&gt;is_folder · 1&lt;&#x2F;text&gt;
+&lt;&#x2F;g&gt;
+&lt;g stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.5&quot;&gt;
+&lt;line x1=&quot;40&quot; y1=&quot;138&quot; x2=&quot;40&quot; y2=&quot;152&quot;&#x2F;&gt;
+&lt;line x1=&quot;120&quot; y1=&quot;138&quot; x2=&quot;120&quot; y2=&quot;148&quot;&#x2F;&gt;
+&lt;line x1=&quot;200&quot; y1=&quot;138&quot; x2=&quot;200&quot; y2=&quot;148&quot;&#x2F;&gt;
+&lt;line x1=&quot;280&quot; y1=&quot;138&quot; x2=&quot;280&quot; y2=&quot;152&quot;&#x2F;&gt;
+&lt;line x1=&quot;360&quot; y1=&quot;138&quot; x2=&quot;360&quot; y2=&quot;148&quot;&#x2F;&gt;
+&lt;line x1=&quot;440&quot; y1=&quot;138&quot; x2=&quot;440&quot; y2=&quot;148&quot;&#x2F;&gt;
+&lt;line x1=&quot;520&quot; y1=&quot;138&quot; x2=&quot;520&quot; y2=&quot;152&quot;&#x2F;&gt;
+&lt;line x1=&quot;600&quot; y1=&quot;138&quot; x2=&quot;600&quot; y2=&quot;148&quot;&#x2F;&gt;
+&lt;line x1=&quot;680&quot; y1=&quot;138&quot; x2=&quot;680&quot; y2=&quot;152&quot;&#x2F;&gt;
+&lt;&#x2F;g&gt;
+&lt;text x=&quot;360&quot; y=&quot;172&quot; text-anchor=&quot;middle&quot; fill=&quot;currentColor&quot; font-size=&quot;12&quot; opacity=&quot;0.7&quot;&gt;8 bytes · 64 bits&lt;&#x2F;text&gt;
+&lt;&#x2F;svg&gt;
+&lt;p&gt;Everything a node needs in 8 bytes. &lt;code&gt;max_child_percentile&lt;&#x2F;code&gt; (highlighted) earns its 10 inline bits because the suggestion walk reads it on &lt;em&gt;every&lt;&#x2F;em&gt; node to prune subtrees; the per-word data only a quarter of nodes need lives off-node instead.&lt;&#x2F;p&gt;
+&lt;&#x2F;figure&gt;
+&lt;p&gt;Why fixed 8-byte records and not a tidy struct? Because the on-disk format &lt;em&gt;is&lt;&#x2F;em&gt;
+the in-memory format. The tree serialises with &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;rkyv.org&quot;&gt;&lt;code&gt;rkyv&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;, and an
+&lt;code&gt;ArchivedTree&lt;&#x2F;code&gt; is queried directly out of an &lt;code&gt;mmap&lt;&#x2F;code&gt;: no parse, no rebuild, no
+pointer fix-up. Loading a 21 MiB English dictionary is an &lt;code&gt;mmap&lt;&#x2F;code&gt; call. For
+English, &lt;code&gt;live heap == serialized == 21.11 MiB&lt;&#x2F;code&gt;: the bytes you store are the bytes
+you query.&lt;&#x2F;p&gt;
+&lt;p&gt;That &lt;code&gt;max_child_percentile&lt;&#x2F;code&gt; field earns its 10 inline bits because it is read on
+&lt;em&gt;every&lt;&#x2F;em&gt; node during a suggestion walk. It records the highest word frequency
+anywhere in the subtree below a node, which is exactly the lower bound a
+&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;seekstorm.com&#x2F;blog&#x2F;pruning-radix-trie&#x2F;&quot;&gt;pruning-radix-trie&lt;&#x2F;a&gt;
+(Wolf Garbe&#x27;s design, which wordtree&#x27;s pruning is modelled on) needs: if a
+subtree&#x27;s best possible frequency can&#x27;t beat the current top-k, skip the whole
+subtree. Top-k autocomplete then touches a tiny fraction of the tree.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;pushing-the-sparse-data-off-node&quot;&gt;Pushing the sparse data off-node&lt;&#x2F;h3&gt;
+&lt;p&gt;A word needs two more values: its frequency (&lt;code&gt;percentile&lt;&#x2F;code&gt;, 0–1000) and the
+24-bit index of its expression. But only ~28% of nodes actually &lt;em&gt;end&lt;&#x2F;em&gt; a word;
+the rest are interior characters. Storing
+those 5 bytes inline would waste them on roughly three out of four nodes.&lt;&#x2F;p&gt;
+&lt;p&gt;So they live in side tables instead, all part of the same zero-copy image:&lt;&#x2F;p&gt;
+&lt;div class=&quot;reflow reflow-bp-37rem&quot; style=&quot;--table-w: 42rem&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th scope=&quot;col&quot;&gt;table&lt;&#x2F;th&gt;&lt;th scope=&quot;col&quot;&gt;size&lt;&#x2F;th&gt;&lt;th scope=&quot;col&quot;&gt;role&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td data-label=&quot;table&quot;&gt;&lt;code&gt;word_bits&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td data-label=&quot;size&quot;&gt;1 bit &#x2F; node&lt;&#x2F;td&gt;&lt;td data-label=&quot;role&quot;&gt;is this node the end of a word?&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td data-label=&quot;table&quot;&gt;&lt;code&gt;rank_index&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td data-label=&quot;size&quot;&gt;1 × u32 &#x2F; 64 nodes&lt;&#x2F;td&gt;&lt;td data-label=&quot;role&quot;&gt;cumulative word count → &lt;code&gt;rank(node)&lt;&#x2F;code&gt; in O(1)&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td data-label=&quot;table&quot;&gt;&lt;code&gt;values&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td data-label=&quot;size&quot;&gt;5 bytes &#x2F; &lt;strong&gt;word&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td data-label=&quot;role&quot;&gt;the &lt;code&gt;(percentile, expr_index)&lt;&#x2F;code&gt; pair&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;The trick is the classic succinct-structure move: a word node at position &lt;code&gt;i&lt;&#x2F;code&gt;
+finds its value at &lt;code&gt;values[rank(i)]&lt;&#x2F;code&gt;, where &lt;code&gt;rank(i)&lt;&#x2F;code&gt; is the number of word-nodes
+before it. The &lt;code&gt;word_bits&lt;&#x2F;code&gt; bitvector plus the cumulative &lt;code&gt;rank_index&lt;&#x2F;code&gt; answer that
+rank query in O(1): popcount the partial 64-bit word, add the precomputed prefix
+sum. The bit probe sits on the hot descent path; the rank query only fires when a
+value is actually consumed (an exact lookup, or a suggestion you decided to keep).&lt;&#x2F;p&gt;
+&lt;p&gt;Moving those 5 bytes off-node took the node from 12 bytes to 8, which on English
+trimmed the structure from ~26.5 MiB to ~21.1 MiB (about 20%) with no loss of
+function. It also made exact lookup ~10–20% &lt;em&gt;faster&lt;&#x2F;em&gt;, because more siblings now
+fit in a cache line and &lt;code&gt;index_of&lt;&#x2F;code&gt; scans siblings linearly. I don&#x27;t often get
+smaller and faster out of the same change.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;edit-distance-that-rides-down-the-trie&quot;&gt;Edit distance that rides down the trie&lt;&#x2F;h2&gt;
+&lt;p&gt;The third job is the interesting one. How do you find every word within
+Damerau-Levenshtein distance 1 of a typo, frequency-ranked, without scanning the
+dictionary? (A brute-force DL≤1 scan over English takes ~90–100 ms, far too slow
+for as-you-type.)&lt;&#x2F;p&gt;
+&lt;p&gt;The answer is to compute the edit distance &lt;em&gt;incrementally as you walk the trie&lt;&#x2F;em&gt;.
+Each node carries one dynamic-programming row recording the edit distance between
+the query and the word spelled by the path from the root to that node. The row at
+a node is computed from its parent&#x27;s row (and, for transposition, its
+grandparent&#x27;s). Conceptually, for a query of length &lt;code&gt;n&lt;&#x2F;code&gt;, the row holds&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo z-code&quot;&gt;&lt;code data-lang=&quot;plain&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;row[j] = edit_distance(query[0..j], word spelled to this node)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;and two quantities matter:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;row[n]&lt;&#x2F;code&gt; is the distance from the &lt;em&gt;whole&lt;&#x2F;em&gt; query to this node&#x27;s word. If the node
+ends a word and &lt;code&gt;row[n] ≤ K&lt;&#x2F;code&gt;, it&#x27;s a correction.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;min(row)&lt;&#x2F;code&gt; is the distance to the closest &lt;em&gt;prefix&lt;&#x2F;em&gt;, a lower bound on every word
+in the subtree below. Once &lt;code&gt;min(row) &amp;gt; K&lt;&#x2F;code&gt;, the entire subtree is pruned.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;So the walk descends at most &lt;code&gt;K&lt;&#x2F;code&gt; levels past the query length and, in practice,
+visits well under 1% of the tree (0.3% on English, 0.8% on Swedish, measured
+over generated single-edit typos). The same walk also collects the nodes that
+the completion sweep extends from, so one call returns corrections and
+completions together.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-bug-that-made-me-rewrite-it&quot;&gt;The bug that made me rewrite it&lt;&#x2F;h3&gt;
+&lt;p&gt;I didn&#x27;t start here. The first version used a hand-rolled 4-window state machine
+that tracked a few edit positions as it descended. It looked fine and passed my
+hand-written tests, and it was wrong.&lt;&#x2F;p&gt;
+&lt;p&gt;What exposed it was building the comparison harness, specifically a recall
+table broken down by edit &lt;em&gt;kind&lt;&#x2F;em&gt;. Substitution and transposition: fine.
+Deletion: ~6–10% recall. Insertion: &lt;strong&gt;0%&lt;&#x2F;strong&gt;. The state machine, run over a
+&lt;em&gt;branching&lt;&#x2F;em&gt; trie rather than a single string, mis-scored mid-word insertions and
+deletions and pruned the correct word away before it was ever reached. My
+autocomplete had been silently dropping every insertion typo and I had no idea
+until a table told me. If you want one reason to build a comparison harness
+before trusting your own tests, that&#x27;s mine.&lt;&#x2F;p&gt;
+&lt;p&gt;The DP-row-over-trie version replaced it and corrects all four single-edit kinds
+at 100% (more on that below).&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-band-why-each-node-costs-three-bytes-not-n&quot;&gt;The band: why each node costs three bytes, not &lt;code&gt;n&lt;&#x2F;code&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;A full row of &lt;code&gt;n + 1&lt;&#x2F;code&gt; values per node would make every node cost O(query length).
+But you don&#x27;t need the full row. &lt;code&gt;row[j]&lt;&#x2F;code&gt; is at least &lt;code&gt;|j − depth|&lt;&#x2F;code&gt; — you need
+that many indels just to reconcile the length difference between a depth-&lt;code&gt;depth&lt;&#x2F;code&gt;
+prefix and a &lt;code&gt;j&lt;&#x2F;code&gt;-character query prefix — so any cell with &lt;code&gt;|j − depth| &amp;gt; K&lt;&#x2F;code&gt; is
+already &lt;code&gt;&amp;gt; K&lt;&#x2F;code&gt; and can never be a kept correction nor lower a surviving minimum.&lt;&#x2F;p&gt;
+&lt;p&gt;Only the &lt;code&gt;2K + 1&lt;&#x2F;code&gt; cells in a diagonal &lt;strong&gt;band&lt;&#x2F;strong&gt; around &lt;code&gt;j = depth&lt;&#x2F;code&gt; can ever matter.
+At the default &lt;code&gt;K = 1&lt;&#x2F;code&gt; that&#x27;s &lt;strong&gt;three cells&lt;&#x2F;strong&gt;, stored as a fixed &lt;code&gt;[u8; 3]&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Concretely: the query is &lt;code&gt;cart&lt;&#x2F;code&gt;, the walk is descending root → &lt;code&gt;c&lt;&#x2F;code&gt; → &lt;code&gt;ca&lt;&#x2F;code&gt; →
+&lt;code&gt;cat&lt;&#x2F;code&gt;, and each row is that node&#x27;s &lt;code&gt;[u8; 3]&lt;&#x2F;code&gt;. The typo is an inserted &lt;code&gt;r&lt;&#x2F;code&gt; — the
+kind the state machine used to drop.&lt;&#x2F;p&gt;
+&lt;figure&gt;
+&lt;svg viewBox=&quot;0 0 620 330&quot; role=&quot;img&quot; aria-label=&quot;The edit-distance grid for the query cart against the trie path root, c, ca, cat. Rows are trie nodes, columns are query prefixes. Only the diagonal band of cells with absolute difference of j and depth at most one is computed; each row&#x27;s three band cells hold real values, ending in a one at the terminal node cat, which is at most K so cat is kept. The out-of-band cells, shown faded, are all two or more and are never computed. The optimal alignment path stays inside the band; its single insertion moves it one cell to the right.&quot; style=&quot;display:block;margin:0 auto;width:100%;height:auto;max-width:640px;font-family:inherit&quot;&gt;
+&lt;title&gt;The band on a real query: cart against the path to cat&lt;&#x2F;title&gt;
+&lt;defs&gt;&lt;marker id=&quot;band-arrow&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;8&quot; refY=&quot;5&quot; markerWidth=&quot;6&quot; markerHeight=&quot;6&quot; orient=&quot;auto&quot;&gt;&lt;path d=&quot;M0,0 L10,5 L0,10 z&quot; fill=&quot;var(--accent,#91bce6)&quot;&#x2F;&gt;&lt;&#x2F;marker&gt;&lt;&#x2F;defs&gt;
+&lt;text x=&quot;265&quot; y=&quot;34&quot; text-anchor=&quot;middle&quot; fill=&quot;currentColor&quot; font-size=&quot;13&quot; opacity=&quot;0.7&quot;&gt;query  cart   (j →)&lt;&#x2F;text&gt;
+&lt;g text-anchor=&quot;middle&quot; fill=&quot;currentColor&quot; font-size=&quot;11&quot; opacity=&quot;0.5&quot;&gt;
+&lt;text x=&quot;173&quot; y=&quot;54&quot;&gt;0&lt;&#x2F;text&gt;&lt;text x=&quot;219&quot; y=&quot;54&quot;&gt;1&lt;&#x2F;text&gt;&lt;text x=&quot;265&quot; y=&quot;54&quot;&gt;2&lt;&#x2F;text&gt;&lt;text x=&quot;311&quot; y=&quot;54&quot;&gt;3&lt;&#x2F;text&gt;&lt;text x=&quot;357&quot; y=&quot;54&quot;&gt;4&lt;&#x2F;text&gt;
+&lt;&#x2F;g&gt;
+&lt;g text-anchor=&quot;middle&quot; fill=&quot;currentColor&quot; font-size=&quot;14&quot; font-family=&quot;monospace&quot;&gt;
+&lt;text x=&quot;173&quot; y=&quot;72&quot; opacity=&quot;0.5&quot;&gt;ε&lt;&#x2F;text&gt;&lt;text x=&quot;219&quot; y=&quot;72&quot;&gt;c&lt;&#x2F;text&gt;&lt;text x=&quot;265&quot; y=&quot;72&quot;&gt;a&lt;&#x2F;text&gt;&lt;text x=&quot;311&quot; y=&quot;72&quot;&gt;r&lt;&#x2F;text&gt;&lt;text x=&quot;357&quot; y=&quot;72&quot;&gt;t&lt;&#x2F;text&gt;
+&lt;&#x2F;g&gt;
+&lt;text x=&quot;66&quot; y=&quot;172&quot; text-anchor=&quot;middle&quot; fill=&quot;currentColor&quot; font-size=&quot;13&quot; opacity=&quot;0.7&quot; transform=&quot;rotate(-90 66 172)&quot;&gt;trie node  (depth ↓)&lt;&#x2F;text&gt;
+&lt;g text-anchor=&quot;end&quot; fill=&quot;currentColor&quot; font-size=&quot;13&quot; font-family=&quot;monospace&quot;&gt;
+&lt;text x=&quot;138&quot; y=&quot;108&quot; opacity=&quot;0.6&quot;&gt;root&lt;&#x2F;text&gt;&lt;text x=&quot;138&quot; y=&quot;154&quot;&gt;c&lt;&#x2F;text&gt;&lt;text x=&quot;138&quot; y=&quot;200&quot;&gt;ca&lt;&#x2F;text&gt;&lt;text x=&quot;138&quot; y=&quot;246&quot;&gt;cat&lt;&#x2F;text&gt;
+&lt;&#x2F;g&gt;
+&lt;g fill=&quot;var(--accent,#91bce6)&quot; fill-opacity=&quot;0.12&quot;&gt;
+&lt;rect x=&quot;196&quot; y=&quot;80&quot; width=&quot;46&quot; height=&quot;46&quot;&#x2F;&gt;
+&lt;rect x=&quot;150&quot; y=&quot;126&quot; width=&quot;46&quot; height=&quot;46&quot;&#x2F;&gt;&lt;rect x=&quot;242&quot; y=&quot;126&quot; width=&quot;46&quot; height=&quot;46&quot;&#x2F;&gt;
+&lt;rect x=&quot;196&quot; y=&quot;172&quot; width=&quot;46&quot; height=&quot;46&quot;&#x2F;&gt;&lt;rect x=&quot;288&quot; y=&quot;172&quot; width=&quot;46&quot; height=&quot;46&quot;&#x2F;&gt;
+&lt;rect x=&quot;242&quot; y=&quot;218&quot; width=&quot;46&quot; height=&quot;46&quot;&#x2F;&gt;&lt;rect x=&quot;334&quot; y=&quot;218&quot; width=&quot;46&quot; height=&quot;46&quot;&#x2F;&gt;
+&lt;&#x2F;g&gt;
+&lt;g fill=&quot;var(--accent,#91bce6)&quot; fill-opacity=&quot;0.28&quot;&gt;
+&lt;rect x=&quot;150&quot; y=&quot;80&quot; width=&quot;46&quot; height=&quot;46&quot;&#x2F;&gt;&lt;rect x=&quot;196&quot; y=&quot;126&quot; width=&quot;46&quot; height=&quot;46&quot;&#x2F;&gt;&lt;rect x=&quot;242&quot; y=&quot;172&quot; width=&quot;46&quot; height=&quot;46&quot;&#x2F;&gt;&lt;rect x=&quot;288&quot; y=&quot;218&quot; width=&quot;46&quot; height=&quot;46&quot;&#x2F;&gt;
+&lt;&#x2F;g&gt;
+&lt;g stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.13&quot; fill=&quot;none&quot;&gt;
+&lt;line x1=&quot;150&quot; y1=&quot;80&quot; x2=&quot;380&quot; y2=&quot;80&quot;&#x2F;&gt;&lt;line x1=&quot;150&quot; y1=&quot;126&quot; x2=&quot;380&quot; y2=&quot;126&quot;&#x2F;&gt;&lt;line x1=&quot;150&quot; y1=&quot;172&quot; x2=&quot;380&quot; y2=&quot;172&quot;&#x2F;&gt;&lt;line x1=&quot;150&quot; y1=&quot;218&quot; x2=&quot;380&quot; y2=&quot;218&quot;&#x2F;&gt;&lt;line x1=&quot;150&quot; y1=&quot;264&quot; x2=&quot;380&quot; y2=&quot;264&quot;&#x2F;&gt;
+&lt;line x1=&quot;150&quot; y1=&quot;80&quot; x2=&quot;150&quot; y2=&quot;264&quot;&#x2F;&gt;&lt;line x1=&quot;196&quot; y1=&quot;80&quot; x2=&quot;196&quot; y2=&quot;264&quot;&#x2F;&gt;&lt;line x1=&quot;242&quot; y1=&quot;80&quot; x2=&quot;242&quot; y2=&quot;264&quot;&#x2F;&gt;&lt;line x1=&quot;288&quot; y1=&quot;80&quot; x2=&quot;288&quot; y2=&quot;264&quot;&#x2F;&gt;&lt;line x1=&quot;334&quot; y1=&quot;80&quot; x2=&quot;334&quot; y2=&quot;264&quot;&#x2F;&gt;&lt;line x1=&quot;380&quot; y1=&quot;80&quot; x2=&quot;380&quot; y2=&quot;264&quot;&#x2F;&gt;
+&lt;&#x2F;g&gt;
+&lt;g text-anchor=&quot;middle&quot; fill=&quot;currentColor&quot; font-size=&quot;14&quot; font-family=&quot;monospace&quot;&gt;
+&lt;text x=&quot;173&quot; y=&quot;108&quot;&gt;0&lt;&#x2F;text&gt;&lt;text x=&quot;219&quot; y=&quot;108&quot;&gt;1&lt;&#x2F;text&gt;&lt;text x=&quot;265&quot; y=&quot;108&quot; opacity=&quot;0.3&quot;&gt;2&lt;&#x2F;text&gt;&lt;text x=&quot;311&quot; y=&quot;108&quot; opacity=&quot;0.3&quot;&gt;3&lt;&#x2F;text&gt;&lt;text x=&quot;357&quot; y=&quot;108&quot; opacity=&quot;0.3&quot;&gt;4&lt;&#x2F;text&gt;
+&lt;text x=&quot;173&quot; y=&quot;154&quot;&gt;1&lt;&#x2F;text&gt;&lt;text x=&quot;219&quot; y=&quot;154&quot;&gt;0&lt;&#x2F;text&gt;&lt;text x=&quot;265&quot; y=&quot;154&quot;&gt;1&lt;&#x2F;text&gt;&lt;text x=&quot;311&quot; y=&quot;154&quot; opacity=&quot;0.3&quot;&gt;2&lt;&#x2F;text&gt;&lt;text x=&quot;357&quot; y=&quot;154&quot; opacity=&quot;0.3&quot;&gt;3&lt;&#x2F;text&gt;
+&lt;text x=&quot;173&quot; y=&quot;200&quot; opacity=&quot;0.3&quot;&gt;2&lt;&#x2F;text&gt;&lt;text x=&quot;219&quot; y=&quot;200&quot;&gt;1&lt;&#x2F;text&gt;&lt;text x=&quot;265&quot; y=&quot;200&quot;&gt;0&lt;&#x2F;text&gt;&lt;text x=&quot;311&quot; y=&quot;200&quot;&gt;1&lt;&#x2F;text&gt;&lt;text x=&quot;357&quot; y=&quot;200&quot; opacity=&quot;0.3&quot;&gt;2&lt;&#x2F;text&gt;
+&lt;text x=&quot;173&quot; y=&quot;246&quot; opacity=&quot;0.3&quot;&gt;3&lt;&#x2F;text&gt;&lt;text x=&quot;219&quot; y=&quot;246&quot; opacity=&quot;0.3&quot;&gt;2&lt;&#x2F;text&gt;&lt;text x=&quot;265&quot; y=&quot;246&quot;&gt;1&lt;&#x2F;text&gt;&lt;text x=&quot;311&quot; y=&quot;246&quot;&gt;1&lt;&#x2F;text&gt;&lt;text x=&quot;357&quot; y=&quot;246&quot;&gt;1&lt;&#x2F;text&gt;
+&lt;&#x2F;g&gt;
+&lt;g stroke=&quot;var(--accent,#91bce6)&quot; stroke-width=&quot;2&quot; fill=&quot;none&quot;&gt;
+&lt;line x1=&quot;184&quot; y1=&quot;114&quot; x2=&quot;206&quot; y2=&quot;136&quot; marker-end=&quot;url(#band-arrow)&quot;&#x2F;&gt;
+&lt;line x1=&quot;230&quot; y1=&quot;160&quot; x2=&quot;252&quot; y2=&quot;182&quot; marker-end=&quot;url(#band-arrow)&quot;&#x2F;&gt;
+&lt;line x1=&quot;280&quot; y1=&quot;195&quot; x2=&quot;296&quot; y2=&quot;195&quot; marker-end=&quot;url(#band-arrow)&quot;&#x2F;&gt;
+&lt;line x1=&quot;322&quot; y1=&quot;206&quot; x2=&quot;344&quot; y2=&quot;228&quot; marker-end=&quot;url(#band-arrow)&quot;&#x2F;&gt;
+&lt;&#x2F;g&gt;
+&lt;rect x=&quot;242&quot; y=&quot;218&quot; width=&quot;138&quot; height=&quot;46&quot; rx=&quot;4&quot; fill=&quot;none&quot; stroke=&quot;var(--accent,#91bce6)&quot; stroke-width=&quot;1.6&quot;&#x2F;&gt;
+&lt;line x1=&quot;380&quot; y1=&quot;241&quot; x2=&quot;404&quot; y2=&quot;241&quot; stroke=&quot;var(--accent,#91bce6)&quot; stroke-opacity=&quot;0.6&quot;&#x2F;&gt;
+&lt;text x=&quot;410&quot; y=&quot;238&quot; fill=&quot;currentColor&quot; font-size=&quot;12&quot; font-family=&quot;monospace&quot; opacity=&quot;0.85&quot;&gt;[u8; 3]&lt;&#x2F;text&gt;
+&lt;text x=&quot;410&quot; y=&quot;254&quot; fill=&quot;currentColor&quot; font-size=&quot;12&quot; opacity=&quot;0.6&quot;&gt;node cat&#x27;s band row&lt;&#x2F;text&gt;
+&lt;text x=&quot;410&quot; y=&quot;270&quot; fill=&quot;currentColor&quot; font-size=&quot;12&quot; opacity=&quot;0.6&quot;&gt;last cell 1 ≤ K → keep cat&lt;&#x2F;text&gt;
+&lt;rect x=&quot;410&quot; y=&quot;92&quot; width=&quot;12&quot; height=&quot;12&quot; fill=&quot;var(--accent,#91bce6)&quot; fill-opacity=&quot;0.28&quot;&#x2F;&gt;
+&lt;text x=&quot;428&quot; y=&quot;103&quot; fill=&quot;currentColor&quot; font-size=&quot;12&quot; opacity=&quot;0.7&quot;&gt;diagonal  j = depth&lt;&#x2F;text&gt;
+&lt;rect x=&quot;410&quot; y=&quot;116&quot; width=&quot;12&quot; height=&quot;12&quot; fill=&quot;var(--accent,#91bce6)&quot; fill-opacity=&quot;0.12&quot;&#x2F;&gt;
+&lt;text x=&quot;428&quot; y=&quot;127&quot; fill=&quot;currentColor&quot; font-size=&quot;12&quot; opacity=&quot;0.7&quot;&gt;band  |j − depth| ≤ 1&lt;&#x2F;text&gt;
+&lt;rect x=&quot;410&quot; y=&quot;140&quot; width=&quot;12&quot; height=&quot;12&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-opacity=&quot;0.3&quot;&#x2F;&gt;
+&lt;text x=&quot;428&quot; y=&quot;151&quot; fill=&quot;currentColor&quot; font-size=&quot;12&quot; opacity=&quot;0.7&quot;&gt;out of band: ≥ 2, never computed&lt;&#x2F;text&gt;
+&lt;line x1=&quot;410&quot; y1=&quot;176&quot; x2=&quot;424&quot; y2=&quot;176&quot; stroke=&quot;var(--accent,#91bce6)&quot; stroke-width=&quot;2&quot;&#x2F;&gt;
+&lt;text x=&quot;428&quot; y=&quot;180&quot; fill=&quot;currentColor&quot; font-size=&quot;12&quot; opacity=&quot;0.7&quot;&gt;alignment: c, a, insert r, t&lt;&#x2F;text&gt;
+&lt;text x=&quot;265&quot; y=&quot;306&quot; text-anchor=&quot;middle&quot; fill=&quot;currentColor&quot; font-size=&quot;12&quot; opacity=&quot;0.65&quot;&gt;the one insertion shifts the path a single cell right — it can never leave a K = 1 band&lt;&#x2F;text&gt;
+&lt;&#x2F;svg&gt;
+&lt;p&gt;Every value the search acts on is inside the band, computed exactly: node &lt;code&gt;cat&lt;&#x2F;code&gt;&#x27;s &lt;code&gt;[u8; 3]&lt;&#x2F;code&gt; ends in &lt;code&gt;1 ≤ K&lt;&#x2F;code&gt;, so &lt;code&gt;cat&lt;&#x2F;code&gt; is kept. The faded cells are what a full &lt;em&gt;n&lt;&#x2F;em&gt;-wide row would also compute — all &lt;code&gt;≥ 2&lt;&#x2F;code&gt;, none able to change a keep-or-prune decision — so they are skipped, and a node costs three bytes instead of &lt;em&gt;O(n)&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;figure&gt;
+&lt;p&gt;Shifting to band-local coordinates turns every DP neighbour into a &lt;em&gt;constant&lt;&#x2F;em&gt;
+offset, so the recurrence carries no per-cell column arithmetic at all:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo z-code&quot;&gt;&lt;code data-lang=&quot;plain&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;cur[o] = min(prev[o+1] + 1,     &#x2F;&#x2F; deletion       (word longer than query)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;             prev[o]   + cost,   &#x2F;&#x2F; match &#x2F; substitution&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;             cur[o-1]  + 1,      &#x2F;&#x2F; insertion      (word shorter than query)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;             pp[o]     + 1)      &#x2F;&#x2F; transposition  (grandparent row)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;By Ukkonen&#x27;s banding argument (Robert Jacobson has a &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.robertjacobson.dev&#x2F;posts&#x2F;2024-12-02-edit-distance-optimizations&#x2F;#limited-distance-variant-the-banded-algorithm&quot;&gt;readable
+walkthrough&lt;&#x2F;a&gt;),
+the optimal alignment to any cell whose true distance is ≤ K stays inside the
+band. So every value the search actually acts on is computed exactly, and &lt;strong&gt;the
+kept corrections, their order, and the exact set of visited nodes are
+bit-identical to a full-row walk.&lt;&#x2F;strong&gt; Out-of-band cells may be over-estimated, but
+they stay &lt;code&gt;&amp;gt; K&lt;&#x2F;code&gt;, so no keep&#x2F;prune decision changes. Banding changes only the
+per-node cost, O(K) instead of O(n), which is why longer queries gain the most: a
+14-character fuzzy query runs ~80% faster than the full-row walk; short typos
+roughly halve.&lt;&#x2F;p&gt;
+&lt;p&gt;(One Rust wrinkle: stable Rust can&#x27;t size &lt;code&gt;[u8; 2*K + 1]&lt;&#x2F;code&gt; from a
+&lt;code&gt;K&lt;&#x2F;code&gt; parameter, so the band &lt;em&gt;width&lt;&#x2F;em&gt; &lt;code&gt;W&lt;&#x2F;code&gt; is the const generic and &lt;code&gt;K = (W − 1) &#x2F; 2&lt;&#x2F;code&gt;
+is derived. Want distance-2 suggestions? Instantiate the search with &lt;code&gt;W = 5&lt;&#x2F;code&gt;.)&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;losing-every-axis-on-purpose&quot;&gt;Losing every axis, on purpose&lt;&#x2F;h2&gt;
+&lt;p&gt;Now the benchmarks. I picked the best specialist crate for each job and ran them
+on the same word lists — &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;fst&quot;&gt;fst&lt;&#x2F;a&gt; (BurntSushi&#x27;s FSA),
+&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;symspell&quot;&gt;symspell&lt;&#x2F;a&gt;, Wolf Garbe&#x27;s
+&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;pruning_radix_trie&quot;&gt;pruning_radix_trie&lt;&#x2F;a&gt;,
+&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;boomphf&quot;&gt;boomphf&lt;&#x2F;a&gt; (minimal perfect hash), and plain
+&lt;code&gt;HashMap&lt;&#x2F;code&gt;&#x2F;&lt;code&gt;Vec&lt;&#x2F;code&gt; baselines. A correctness gate asserts every engine resolves a
+word to the &lt;em&gt;same&lt;&#x2F;em&gt; expression index before any timing is trusted.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Exact lookup (nanoseconds).&lt;&#x2F;strong&gt; &lt;code&gt;wordtree&lt;&#x2F;code&gt; is the slowest of the bunch; it
+linearly scans each node&#x27;s siblings.&lt;&#x2F;p&gt;
+&lt;div class=&quot;table-scroll&quot; style=&quot;--table-w: 36rem&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;case (en)&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;wordtree&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;fst&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;boomphf&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;hashmap&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;short &lt;code&gt;on&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;74.3&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;15.3&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;14.1&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;8.1&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;long &lt;code&gt;alphanumerical&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;112.0&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;107.4&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;25.9&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;8.7&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;&lt;code&gt;HashMap&lt;&#x2F;code&gt; wins outright at ~8 ns, flat. wordtree is ~9–13× slower. All are tens
+of nanoseconds in absolute terms, which is fine, but exact lookup is not a reason
+to pick wordtree.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Size.&lt;&#x2F;strong&gt; The FST is the clear winner: it minimises shared prefixes &lt;em&gt;and&lt;&#x2F;em&gt;
+suffixes (DAWG-like), doing exact lookup &lt;em&gt;and&lt;&#x2F;em&gt; spelling correction in ~3× less
+space than wordtree does anything.&lt;&#x2F;p&gt;
+&lt;div class=&quot;table-scroll table-scroll-sticky table-scroll-clamp&quot; style=&quot;--table-w: 24rem; --sticky-w: 6rem&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;engine (en)&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;live heap&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;serialized&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;fst&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;10.0 MiB&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;6.7 MiB&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;wordtree&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;21.1 MiB&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;21.1 MiB&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;sorted-vec&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;25.1 MiB&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;—&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;boomphf&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;33.9 MiB&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;—&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;hashmap&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;38.7 MiB&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;—&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;symspell&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;300.4 MiB&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;—&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;So: wordtree is the &lt;strong&gt;smallest of the naive key-storing structures&lt;&#x2F;strong&gt;, but still
+~3× &lt;em&gt;larger&lt;&#x2F;em&gt; than an FSA. Its &quot;size-optimised&quot; claim holds against a naive trie,
+not against fst. (Also, wordtree&#x27;s &lt;em&gt;build&lt;&#x2F;em&gt; peaks at ~224 MiB to produce 21 MiB,
+about 11×, which matters if you generate trees on a constrained device.)&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Spelling correction.&lt;&#x2F;strong&gt; symspell is in another league on latency.&lt;&#x2F;p&gt;
+&lt;div class=&quot;table-scroll table-scroll-sticky table-scroll-clamp&quot; style=&quot;--table-w: 36rem; --sticky-w: 6rem&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;case (en)&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;wordtree&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;symspell&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;fst-lev&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;brute force&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;sub &lt;code&gt;abxut&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;46.2 µs&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;1.5 µs&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;132.6 µs&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;102.6 ms&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;del &lt;code&gt;abut&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;49.3 µs&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;8.4 µs&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;129.6 µs&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;91.5 ms&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;symspell does a handful of hash lookups against a precomputed delete-dictionary;
+wordtree walks the trie. It&#x27;s ~25–31× slower than symspell on a substitution
+typo and ~6–10× slower on a deletion. (It is ~2.6–3.1× &lt;em&gt;faster&lt;&#x2F;em&gt; than fst&#x27;s
+Levenshtein automaton, and corrects transpositions that fst misses entirely,
+but symspell is the one to beat, and it wins.)&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Autocomplete.&lt;&#x2F;strong&gt; Closest race. The combined &lt;code&gt;suggestions()&lt;&#x2F;code&gt; call runs the
+edit-distance walk every time, so it&#x27;s the wrong thing to race against a pure
+completer (~43 µs). The autocomplete-only &lt;code&gt;completions()&lt;&#x2F;code&gt; call skips the walk:&lt;&#x2F;p&gt;
+&lt;div class=&quot;table-scroll table-scroll-sticky table-scroll-clamp&quot; style=&quot;--table-w: 30rem; --sticky-w: 6rem&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;case (en)&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;wordtree &lt;code&gt;completions()&lt;&#x2F;code&gt;&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;pruning-trie&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;co&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;3.1 µs&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;1.2 µs&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;Roughly 2–4× on English and 1–2.5× on Swedish, widening with the prefix&#x27;s
+fan-out: the pruning trie stays flat at ~1–2 µs whatever the prefix, while
+&lt;code&gt;completions()&lt;&#x2F;code&gt; scales with how many descendants it sweeps. wordtree is
+slightly &lt;em&gt;ahead&lt;&#x2F;em&gt; on quality (recall@5 80% vs 74% on English, 96% vs 93% on
+Swedish), but on the latency axis, the one being raced, it&#x27;s still a loss.&lt;&#x2F;p&gt;
+&lt;p&gt;So on all four axes (lookup speed, size, correction latency, autocomplete
+latency) a specialist wins on its home turf. Hence the title.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-one-place-it-doesn-t-lose-doing-all-of-it-from-one-file&quot;&gt;The one place it doesn&#x27;t lose: doing all of it from one file&lt;&#x2F;h2&gt;
+&lt;p&gt;Here&#x27;s the part the per-axis tables hide. Every alternative above does &lt;em&gt;one&lt;&#x2F;em&gt; job
+(boomphf, symspell, pruning-trie) or &lt;em&gt;two&lt;&#x2F;em&gt; (fst: lookup + correction). Picking
+specialists means assembling three or four structures, three or four files, three
+or four load paths, and &lt;code&gt;HashMap&lt;&#x2F;code&gt;&#x2F;symspell can&#x27;t be memory-mapped at all, so they
+rebuild at startup.&lt;&#x2F;p&gt;
+&lt;p&gt;wordtree folds all three jobs into one structure that loads by &lt;code&gt;mmap&lt;&#x2F;code&gt; with no
+parse or build step, and returns a deliberately short, frequency-ranked,
+single-edit-tolerant list. On correction quality it matches symspell:&lt;&#x2F;p&gt;
+&lt;div class=&quot;table-scroll&quot; style=&quot;--table-w: 48rem&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;correction recall by edit kind (en)&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;substitute&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;transpose&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;delete&lt;&#x2F;th&gt;&lt;th style=&quot;text-align: right&quot;&gt;insert&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;wordtree&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;100%&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;100%&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;100%&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;100%&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;symspell&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;100%&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;100%&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;100%&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;100%&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;fst-lev&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;100%&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;0%&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;100%&lt;&#x2F;td&gt;&lt;td style=&quot;text-align: right&quot;&gt;100%&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;(fst&#x27;s &lt;code&gt;Levenshtein&lt;&#x2F;code&gt; is plain Levenshtein: a transposition costs 2, so it misses
+every transposed typo at distance 1.) By default wordtree returns a small
+frequency-capped top-k rather than the exhaustive DL≤1 set symspell gives you,
+the right trade for an as-you-type box. For a batch spell-checker,
+&lt;code&gt;corrections_with(q, f, Caps::uniform(n))&lt;&#x2F;code&gt; lifts the cap and returns the complete
+set, at 100% of the brute-force oracle.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;when-to-use-it-and-when-not&quot;&gt;When to use it (and when not)&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Need &lt;strong&gt;only one&lt;&#x2F;strong&gt; of these jobs, or the lowest latency, or the smallest file?
+Use the specialist. fst for lookup + fuzzy in minimal space; symspell for
+exhaustive correction; pruning_radix_trie for pure autocomplete; a &lt;code&gt;HashMap&lt;&#x2F;code&gt;
+for raw lookup speed.&lt;&#x2F;li&gt;
+&lt;li&gt;Need a &lt;strong&gt;browsable index + frequency + typo-tolerant autocomplete from one
+mmap-able file&lt;&#x2F;strong&gt;, with a short ranked suggestion list and no startup cost? Then
+one 21 MiB file you &lt;code&gt;mmap&lt;&#x2F;code&gt; and query three ways is a reasonable single
+dependency, which is the spot wordtree was built for.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The repo is a snapshot extracted from a private project to accompany this
+post, not a crate I&#x27;m asking you to depend on. But the comparison harness is real
+and reproducible, the edit-distance walk is worth reading, and the lesson is one
+I keep relearning: benchmark against the specialists, expect to lose, and find
+out whether the thing you&#x27;re actually optimising for (here, three jobs in one
+zero-copy file) is even on the axis you&#x27;re measuring. Usually it isn&#x27;t.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;&lt;em&gt;Reproduce everything:&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo z-code&quot;&gt;&lt;code data-lang=&quot;shellscript&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span class=&quot;z-entity z-name z-entity z-name z-function&quot;&gt;cargo&lt;&#x2F;span&gt;&lt;span class=&quot;z-string&quot;&gt; run&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt; -&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt;p&lt;&#x2F;span&gt;&lt;span class=&quot;z-string&quot;&gt; comparisons&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt; -&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt;-bin&lt;&#x2F;span&gt;&lt;span class=&quot;z-string&quot;&gt; quality&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt; -&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt;-release&lt;&#x2F;span&gt;&lt;span class=&quot;z-punctuation z-definition z-comment&quot;&gt;   #&lt;&#x2F;span&gt;&lt;span class=&quot;z-comment&quot;&gt; quality tables&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span class=&quot;z-entity z-name z-entity z-name z-function&quot;&gt;cargo&lt;&#x2F;span&gt;&lt;span class=&quot;z-string&quot;&gt; run&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt; -&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt;p&lt;&#x2F;span&gt;&lt;span class=&quot;z-string&quot;&gt; comparisons&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt; -&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt;-bin&lt;&#x2F;span&gt;&lt;span class=&quot;z-string&quot;&gt; size&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt;    -&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt;-release&lt;&#x2F;span&gt;&lt;span class=&quot;z-punctuation z-definition z-comment&quot;&gt;   #&lt;&#x2F;span&gt;&lt;span class=&quot;z-comment&quot;&gt; size + RAM&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span class=&quot;z-entity z-name z-entity z-name z-function&quot;&gt;cargo&lt;&#x2F;span&gt;&lt;span class=&quot;z-string&quot;&gt; bench&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt; -&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt;p&lt;&#x2F;span&gt;&lt;span class=&quot;z-string&quot;&gt; comparisons&lt;&#x2F;span&gt;&lt;span class=&quot;z-punctuation z-definition z-comment&quot;&gt;                         #&lt;&#x2F;span&gt;&lt;span class=&quot;z-comment&quot;&gt; latency&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span class=&quot;z-entity z-name z-entity z-name z-function&quot;&gt;cargo&lt;&#x2F;span&gt;&lt;span class=&quot;z-string&quot;&gt; test&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt;  -&lt;&#x2F;span&gt;&lt;span class=&quot;z-constant z-string&quot;&gt;p&lt;&#x2F;span&gt;&lt;span class=&quot;z-string&quot;&gt; comparisons&lt;&#x2F;span&gt;&lt;span class=&quot;z-punctuation z-definition z-comment&quot;&gt;                         #&lt;&#x2F;span&gt;&lt;span class=&quot;z-comment&quot;&gt; correctness gate&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;em&gt;Numbers are from one Apple M-series machine; treat them as ratios, not
+absolutes. Word lists are derived from PanLex and Wiktionary (en 638,545 words,
+sv 113,220).&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Dusting off my archives</title>
+        <published>2026-08-11T00:00:00+00:00</published>
+        <updated>2026-08-11T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://akesson.io/dusting-off-archives/"/>
+        <id>https://akesson.io/dusting-off-archives/</id>
+        
+        <content type="html" xml:base="https://akesson.io/dusting-off-archives/">&lt;p&gt;This summer I found some time to dust off some of my own git repos — the ones
+with interesting explorations and other things that might be worth sharing.
+We are talking about many years of work as a developer and team lead dusted off,
+so I will probably be publishing quite frequently now, time allowing.&lt;&#x2F;p&gt;
+&lt;p&gt;I started it partially thanks to LLMs becoming more trustworthy and capable, which
+made the dusting off a lot cheaper. So you will find old repos of mine with a
+bunch of recent commits made by LLMs.
+&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;akesson&#x2F;reactive-signals&quot;&gt;reactive-signals&lt;&#x2F;a&gt; is a good
+example: my commits from 2023, three years of silence, then a fresh layer of
+dependency bumps and clippy fixes from this summer.&lt;&#x2F;p&gt;
+&lt;p&gt;Sounds like AI slop? Well, it certainly is AI-assisted. Slop? I did check the
+code, and to me it&#x27;s not sloppy.&lt;&#x2F;p&gt;
+&lt;p&gt;What I did re-discover is my passion for technology and for exploring
+solutions. With AI I can explore a new solution in a very short amount of
+time. That is great!&lt;&#x2F;p&gt;
+&lt;p&gt;Another thing I started doing is using AI to fill in my knowledge gaps in
+areas I&#x27;m interested in. As an example, I have always had some bits missing in
+my understanding of Rust async. If I find the time for it, I&#x27;ll do some very
+AI-driven explainers that explain it from my way of seeing things.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

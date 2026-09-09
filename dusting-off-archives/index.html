@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta itemprop="name" content="Henrik Åkesson" />
+  <meta itemprop="description" content="" />
+  <link rel="icon" href="https://akesson.io/favicon.ico?h=dad5b8ddd3cbf12a7f1f" sizes="32x32" />
+  <link rel="icon" type="image/svg+xml" href="https://akesson.io/favicon.svg?h=bc85d86947d333f10261" />
+  <link rel="apple-touch-icon" sizes="180x180" href="https://akesson.io/apple-touch-icon.png?h=925c7fad13e66e8264f4" />
+  <link rel="manifest" href="https://akesson.io/site.webmanifest" />
+  <link rel="preload" href="https://akesson.io/fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin/>
+  <!-- Syntax highlighting: both theme sheets load; the active one is chosen to
+       match the resolved data-theme (below + main.js) — which may be a manual
+       override — not prefers-color-scheme directly. Only emitted when the page
+       actually contains a code block (<pre>); most pages have none, so they skip
+       ~14.7 KB of render-blocking CSS. The inline script below and main.js both
+       guard getElementById, so their absence is safe. -->
+  <!-- Resolve theme + starting hue before first paint: no flash of the wrong
+       theme or the default hue. Mirrors the logic in main.js.
+       theme mode is one of light / dark / system (default); "system" follows the
+       OS live (see main.js). data-theme is the resolved light|dark that drives
+       colours; data-theme-mode is the chosen mode that drives the toggle icon. -->
+  <script>
+    (function () {
+      try {
+        var d = document.documentElement;
+        var mode = localStorage.getItem("theme") || "system";
+        var prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+        var theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        d.setAttribute("data-theme", theme);
+        d.setAttribute("data-theme-mode", mode);
+        var dark = document.getElementById("giallo-dark");
+        var light = document.getElementById("giallo-light");
+        if (dark && light) {
+          dark.media = theme === "light" ? "not all" : "all";
+          light.media = theme === "light" ? "all" : "not all";
+        }
+        if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          d.style.setProperty("--hue", (Date.now() / 1800000 * 360 % 360).toFixed(1));
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="https://akesson.io/style.css"/>
+  
+
+  
+  <script type="speculationrules">
+  {
+    "prefetch": [
+      { "source": "document", "where": { "href_matches": "/*" }, "eagerness": "moderate" }
+    ]
+  }
+  </script>
+  
+  <title>Dusting off my archives</title>
+  
+
+  
+  
+  <link rel="alternate" type="application/atom+xml" title="Henrik Åkesson" href="https://akesson.io/atom.xml">
+  
+  
+
+  <body id="page">
+
+    <button id="theme-toggle" class="hdr-btn" title="Theme" aria-label="Switch theme (light, dark, or system)">
+      
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-monitor"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+
+    </button>
+
+    
+    
+<header class="leaf-header">
+  <div class="chrome-row">
+    <a class="back-link" href="https:&#x2F;&#x2F;akesson.io&#x2F;" data-default-href="https:&#x2F;&#x2F;akesson.io&#x2F;" data-default-label="Articles">
+      
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+<span class="back-label">Articles</span>
+    </a>
+  </div>
+</header>
+
+
+    
+
+    
+<main class="site-main reading-layout section-inner">
+  <article class="thin">
+    <header class="post-header">
+      <div class="post-meta">
+        
+        <span>Aug 11, 2026</span>
+        <small> - 
+<span class="reading-time" title="Estimated read time">
+   1 min read 
+</span>
+</small>
+        
+      </div>
+      <h1>Dusting off my archives</h1>
+    </header>
+
+    <div class="content">
+      <p>This summer I found some time to dust off some of my own git repos — the ones
+with interesting explorations and other things that might be worth sharing.
+We are talking about many years of work as a developer and team lead dusted off,
+so I will probably be publishing quite frequently now, time allowing.</p>
+<p>I started it partially thanks to LLMs becoming more trustworthy and capable, which
+made the dusting off a lot cheaper. So you will find old repos of mine with a
+bunch of recent commits made by LLMs.
+<a rel="external" href="https://github.com/akesson/reactive-signals">reactive-signals</a> is a good
+example: my commits from 2023, three years of silence, then a fresh layer of
+dependency bumps and clippy fixes from this summer.</p>
+<p>Sounds like AI slop? Well, it certainly is AI-assisted. Slop? I did check the
+code, and to me it's not sloppy.</p>
+<p>What I did re-discover is my passion for technology and for exploring
+solutions. With AI I can explore a new solution in a very short amount of
+time. That is great!</p>
+<p>Another thing I started doing is using AI to fill in my knowledge gaps in
+areas I'm interested in. As an example, I have always had some bits missing in
+my understanding of Rust async. If I find the time for it, I'll do some very
+AI-driven explainers that explain it from my way of seeing things.</p>
+
+    </div>
+    <hr class="post-end">
+    <footer class="post-info">
+      <p>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+231 Words</p>
+      
+      <p>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+2026-08-11</p>
+      
+    </footer>
+  </article>
+
+  
+<div class="post-nav thin">
+  
+  
+</div>
+
+</main>
+
+
+    
+
+    <script defer src="https://akesson.io/js/main.js"></script>
+
+    
+    
+    <script data-goatcounter="https://akesson.goatcounter.com/count"
+            async src="https://gc.zgo.at/count.js"></script>
+    
+
+    
+
+    
+    
+  </body>
+</html>
