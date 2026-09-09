@@ -183,10 +183,11 @@
   /* denser type so the tallest n-gap note stays clear of the terminal's
      "hi henrik!" line, which lands at the same step */
   .am-note.n-gap p, .am-note.n-gap li { font-size: 1rem; line-height: 1.6; }
-  /* the opening note: centered over the empty stage */
-  .am-note.n-center { left: 50%; top: 6rem; width: min(34rem, 56%);
-    transform: translate(-50%, 5px); }
-  .am-note.n-center.on { transform: translate(-50%, 0); }
+  /* the opening notes: stacked so longer copy cannot overlap */
+  .am-opening { position: absolute; left: 50%; top: 6rem;
+    width: min(34rem, 56%); transform: translateX(-50%);
+    display: grid; gap: 1rem; }
+  .am-opening .am-note { position: static; max-width: none; }
 
   /* ── sequence panel (frame + label always visible; the skeleton fades in
      with the first poll, arrows appear per step) ──────────────────────── */
@@ -263,6 +264,7 @@
     /* notes: in flow, first; note and block scroll together (a pinned note
        ate most of the screen and the block slid under it) */
     .am-notes { position: static; inset: auto; order: -1; pointer-events: auto; }
+    .am-opening { position: static; width: auto; transform: none; }
     .am-notes .am-note { display: none; position: static; width: auto; max-width: none;
       padding: 1rem 1.1rem 1.1rem; opacity: 1; }
     .am-notes .am-note.on { display: block; transform: none; }
@@ -549,7 +551,8 @@
 
       <!-- ── overlaid notes ──────────────────────────────────────────── -->
       <div class="am-notes" aria-live="polite">
-        <div class="am-note n-center" data-on="0">
+        <div class="am-opening">
+        <div class="am-note" data-on="0">
           <span class="t">1/16 · why this page</span>
           <h1>{{ page.title }}</h1>
           <p>I have always felt that I missed some parts of the async story. I could never
@@ -557,7 +560,13 @@
           <p>So I asked an LLM to explain it to me and I was really happy with it, so I
           decided to share it. A lot of beating and kicking an LLM ensued until I had
           something I think can be genuinely useful for a lot of people. Enjoy!</p>
-          <p>Step with your keyboard arrow-keys or the buttons.</p>
+        </div>
+        <div class="am-note" data-on="0">
+          <p>The code is simplified for demonstration purposes. Some snippets are
+          pseudocode and won’t compile as shown.</p>
+          <p>Use the left and right arrow keys, click the arrow buttons, or swipe
+          left and right to move through the guide.</p>
+        </div>
         </div>
         <div class="am-note n-left" data-on="1" data-focus="code">
           <span class="t">2/16 · the program</span>
