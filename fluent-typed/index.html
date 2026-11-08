@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta itemprop="name" content="Henrik Åkesson" />
+  <meta itemprop="description" content="" />
+  <link rel="icon" href="https://akesson.io/favicon.ico?h=dad5b8ddd3cbf12a7f1f" sizes="32x32" />
+  <link rel="icon" type="image/svg+xml" href="https://akesson.io/favicon.svg?h=bc85d86947d333f10261" />
+  <link rel="apple-touch-icon" sizes="180x180" href="https://akesson.io/apple-touch-icon.png?h=925c7fad13e66e8264f4" />
+  <link rel="manifest" href="https://akesson.io/site.webmanifest" />
+  <link rel="preload" href="https://akesson.io/fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin/>
+  <!-- Syntax highlighting: both theme sheets load; the active one is chosen to
+       match the resolved data-theme (below + main.js) — which may be a manual
+       override — not prefers-color-scheme directly. Only emitted when the page
+       actually contains a code block (<pre>); most pages have none, so they skip
+       ~14.7 KB of render-blocking CSS. The inline script below and main.js both
+       guard getElementById, so their absence is safe. -->
+  <link id="giallo-dark" rel="stylesheet" media="all" href="https://akesson.io/giallo-dark.css"/>
+  <link id="giallo-light" rel="stylesheet" media="not all" href="https://akesson.io/giallo-light.css"/>
+  
+  <!-- Resolve theme + starting hue before first paint: no flash of the wrong
+       theme or the default hue. Mirrors the logic in main.js.
+       theme mode is one of light / dark / system (default); "system" follows the
+       OS live (see main.js). data-theme is the resolved light|dark that drives
+       colours; data-theme-mode is the chosen mode that drives the toggle icon. -->
+  <script>
+    (function () {
+      try {
+        var d = document.documentElement;
+        var mode = localStorage.getItem("theme") || "system";
+        var prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+        var theme = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+        d.setAttribute("data-theme", theme);
+        d.setAttribute("data-theme-mode", mode);
+        var dark = document.getElementById("giallo-dark");
+        var light = document.getElementById("giallo-light");
+        if (dark && light) {
+          dark.media = theme === "light" ? "not all" : "all";
+          light.media = theme === "light" ? "all" : "not all";
+        }
+        if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          d.style.setProperty("--hue", (Date.now() / 1800000 * 360 % 360).toFixed(1));
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="https://akesson.io/style.css"/>
+  
+
+  
+  <script type="speculationrules">
+  {
+    "prefetch": [
+      { "source": "document", "where": { "href_matches": "/*" }, "eagerness": "moderate" }
+    ]
+  }
+  </script>
+  
+  <title>If it builds, it works (and it&#x27;s translated)</title>
+  
+
+  
+  
+  <link rel="alternate" type="application/atom+xml" title="Henrik Åkesson" href="https://akesson.io/atom.xml">
+  
+  
+
+  <body id="page">
+
+    <button id="theme-toggle" class="hdr-btn" title="Theme" aria-label="Switch theme (light, dark, or system)">
+      
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-monitor"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+
+    </button>
+
+    
+    
+<header class="leaf-header">
+  <div class="chrome-row">
+    <a class="back-link" href="https:&#x2F;&#x2F;akesson.io&#x2F;" data-default-href="https:&#x2F;&#x2F;akesson.io&#x2F;" data-default-label="Articles">
+      
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+<span class="back-label">Articles</span>
+    </a>
+  </div>
+</header>
+
+
+    
+
+    
+<main class="site-main reading-layout section-inner">
+  <article class="thin">
+    <header class="post-header">
+      <div class="post-meta">
+        
+        <span>Nov 08, 2026</span>
+        <small> - 
+<span class="reading-time" title="Estimated read time">
+   4 min read
+  
+</span>
+</small>
+        
+      </div>
+      <h1>If it builds, it works (and it&#x27;s translated)</h1>
+    </header>
+
+    <div class="content">
+      <p><em>"Translated" here means every message your code calls exists in every
+language, with the variables your code passes. It doesn't mean the translation
+is any good. The compiler can't read French.</em></p>
+<p><em>I created fluent-typed in 2024 and have maintained it since. Recently I have used some AI assistance, but with great care and attention to quality. This
+article had AI assistance as well. The design and opinions are mine.</em></p>
+<p><a rel="external" href="https://github.com/akesson/fluent-typed">fluent-typed</a> is a build-time code
+generator for <a rel="external" href="https://projectfluent.org">Fluent</a> translations. It turns every
+message into a typed Rust method. Once your strings are methods, the compiler
+checks them the same way it checks the rest of your code. A misspelled key, a
+wrong argument type, or a message that one language forgot to translate fails
+the build. A message nobody calls any more becomes a dead-code warning.</p>
+<h2 id="why-i-built-it">Why I built it</h2>
+<p>I try to push "if it builds, it works" as far as it goes, with as much as
+possible checked at build time. Two things mattered most to me: finding
+translation strings nobody uses any more, and guaranteeing that a
+translation is complete, so a French user never silently gets English.</p>
+<h2 id="the-problem-with-string-keys">The problem with string keys</h2>
+<p>Plain Fluent looks messages up by string at runtime:</p>
+<pre class="giallo z-code"><code data-lang="rust"><span class="giallo-l"><span class="z-storage z-type z-storage">let</span><span class="z-variable z-other"> msg</span><span class="z-keyword z-keyword z-operator"> =</span><span class="z-variable z-other"> bundle</span><span class="z-keyword z-keyword z-operator">.</span><span class="z-entity z-name z-entity z-name z-function">get_message</span><span class="z-punctuation">(</span><span class="z-punctuation z-definition z-string z-punctuation">&quot;</span><span class="z-string">helo</span><span class="z-punctuation z-definition z-string z-punctuation">&quot;</span><span class="z-punctuation">)</span><span class="z-punctuation">;</span><span class="z-punctuation z-definition z-comment"> //</span><span class="z-comment"> None, at runtime, in production</span></span></code></pre>
+<p>Rust's "if it builds, it works" has never been a literal promise. What it means
+in practice is that whole classes of mistakes can't reach a running program.
+String keys opt your translations out of that. The typo above compiles, ships,
+and shows up as a blank label or a fallback string in whichever language nobody
+tested.</p>
+<h2 id="how-it-works">How it works</h2>
+<p>You write messages in <code>.ftl</code> files, one folder per language:</p>
+<pre class="giallo z-code"><code data-lang="fluent"><span class="giallo-l"><span class="z-comment"># locales/en/main.ftl</span></span>
+<span class="giallo-l"><span class="z-comment"># $name (String) - the user&#39;s name</span></span>
+<span class="giallo-l"><span class="z-support z-support z-class">hello = </span><span class="z-string">Hello </span><span class="z-keyword">{</span><span class="z-variable z-other"> $name</span><span class="z-keyword"> }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-support z-support z-class">unread-messages = </span><span class="z-keyword">{</span><span class="z-variable z-other"> $count</span><span class="z-support z-support z-function"> -&gt;</span></span>
+<span class="giallo-l"><span class="z-support z-support z-function">    [</span><span class="z-variable z-other">one</span><span class="z-support z-support z-function">] </span><span class="z-string">You have one message</span></span>
+<span class="giallo-l"><span class="z-support z-support z-function">   *[</span><span class="z-variable z-other">other</span><span class="z-support z-support z-function">] </span><span class="z-string">You have </span><span class="z-keyword">{</span><span class="z-variable z-other"> $count</span><span class="z-keyword"> }</span><span class="z-string"> messages</span></span>
+<span class="giallo-l"><span class="z-keyword">}</span></span></code></pre>
+<p>One call in <code>build.rs</code> reads <code>locales/</code>, and writes <code>src/l10n.rs</code> with a method
+per message:</p>
+<pre class="giallo z-code"><code data-lang="rust"><span class="giallo-l"><span class="z-punctuation z-definition z-comment">//</span><span class="z-comment"> build.rs</span></span>
+<span class="giallo-l"><span class="z-keyword">use</span><span class="z-entity z-name"> fluent_typed</span><span class="z-keyword z-keyword z-operator">::</span><span class="z-punctuation">{</span><span>build_from_locales_folder</span><span class="z-punctuation">,</span><span class="z-entity z-name z-entity z-name z-type"> BuildOptions</span><span class="z-punctuation">}</span><span class="z-punctuation">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-keyword">fn</span><span class="z-entity z-name z-entity z-name z-function"> main</span><span class="z-punctuation">(</span><span class="z-punctuation">)</span><span class="z-keyword z-keyword z-operator"> -&gt;</span><span class="z-entity z-name"> std</span><span class="z-keyword z-keyword z-operator">::</span><span class="z-entity z-name">process</span><span class="z-keyword z-keyword z-operator">::</span><span class="z-entity z-name z-entity z-name z-type">ExitCode</span><span class="z-punctuation"> {</span></span>
+<span class="giallo-l"><span class="z-entity z-name z-entity z-name z-function">    build_from_locales_folder</span><span class="z-punctuation">(</span><span class="z-entity z-name">BuildOptions</span><span class="z-keyword z-keyword z-operator">::</span><span class="z-entity z-name z-entity z-name z-function">default</span><span class="z-punctuation">(</span><span class="z-punctuation">)</span><span class="z-punctuation">)</span></span>
+<span class="giallo-l"><span class="z-punctuation">}</span></span></code></pre>
+<p>The generated method for <code>hello</code> looks like this:</p>
+<pre class="giallo z-code"><code data-lang="rust"><span class="giallo-l"><span class="z-keyword">pub</span><span class="z-keyword"> fn</span><span class="z-entity z-name z-entity z-name z-function"> msg_hello</span><span class="z-punctuation">&lt;</span><span class="z-entity z-name z-entity z-name z-type">F0</span><span class="z-keyword z-keyword z-operator">:</span><span class="z-entity z-name z-entity z-name z-type"> AsRef</span><span class="z-punctuation">&lt;</span><span class="z-entity z-name z-entity z-name z-type">str</span><span class="z-punctuation">&gt;</span><span class="z-punctuation">&gt;</span><span class="z-punctuation">(</span><span class="z-keyword z-keyword z-operator">&amp;</span><span class="z-variable z-language">self</span><span class="z-punctuation">,</span><span class="z-variable z-other"> name</span><span class="z-keyword z-keyword z-operator">:</span><span class="z-entity z-name z-entity z-name z-type"> F0</span><span class="z-punctuation">)</span><span class="z-keyword z-keyword z-operator"> -&gt;</span><span class="z-entity z-name z-entity z-name z-type"> String</span></span></code></pre>
+<p>The argument type comes from the <code>(String)</code> comment. <code>$count</code> becomes a number
+without a comment, because it selects between plural variants. In your code it
+reads like any other method call:</p>
+<pre class="giallo z-code"><code data-lang="rust"><span class="giallo-l"><span class="z-storage z-type z-storage">let</span><span class="z-variable z-other"> strs</span><span class="z-keyword z-keyword z-operator"> =</span><span class="z-entity z-name z-entity z-name z-type"> L10n</span><span class="z-keyword z-keyword z-operator">::</span><span class="z-entity z-name z-entity z-name z-type">Fr</span><span class="z-keyword z-keyword z-operator">.</span><span class="z-entity z-name z-entity z-name z-function">load</span><span class="z-punctuation">(</span><span class="z-punctuation">)</span><span class="z-punctuation">;</span></span>
+<span class="giallo-l"><span class="z-variable z-other">strs</span><span class="z-keyword z-keyword z-operator">.</span><span class="z-entity z-name z-entity z-name z-function">msg_hello</span><span class="z-punctuation">(</span><span class="z-punctuation z-definition z-string z-punctuation">&quot;</span><span class="z-string">Sam</span><span class="z-punctuation z-definition z-string z-punctuation">&quot;</span><span class="z-punctuation">)</span><span class="z-punctuation">;</span><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> &quot;Bonjour Sam&quot;</span></span>
+<span class="giallo-l"><span class="z-variable z-other">strs</span><span class="z-keyword z-keyword z-operator">.</span><span class="z-entity z-name z-entity z-name z-function">msg_unread_messages</span><span class="z-punctuation">(</span><span class="z-constant z-constant z-numeric">3</span><span class="z-punctuation">)</span><span class="z-punctuation">;</span><span class="z-punctuation z-definition z-comment">  //</span><span class="z-comment"> &quot;Vous avez 3 messages&quot;</span></span></code></pre>
+<p>The real strings have Unicode isolation marks around <code>Sam</code> and <code>3</code>, so a
+right-to-left name can't scramble the sentence around it. You can turn that off.</p>
+<p>The generated file is plain Rust that you commit. You can read it, and your
+editor gives you autocomplete and go-to-definition on every message.</p>
+<h2 id="what-the-build-catches">What the build catches</h2>
+<p><strong>A typo in the key.</strong> It's a method that doesn't exist, so it's an ordinary
+compile error, and rustc suggests the right name:</p>
+<pre class="giallo z-code"><code data-lang="plain"><span class="giallo-l"><span>error[E0599]: no method named `msg_chekout` found for struct `L10nLanguage`</span></span>
+<span class="giallo-l"><span>help: there is a method `msg_checkout` with a similar name</span></span></code></pre>
+<p><strong>The wrong argument type.</strong> <code>$name</code> is a <code>String</code>, so passing a number fails:</p>
+<pre class="giallo z-code"><code data-lang="plain"><span class="giallo-l"><span>error[E0277]: the trait bound `{integer}: AsRef&lt;str&gt;` is not satisfied</span></span>
+<span class="giallo-l"><span>  |     strs.msg_hello(42)</span></span></code></pre>
+<p><strong>A message missing in one language.</strong> This is the "and it's translated" part.
+fluent-typed generates a method only for a message that exists in <em>every</em>
+locale. Delete <code>checkout</code> from the French file and the method disappears, so
+every call to it stops compiling. The build script tells you why, with the file
+and line:</p>
+<pre class="giallo z-code"><code data-lang="plain"><span class="giallo-l"><span>warning: locales/en/main.ftl:9: message &#39;checkout&#39; is not generated</span></span>
+<span class="giallo-l"><span>  — it is missing from locale(s): fr</span></span>
+<span class="giallo-l"><span>error[E0599]: no method named `msg_checkout` found for struct `L10nLanguage`</span></span></code></pre>
+<p><strong>A translation that uses the wrong variable.</strong> If the French message says
+<code>{ $nom }</code> where English says <code>{ $name }</code>, the message isn't generated either.
+The warning points at the French line:</p>
+<pre class="giallo z-code"><code data-lang="plain"><span class="giallo-l"><span>warning: locales/fr/main.ftl:1: message &#39;hello&#39; is not generated</span></span>
+<span class="giallo-l"><span>  — the &#39;fr&#39; translation uses $nom, which the default locale&#39;s</span></span>
+<span class="giallo-l"><span>  message (locales/en/main.ftl:2) doesn&#39;t have, so the accessor</span></span>
+<span class="giallo-l"><span>  never passes it</span></span></code></pre>
+<p><strong>A message you no longer use.</strong> The generated methods are ordinary code, so
+rustc's dead-code lint finds the stale ones:</p>
+<pre class="giallo z-code"><code data-lang="plain"><span class="giallo-l"><span>warning: method `msg_checkout` is never used</span></span></code></pre>
+<p>This only works if the generated module isn't part of your crate's public API.
+A public method always counts as used.</p>
+<h2 id="links-inside-a-sentence">Links inside a sentence</h2>
+<p>Some strings need a link or an icon in the middle. Splitting the sentence into
+three messages breaks as soon as a language puts the link somewhere else. In
+fluent-typed you mark a term or variable as <code>(Element)</code>:</p>
+<pre class="giallo z-code"><code data-lang="fluent"><span class="giallo-l"><span class="z-comment"># locales/en/main.ftl</span></span>
+<span class="giallo-l"><span class="z-comment"># $count (Number) - how many messages were deleted</span></span>
+<span class="giallo-l"><span class="z-comment"># -privacy-link (Element) - link text the app wraps in a link</span></span>
+<span class="giallo-l"><span class="z-support z-support z-class">deleted = </span><span class="z-keyword">{</span><span class="z-variable z-other"> $count</span><span class="z-keyword"> }</span><span class="z-string"> messages deleted, see </span><span class="z-keyword">{</span><span class="z-variable z-other"> -privacy-link</span><span class="z-keyword"> }</span><span class="z-string">.</span></span>
+<span class="giallo-l"><span class="z-support z-support z-class">-privacy-link = </span><span class="z-string">our privacy policy</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-comment"># locales/fr/main.ftl</span></span>
+<span class="giallo-l"><span class="z-support z-support z-class">deleted = </span><span class="z-string">Voir </span><span class="z-keyword">{</span><span class="z-variable z-other"> -privacy-link</span><span class="z-keyword"> }</span><span class="z-string"> : </span><span class="z-keyword">{</span><span class="z-variable z-other"> $count</span><span class="z-keyword"> }</span><span class="z-string"> messages supprimés.</span></span>
+<span class="giallo-l"><span class="z-support z-support z-class">-privacy-link = </span><span class="z-string">notre politique de confidentialité</span></span></code></pre>
+<p>The method returns a struct instead of a <code>String</code>, with the translated text
+split at the element:</p>
+<pre class="giallo z-code"><code data-lang="rust"><span class="giallo-l"><span class="z-keyword">pub</span><span class="z-storage z-type z-storage"> struct</span><span class="z-entity z-name z-entity z-name z-type"> Deleted</span><span class="z-punctuation"> {</span></span>
+<span class="giallo-l"><span class="z-keyword">    pub</span><span class="z-variable z-other"> s0</span><span class="z-keyword z-keyword z-operator">:</span><span class="z-entity z-name z-entity z-name z-type"> String</span><span class="z-punctuation">,</span></span>
+<span class="giallo-l"><span class="z-keyword">    pub</span><span class="z-variable z-other"> privacy_link</span><span class="z-keyword z-keyword z-operator">:</span><span class="z-entity z-name z-entity z-name z-type"> String</span><span class="z-punctuation">,</span></span>
+<span class="giallo-l"><span class="z-keyword">    pub</span><span class="z-variable z-other"> s1</span><span class="z-keyword z-keyword z-operator">:</span><span class="z-entity z-name z-entity z-name z-type"> String</span><span class="z-punctuation">,</span></span>
+<span class="giallo-l"><span class="z-punctuation">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-storage z-type z-storage">let</span><span class="z-variable z-other"> d</span><span class="z-keyword z-keyword z-operator"> =</span><span class="z-variable z-other"> strs</span><span class="z-keyword z-keyword z-operator">.</span><span class="z-entity z-name z-entity z-name z-function">msg_deleted</span><span class="z-punctuation">(</span><span class="z-constant z-constant z-numeric">3</span><span class="z-punctuation">)</span><span class="z-punctuation">;</span></span>
+<span class="giallo-l"><span class="z-entity z-name z-entity z-name z-function">format!</span><span class="z-punctuation">(</span><span class="z-string">r</span><span class="z-punctuation z-definition z-string z-punctuation">#</span><span class="z-punctuation z-definition z-string z-punctuation">&quot;</span><span class="z-string">{}&lt;a href=&quot;/privacy&quot;&gt;{}&lt;/a&gt;{}</span><span class="z-punctuation z-definition z-string z-punctuation">&quot;</span><span class="z-punctuation z-definition z-string z-punctuation">#</span><span class="z-punctuation">,</span><span class="z-variable z-other"> d</span><span class="z-keyword z-keyword z-operator">.</span><span>s0</span><span class="z-punctuation">,</span><span class="z-variable z-other"> d</span><span class="z-keyword z-keyword z-operator">.</span><span>privacy_link</span><span class="z-punctuation">,</span><span class="z-variable z-other"> d</span><span class="z-keyword z-keyword z-operator">.</span><span>s1</span><span class="z-punctuation">)</span></span></code></pre>
+<p>In English the link ends the sentence and in French it comes first, with the
+same rendering code. Plurals and variables are already resolved inside the
+pieces.</p>
+<p>The elements are part of the check. If the French translation drops the link,
+the method isn't generated:</p>
+<pre class="giallo z-code"><code data-lang="plain"><span class="giallo-l"><span>warning: locales/fr/main.ftl:10: message &#39;deleted&#39; is not generated</span></span>
+<span class="giallo-l"><span>  — the &#39;fr&#39; translation has the (Element) markers [], but the</span></span>
+<span class="giallo-l"><span>  default locale&#39;s message (locales/en/main.ftl:13) has</span></span>
+<span class="giallo-l"><span>  [-privacy-link] in that order</span></span></code></pre>
+<p>There's one limit. With two or more elements, every language has to use them
+in the same order. A French translation that swaps two links is rejected the
+same way.</p>
+<h2 id="what-it-doesn-t-catch">What it doesn't catch</h2>
+<ul>
+<li><strong>Translation quality.</strong> If the French file says <code>checkout = Checkout</code>, it
+builds. Copying the English text into another language passes every check.</li>
+<li><strong>Types in other languages.</strong> Argument types come from the default locale's
+comments only. Translators never have to write them, and other locales only
+need the same variable <em>names</em>.</li>
+<li><strong>Untyped variables.</strong> A variable with no type comment, no <code>NUMBER()</code> and no
+plural selector accepts any string or number. <code>LintLevel::Strict</code> in
+<code>build.rs</code> makes that a build error.</li>
+</ul>
+<p>There's a linter for mistakes in the type comments themselves, such as
+<code>(Numbr)</code> or a comment for a variable the message doesn't use. By default
+those are cargo warnings. Mistakes in non-default locales stay warnings at every
+level, because those files belong to translators and shouldn't break your build.</p>
+<h2 id="translations-the-build-never-saw">Translations the build never saw</h2>
+<p>Sometimes the <code>.ftl</code> arrives after the binary: a language added after release,
+a translator's file in CI, or hot reloading while you work on copy. For those,
+<code>L10nLanguage::new_external</code> checks the file against the message list compiled
+into your binary before it loads it:</p>
+<pre class="giallo z-code"><code data-lang="rust"><span class="giallo-l"><span class="z-storage z-type z-storage">let</span><span class="z-variable z-other"> bytes</span><span class="z-keyword z-keyword z-operator"> =</span><span class="z-entity z-name"> std</span><span class="z-keyword z-keyword z-operator">::</span><span class="z-entity z-name">fs</span><span class="z-keyword z-keyword z-operator">::</span><span class="z-entity z-name z-entity z-name z-function">read</span><span class="z-punctuation">(</span><span class="z-punctuation z-definition z-string z-punctuation">&quot;</span><span class="z-string">locales/pl.ftl</span><span class="z-punctuation z-definition z-string z-punctuation">&quot;</span><span class="z-punctuation">)</span><span class="z-keyword z-keyword z-operator">?</span><span class="z-punctuation">;</span></span>
+<span class="giallo-l"><span class="z-storage z-type z-storage">let</span><span class="z-variable z-other"> pl</span><span class="z-keyword z-keyword z-operator"> =</span><span class="z-entity z-name z-entity z-name z-type"> L10nLanguage</span><span class="z-keyword z-keyword z-operator">::</span><span class="z-entity z-name z-entity z-name z-function">new_external</span><span class="z-punctuation">(</span><span class="z-punctuation z-definition z-string z-punctuation">&quot;</span><span class="z-string">pl</span><span class="z-punctuation z-definition z-string z-punctuation">&quot;</span><span class="z-punctuation">,</span><span class="z-variable z-other"> bytes</span><span class="z-punctuation">)</span><span class="z-keyword z-keyword z-operator">?</span><span class="z-punctuation">;</span></span>
+<span class="giallo-l"><span class="z-variable z-other">pl</span><span class="z-keyword z-keyword z-operator">.</span><span class="z-entity z-name z-entity z-name z-function">msg_hello</span><span class="z-punctuation">(</span><span class="z-punctuation z-definition z-string z-punctuation">&quot;</span><span class="z-string">Ala</span><span class="z-punctuation z-definition z-string z-punctuation">&quot;</span><span class="z-punctuation">)</span><span class="z-punctuation">;</span></span></code></pre>
+<p>A file with a missing message, a wrong variable name or a broken reference is
+rejected with an error listing every problem, instead of panicking later inside
+a method. Here's a Polish file with one message and the wrong variable:</p>
+<pre class="giallo z-code"><code data-lang="plain"><span class="giallo-l"><span>The .ftl content does not satisfy the compiled message contract:</span></span>
+<span class="giallo-l"><span>  message &#39;hello&#39; references unknown variable &#39;$nom&#39;</span></span>
+<span class="giallo-l"><span>  message &#39;unread-messages&#39; is missing</span></span>
+<span class="giallo-l"><span>  message &#39;checkout&#39; is missing</span></span></code></pre>
+<p>It's the same code that checks each locale at build time. It can't
+check argument types at runtime, and doesn't need to, because the method
+signatures already fixed what your code passes.</p>
+<h2 id="compared-to-fl">Compared to <code>fl!</code></h2>
+<p><a rel="external" href="https://crates.io/crates/i18n-embed-fl"><code>i18n-embed-fl</code></a>'s <code>fl!</code> macro checks
+message ids and argument names, but only against the fallback language. In a
+small demo, a message missing from the French file compiled and showed English
+text. A wrong variable name compiled and printed <code>Bonjour {$nom}</code> as literal
+text. <code>fl!</code> also returns a plain <code>String</code>, so it has no equivalent of
+<code>(Element)</code>. In return, it needs no build script and has a much larger user base.</p>
+<h2 id="try-it">Try it</h2>
+<p>The <a rel="external" href="https://github.com/akesson/fluent-typed">README</a> covers setup, and the
+guides cover embedding or compressing translations, loading one language at a
+time in a WASM client, picking a language from an <code>Accept-Language</code> header, and
+putting links or icons in the middle of a sentence. The minimum Rust version is
+1.88. It's pre-1.0, so read the changelog before upgrading.</p>
+
+    </div>
+    <hr class="post-end">
+    <footer class="post-info">
+      <p>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+1073 Words</p>
+      
+      <p>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+2026-11-08</p>
+      
+    </footer>
+  </article>
+
+  
+<div class="post-nav thin">
+  
+  
+</div>
+
+</main>
+
+
+    
+
+    <script defer src="https://akesson.io/js/main.js"></script>
+
+    
+    
+    <script data-goatcounter="https://akesson.goatcounter.com/count"
+            async src="https://gc.zgo.at/count.js"></script>
+    
+
+    
+
+    
+    
+  </body>
+</html>

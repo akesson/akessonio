@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<!-- Å mark: Hanken Grotesk 700 "A" traced to a path, under an open arc. Colour = site accent oklch(L 0.10 250), light/dark via prefers-color-scheme -->
+<style>svg{color:#32669a}@media(prefers-color-scheme:dark){svg{color:#7fb6ee}}</style>
+<path fill="currentColor" transform="translate(21.03,87.00) scale(0.0861,-0.0861)" d="M8 0 288 697H385L665 0H524L338 506L149 0ZM192 136 232 252H442L484 136Z"/>
+<path d="M19.98 68.92 A34.31 34.31 0 1 1 80.02 68.92" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+</svg>
